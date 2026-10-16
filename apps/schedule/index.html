@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- No scripts, no trackers, no cookies, nothing from anyone else: the policy below
+     holds every page to files served from this site. How the site is built and
+     published: docs/WEBSITE.md. Brand rules: docs/BRAND.md. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Method Schedule: open-source film and TV scheduling</title>
+<meta name="description" content="Method Schedule is free, open-source film and TV scheduling that runs on your own computer: breakdown, stripboard, calendar, day out of days and reports, in open files.">
+<link rel="canonical" href="https://methodschedule.com/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111417" media="(prefers-color-scheme: dark)">
+<!-- Share cards. og:image is an absolute URL at 1200x630, drawn from og-card.html by
+     scripts/make-og.sh. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Method Schedule">
+<meta property="og:url" content="https://methodschedule.com/">
+<meta property="og:title" content="Method Schedule: open-source film and TV scheduling">
+<meta property="og:description" content="Free desktop scheduling for film and TV: breakdown, stripboard, calendar, day out of days and reports. Your schedules stay on your computer as open files.">
+<meta property="og:image" content="https://methodschedule.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Method Schedule: film and TV scheduling, from script to stripboard.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Method Schedule: open-source film and TV scheduling">
+<meta name="twitter:description" content="Free desktop scheduling for film and TV. Open files, keyboard first, every day count explained, no subscription.">
+<meta name="twitter:image" content="https://methodschedule.com/og.png">
+<meta name="twitter:image:alt" content="Method Schedule: film and TV scheduling, from script to stripboard.">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="home" href="./" aria-label="Method Schedule home">
+      <picture>
+        <source srcset="assets/brand/mark-dark.svg" media="(prefers-color-scheme: dark)">
+        <img src="assets/brand/mark.svg" alt="" width="32" height="32">
+      </picture>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#formats">Scripts and exports</a>
+      <a href="#open-files">Open files</a>
+      <a href="#keyboard">Keyboard</a>
+      <a href="#cli">Command line</a>
+      <a href="#budget">Budgeting</a>
+      <a href="#download">Download</a>
+      <a href="#help">Report a bug</a>
+      <a href="#faq">FAQ</a>
+      <a href="releases/">Release notes</a>
+      <a href="https://github.com/method-production-suite/method-scheduling" data-repo="">Source</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <h1 id="hero-title">
+        <picture>
+          <source srcset="assets/brand/wordmark-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="assets/brand/wordmark.svg" alt="Method Schedule" width="660" height="63">
+        </picture>
+      </h1>
+      <p class="status"><span class="badge alpha">Early alpha</span> Not released yet: it builds from source today. <a href="#help">Found a bug? Tell us.</a></p>
+      <p class="pitch">Film and TV scheduling, from script to stripboard.</p>
+      <p class="lede">A free, open-source desktop app for shooting schedules: script
+        breakdown, the stripboard with its day breaks and banners, the calendar, the day
+        out of days and every report a production runs on. Your schedules are open files on
+        your own computer, the board is built for the keyboard, and every day count can
+        tell you exactly where it came from.</p>
+      <div class="cta">
+        <a class="btn primary" href="#download">Get Method Schedule</a>
+        <a class="btn ghost" href="#features">See what it does</a>
+      </div>
+      <p class="fine">No account, no subscription, no cloud. The Mac comes first; Windows and Linux follow.</p>
+    </div>
+  </section>
+
+  <div class="shot">
+    <div class="wrap">
+      <figure class="window" role="img" aria-label="Illustration of the Method Schedule window: the board of an invented schedule with two shoot days, seven scene strips colored by interior, exterior, day and night, a banner for a company move, two dark day-break rows with each day's scenes, pages and time, and the breakdown sheet of the selected scene beside the board.">
+        <div aria-hidden="true">
+          <div class="w-bar"><i></i><i></i><i></i><span>Salt Road.mtsc</span></div>
+          <div class="w-tools">
+            <span><b>New</b><b>Open</b><b>Save</b></span>
+            <span class="opt"><b>Import Script</b></span>
+            <span><b>Undo</b><b>Redo</b></span>
+            <span class="opt"><b>Find</b><b>Print</b></span>
+            <span class="doc opt">Autosave on</span>
+          </div>
+          <div class="w-tabs"><span class="on">Board</span><span>Breakdown</span><span class="opt">Elements</span><span class="opt">Day out of days</span><span class="opt">Calendar</span><span class="opt">Reports</span></div>
+          <div class="w-boardbar"><span>Board <b>Shooting order</b></span><span>Sub-board <b>Main unit</b></span></div>
+          <div class="w-body">
+            <div class="w-main">
+              <table class="w-board">
+                <tbody>
+                  <tr class="dh"><td colspan="6">Day 1, Mon Mar 1, 2027</td></tr>
+                  <tr class="id"><td>12</td><td>INT</td><td class="set">FERRY CABIN</td><td class="c-dn">DAY</td><td class="n">1 2/8</td><td class="c-cast">1, 3</td></tr>
+                  <tr class="ed"><td>13</td><td>EXT</td><td class="set">FERRY DECK</td><td class="c-dn">DAY</td><td class="n">2/8</td><td class="c-cast">1</td></tr>
+                  <tr class="ed"><td>14</td><td>EXT</td><td class="set">FERRY DECK</td><td class="c-dn">DAY</td><td class="n">1 4/8</td><td class="c-cast">1, 2, 3</td></tr>
+                  <tr class="bn"><td colspan="5">Company move to the harbor</td><td class="n">0:45</td></tr>
+                  <tr class="id"><td>27</td><td>INT</td><td class="set">HARBOR OFFICE</td><td class="c-dn">DAY</td><td class="n">6/8</td><td class="c-cast">2, 4</td></tr>
+                  <tr class="brk"><td colspan="6">End of day 1: 4 scenes, 3 6/8 pages, 10:00</td></tr>
+                  <tr class="dh"><td colspan="6">Day 2, Tue Mar 2, 2027</td></tr>
+                  <tr class="in sel"><td>31</td><td>INT</td><td class="set">LIGHTHOUSE STAIRS</td><td class="c-dn">NIGHT</td><td class="n">1 1/8</td><td class="c-cast">1</td></tr>
+                  <tr class="en"><td>32</td><td>EXT</td><td class="set">LIGHTHOUSE GALLERY</td><td class="c-dn">NIGHT</td><td class="n">2 3/8</td><td class="c-cast">1, 2</td></tr>
+                  <tr class="in"><td>33</td><td>INT</td><td class="set">LAMP ROOM</td><td class="c-dn">NIGHT</td><td class="n">7/8</td><td class="c-cast">1, 2, 5</td></tr>
+                  <tr class="brk"><td colspan="6">End of day 2: 3 scenes, 4 3/8 pages, 8:30</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="w-panel">
+              <div class="w-ptabs"><span class="on">Breakdown</span><span>Board</span><span>Calendar</span></div>
+              <h4>Sheet 31, scene 31</h4>
+              <p class="slug">INT. LIGHTHOUSE STAIRS, NIGHT, 1 1/8</p>
+              <p class="syn">Mara climbs to the lamp room with the last of the oil.</p>
+              <ul class="w-cats">
+                <li><span>Cast</span>1. Mara</li>
+                <li><span>Props</span>Oil can, storm lantern</li>
+                <li><span>Set dressing</span>Rope coil, tide chart</li>
+                <li><span>Sound</span>Foghorn (playback)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="w-foot"><span>18 shoot days, Mar 1 to Mar 24</span><span>7 scenes shown</span><span class="ok">Saved</span></div>
+        </div>
+        <figcaption>Illustration with an invented schedule. Screenshots of the real app come with the first release.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section class="band alt" id="news" aria-labelledby="news-title">
+    <div class="wrap news">
+      <div>
+        <p class="kicker">Release notes</p>
+        <h2 id="news-title">What's new</h2>
+        <p><a href="releases/">Every release</a></p>
+      </div>
+      <div class="box">
+        <!-- whatsnew:start (generated by scripts/site.py from the newest docs/releases/*.md: edit that, then run python3 scripts/site.py) -->
+        <p class="wn-ver">No release yet</p>
+        <p>The first release is on its way. Until then Method Schedule builds from source, and every feature listed here is in the code today.</p>
+        <!-- whatsnew:end -->
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="formats" aria-labelledby="formats-title">
+    <div class="wrap">
+      <p class="kicker">Works with what you have</p>
+      <h2 id="formats-title">Bring your schedules with you</h2>
+      <p class="intro">A schedule starts from the script. Method Schedule reads the script
+        files writers already have, keeps up with their revisions, and sends everything
+        back out in open formats anyone can read.</p>
+      <div class="fmt-grid">
+        <div class="fmt-card">
+          <h3>Scripts in</h3>
+          <p>One breakdown sheet per scene, with its heading split up, its length in eighths
+            and its speaking characters as cast.</p>
+          <ul class="fmt-list">
+            <li><span>Fountain</span> Plain-text screenplays</li>
+            <li><span>Final Draft</span> Script files (.fdx), production tags included</li>
+            <li><span>Revisions</span> A new draft merged in, tags and places kept</li>
+          </ul>
+        </div>
+        <div class="fmt-card">
+          <h3>Out, in open formats</h3>
+          <p>Nothing you make here is locked in.</p>
+          <ul class="fmt-list">
+            <li><span>.mtsc</span> Plain, documented JSON with a published spec</li>
+            <li><span>PDF</span> Every report and the board, ready to send</li>
+            <li><span>Excel</span> Workbooks whose totals are working formulas</li>
+            <li><span>CSV</span> The same reports for any other tool</li>
+            <li><span>JSON, CSV</span> Call sheet data for each shoot day</li>
+          </ul>
+        </div>
+        <div class="fmt-card">
+          <h3>To the budget</h3>
+          <p>The day out of days as one small, documented file.</p>
+          <ul class="fmt-list">
+            <li><span>Exchange file</span> Shoot days, and each element's work, hold and travel days kept apart</li>
+            <li><span>Prep and wrap</span> Each sub-board's dates, when you record them</li>
+          </ul>
+        </div>
+      </div>
+      <p class="fine">Method Schedule reads scripts in the open Fountain format and the
+        <code>.fdx</code> files screenwriting apps save. Final Draft is a trademark of its
+        owner; Method Schedule is independent and not affiliated with or endorsed by it.</p>
+    </div>
+  </section>
+
+  <section class="band alt" id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <p class="kicker">Features</p>
+      <h2 id="features-title">Everything a shooting schedule needs</h2>
+      <p class="intro">All of this is built and in the code today. Open a group to see what is
+        in it; the dashed box at the end is what comes next.</p>
+      <!-- features:start (generated by scripts/site.py from docs/features.toml: edit that, then run python3 scripts/site.py) -->
+      <div class="groups">
+        <details class="group" id="g-breakdown">
+          <summary>
+            <span class="group-head"><span class="group-title">Breakdown</span> <span class="group-count">9</span></span>
+            <span class="group-teaser">Script import, Breakdown sheets, Elements by category, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Script import</strong> Bring in a Fountain or <code>.fdx</code> script: one sheet per scene, its heading split into I/E, set and time of day, its length in eighths and its speaking characters as cast.</li>
+            <li><strong>Breakdown sheets</strong> Scenes, I/E, set, time of day, pages, shoot time, synopsis, location and the rest of the header, with the values other sheets use offered as you type.</li>
+            <li><strong>Elements by category</strong> Tag cast, props, vehicles and the rest by typing under a category or in one quick-add field, and cut, copy and paste them between sheets.</li>
+            <li><strong>Element manager</strong> Board IDs, notes, custom properties, images and linked elements, with merge, move and renumber, and each element's scenes, pages, work days and dates.</li>
+            <li><strong>Category settings</strong> Automatic board IDs, default holds and drops, daily quantities, and leaving a category or a single element off the board.</li>
+            <li><strong>Quantities per scene</strong> Count background, stand-ins or animals scene by scene and see each day's total.</li>
+            <li><strong>Split and merge sheets</strong> Duplicate a sheet to split a scene, or merge several sheets into one.</li>
+            <li><strong>Breakdown designer</strong> Choose the order, visibility and width of the header fields, kept in the schedule.</li>
+            <li><strong>Images on scenes and elements</strong> Attach pictures to sheets and elements and see them beside the board; the files stay where you keep them.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-board">
+          <summary>
+            <span class="group-head"><span class="group-title">Board</span> <span class="group-count">8</span></span>
+            <span class="group-teaser">Stripboard by drag or keys, Boards and sub-boards, Day breaks, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Stripboard by drag or keys</strong> Drag strips, or move them with the keyboard, within a sub-board, between sub-boards and into the Boneyard, and cut, copy and paste them.</li>
+            <li><strong>Boards and sub-boards</strong> Several boards for different orders, each with sub-boards for units or blocks and a Boneyard of unscheduled strips.</li>
+            <li><strong>Day breaks</strong> Insert them by hand or break the days by pages, shoot time or screen time; each shows its day, date, pages and time.</li>
+            <li><strong>Banners</strong> Lines across the board for moves, meals and notes, with a duration that counts in the day and a color, size and alignment of their own.</li>
+            <li><strong>Strip designer</strong> Strip and text colors by I/E and time of day, up to four lines a strip with merged cells, and a layout library shared with the one-line report.</li>
+            <li><strong>Sort and find</strong> Sort strips by up to three fields, and find strips with a highlight you step through.</li>
+            <li><strong>Split screen</strong> Put the breakdown, another board, the calendar or the scene's images beside the board, or the images beside the breakdown, and back to one view in a click.</li>
+            <li><strong>Print the board</strong> Print all or selected strips, with or without the Boneyard, or save the board as a PDF.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-dood">
+          <summary>
+            <span class="group-head"><span class="group-title">Day out of days</span> <span class="group-count">5</span></span>
+            <span class="group-teaser">The full grid, Counting rules that hold up, Explain this count, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>The full grid</strong> Every element's start, work, hold, drop and finish, day by day, for each sub-board and category, with a summary.</li>
+            <li><strong>Counting rules that hold up</strong> Holds between work days, one drop over the longest gap, travel, fittings and rehearsals as worked days, and holidays and company moves only inside a held span.</li>
+            <li><strong>Explain this count</strong> Ask why an element's counts are what they are and get the answer date by date.</li>
+            <li><strong>Your codes, sorts and views</strong> Your own code letters, multi-key sorts, a vertical view, a view without holds, and hold and drop switches on every row.</li>
+            <li><strong>Header fields as categories</strong> Read-only rows for each set, location, unit, episode, I/E, time of day, script day and sequence value with their sheets, pages, work days, start and finish.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-calendar">
+          <summary>
+            <span class="group-head"><span class="group-title">Calendar and events</span> <span class="group-count">6</span></span>
+            <span class="group-teaser">A calendar per sub-board, Month and weeks views, Events, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>A calendar per sub-board</strong> Start date, working week, off days, holidays and company travel days, with shoot days moving around them on their own.</li>
+            <li><strong>Month and weeks views</strong> One month or every week of the schedule in one list, with strips, banners, pages and length on each day, switches for what each day shows, an actions menu on any date, and a filter by category and element.</li>
+            <li><strong>Events</strong> Travel, fittings, rehearsals, unavailable days, camera tests and post-production work over a date range, in one of ten colors, made from an element or a sheet and dragged on the calendar.</li>
+            <li><strong>Conflicts</strong> An element booked on one date in two sub-boards, or an event on a work day, is marked on the strips, the calendar, the day out of days and the elements table.</li>
+            <li><strong>Red flags</strong> Flag several elements on several dates at once, with standard types that match the event kinds, see every flag in one table and every place the schedule clashes with them.</li>
+            <li><strong>Prep and wrap dates</strong> Record each sub-board's prep start and wrap end for the budget.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-reports">
+          <summary>
+            <span class="group-head"><span class="group-title">Reports and exports</span> <span class="group-count">5</span></span>
+            <span class="group-teaser">The reports a production runs on, More reports, Report designer, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>The reports a production runs on</strong> One-line, shooting schedule, day out of days and its summary, element list, breakdown and calendar.</li>
+            <li><strong>More reports</strong> Breakdown by day, element detail, daily category totals, the vertical one-line with its cast grid, conflicts, red flags and a multi-unit one-line merged by date.</li>
+            <li><strong>Report designer</strong> Columns on up to four lines with merged cells, header layouts with your production info, date ranges and named copies, all kept in the schedule.</li>
+            <li><strong>PDF</strong> Print any report or save it as a PDF.</li>
+            <li><strong>Excel and CSV</strong> One-line, day out of days, elements, breakdown, element detail and the whole board as workbooks whose totals are working formulas, or as CSV.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-files">
+          <summary>
+            <span class="group-head"><span class="group-title">Files and safety</span> <span class="group-count">6</span></span>
+            <span class="group-teaser">Open file format, Never lose work, Undo, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Open file format</strong> Schedules are <code>.mtsc</code> files: plain, documented JSON that diffs cleanly and that any tool can read.</li>
+            <li><strong>Never lose work</strong> Autosave into the file, a recovery copy for a schedule not saved yet, rolling backups and a restore after a crash.</li>
+            <li><strong>Undo</strong> Every change is one step, up to 200 of them.</li>
+            <li><strong>Templates and layout files</strong> Start a schedule from a template of your categories, elements, boards and layouts, and share layouts as files.</li>
+            <li><strong>Several windows</strong> One schedule per window, each with its own undo, autosave and recovery, and a list of recent files.</li>
+            <li><strong>What changed and merge</strong> See every change between two schedules in plain words, and merge two copies that changed apart, with real clashes listed for you to pick.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-keys">
+          <summary>
+            <span class="group-head"><span class="group-title">Keyboard and command line</span> <span class="group-count">5</span></span>
+            <span class="group-teaser">Keyboard first, Find and replace, Scriptable command line, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Keyboard first</strong> Move strips, insert day breaks and banners, step through sheets and switch tabs from the keyboard; a shortcut sheet lists every key.</li>
+            <li><strong>Find and replace</strong> Search the text fields, replace in the results, or build a search from field, comparison and value rows.</li>
+            <li><strong>Scriptable command line</strong> <code>method-schedule</code> imports scripts, sets day breaks and writes the reports as text, CSV or Excel, with no window and no network.</li>
+            <li><strong>Coding agents</strong> An MCP server lets coding agents read and edit schedules through the same engine, only in the folders you allow.</li>
+            <li><strong>Git merge driver</strong> Keep schedules in git and let <code>method-schedule merge-driver</code> combine two people's edits, flagging only real conflicts.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-beyond">
+          <summary>
+            <span class="group-head"><span class="group-title">Beyond the usual stripboard</span> <span class="group-count">9</span></span>
+            <span class="group-teaser">Budget exchange file, Production tags from the script, Script revisions, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Budget exchange file</strong> Shoot days and every element's day counts as one small, documented file a budgeting app can read.</li>
+            <li><strong>Production tags from the script</strong> Bring in the props, wardrobe and other tags a tagged script already carries as elements.</li>
+            <li><strong>Script revisions</strong> Merge a revised draft into the schedule: scenes keep their tags and places, new ones go to the Boneyard and cut ones are marked omitted.</li>
+            <li><strong>Day timeline</strong> Each shoot day from its call time, strip by strip, with warnings for a long day or a scene past sunset, and what runs past wrap moved to the next day in one step.</li>
+            <li><strong>Sunrise and sunset</strong> Give each location its coordinates and see sunrise and sunset for every dated shoot day, with the US and Canada or EU daylight saving dates.</li>
+            <li><strong>Rest checks</strong> Set a turnaround per category and get a warning wherever a rest between wrap and the next call is too short.</li>
+            <li><strong>Schedule locks and drift</strong> Lock the schedule as sent, then see each actor's work days added, dropped and moved since.</li>
+            <li><strong>Strip order suggestion</strong> A suggested order that groups by location, set and cast around your pinned strips and red flags, with the before and after counts to compare.</li>
+            <li><strong>Call sheet data</strong> A shoot day's call sheet data as JSON or CSV, ready for whatever lays out your call sheets.</li>
+          </ul>
+        </details>
+      </div>
+      <section class="soon" aria-labelledby="g-soon">
+        <h3 id="g-soon">On the roadmap</h3>
+        <ul class="feats">
+          <li><strong>Signed Mac app with updates</strong> A downloadable Mac app, signed and notarized by Apple, that keeps itself up to date.</li>
+          <li><strong>Windows and Linux, tested</strong> Both build from the same code today; printing, keys and file types still need a hands-on check.</li>
+          <li><strong>Day counts into Method Budget</strong> Method Budget reading the exchange file, so shoot days and cast days arrive as the budget's globals.</li>
+          <li><strong>Try it in your browser</strong> The app with an invented schedule, running in the browser with nothing to install.</li>
+          <li><strong>A designed call sheet</strong> Call sheets laid out and printed from the call sheet data.</li>
+          <li><strong>Daylight saving per location</strong> Sunrise, sunset and call times that follow each location's clock changes.</li>
+        </ul>
+      </section>
+      <!-- features:end -->
+    </div>
+  </section>
+
+  <section class="band" id="open-files" aria-labelledby="open-title">
+    <div class="wrap split">
+      <div>
+        <p class="kicker">Why open files</p>
+        <h2 id="open-title">Your schedule is a file you own</h2>
+        <p class="intro">A schedule is the record of every call a production made. It should
+          outlive any app, any subscription and any company, including this one.</p>
+        <ul class="points">
+          <li><strong>Plain, documented JSON.</strong> Schedules are <code>.mtsc</code> files
+            with a published specification. Any tool can read them, today or in twenty years.</li>
+          <li><strong>Exact numbers.</strong> Page lengths are whole eighths and times whole
+            minutes, so the same schedule always produces the same bytes.</li>
+          <li><strong>Made for version control.</strong> Every sheet, strip and element keeps
+            its id through edits and moves, so files diff line by line and a git merge
+            driver combines two people's edits.</li>
+          <li><strong>On your disk, not ours.</strong> Save a schedule wherever you keep your
+            work. Nothing is uploaded, and the app makes no network connections.</li>
+        </ul>
+        <p class="fine"><a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/FORMAT.md" data-repo="docs/FORMAT.md">Read the file format</a></p>
+      </div>
+      <div>
+<pre class="code"><code><span class="c">// one breakdown sheet, as written in the file</span>
+{
+  <span class="k">"id"</span>: 31,
+  <span class="k">"scenes"</span>: "31",
+  <span class="k">"int_ext"</span>: "INT",
+  <span class="k">"set"</span>: "LIGHTHOUSE STAIRS",
+  <span class="k">"time_of_day"</span>: "NIGHT",
+  <span class="k">"eighths"</span>: 9,
+  <span class="k">"shoot_minutes"</span>: 75,
+  <span class="k">"synopsis"</span>: "Mara climbs to the lamp room.",
+  <span class="k">"elements"</span>: [6, 14, 15]
+}</code></pre>
+        <p class="caption">Lengths are eighths of a page (9 is 1 1/8), and fields left at
+          their default are left out, so a change to one scene is a change to a few lines of
+          the file.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="keyboard" aria-labelledby="keys-title">
+    <div class="wrap split">
+      <div>
+        <p class="kicker">Keyboard first</p>
+        <h2 id="keys-title">Hands stay on the keys</h2>
+        <p class="intro">Scheduling is moving strips. Step through the board, carry a run of
+          strips across day breaks, drop in a day break or a banner and open a scene's sheet
+          without reaching for the mouse.</p>
+        <p>Every command is in the menus, most have a key, and a shortcut sheet lists them
+          all with a filter.</p>
+        <p class="fine">Shown with Mac keys. On Windows and Linux, Ctrl takes the place of
+          <span aria-hidden="true">&#8984;</span><span class="sr">Command</span> and Alt the place of
+          <span aria-hidden="true">&#8997;</span><span class="sr">Option</span>.</p>
+      </div>
+      <table class="keys">
+        <caption class="sr">Some of the keyboard shortcuts</caption>
+        <tbody>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&uarr;</span><span class="sr">Up arrow</span></kbd><kbd><span aria-hidden="true">&darr;</span><span class="sr">Down arrow</span></kbd></th><td>Select the strip above or below (with <span aria-hidden="true">&#8679;</span><span class="sr">Shift</span>, grow the selection)</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8997;</span><span class="sr">Option</span></kbd><kbd><span aria-hidden="true">&uarr;</span><span class="sr">Up arrow</span></kbd></th><td>Move the selected strips up, across day breaks and between sub-boards (with <span aria-hidden="true">&darr;</span><span class="sr">Down arrow</span>, down)</td></tr>
+          <tr><th scope="row"><kbd>B</kbd></th><td>Insert a day break below the selected strip</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd>B</kbd></th><td>Insert a banner above the selection</td></tr>
+          <tr><th scope="row"><kbd>Return</kbd></th><td>Open the selected scene's breakdown sheet</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd>]</kbd></th><td>Next sheet in board order (with <kbd>[</kbd>, the previous one)</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd>I</kbd></th><td>Explain the selected day out of days row's counts</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd><span aria-hidden="true">&#8679;</span><span class="sr">Shift</span></kbd><kbd>F</kbd></th><td>Find and replace</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd>/</kbd></th><td>Every shortcut, on one sheet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="band" id="cli" aria-labelledby="cli-title">
+    <div class="wrap">
+      <p class="kicker">Command line and coding agents</p>
+      <h2 id="cli-title">The same engine, without the window</h2>
+      <p class="intro">The <code>method-schedule</code> command reads and writes schedules with
+        no window and no network, so schedules fit into scripts, build steps and automated
+        checks.</p>
+<pre class="term"><code><span class="p">$ </span>method-schedule import salt-road.fountain --into salt-road.mtsc  <span class="c"># a sheet per scene</span>
+<span class="p">$ </span>method-schedule breaks salt-road.mtsc --pages 5                  <span class="c"># break the days</span>
+<span class="p">$ </span>method-schedule days salt-road.mtsc                              <span class="c"># shoot days and dates</span>
+<span class="p">$ </span>method-schedule dood salt-road.mtsc --grid                       <span class="c"># the day out of days</span>
+<span class="p">$ </span>method-schedule explain salt-road.mtsc MARA                      <span class="c"># why those counts</span>
+<span class="p">$ </span>method-schedule oneline salt-road.mtsc --xlsx one-line.xlsx      <span class="c"># a workbook</span>
+<span class="p">$ </span>method-schedule diff old.mtsc new.mtsc                           <span class="c"># what changed</span></code></pre>
+      <div class="cards after-term">
+        <div class="card">
+          <span class="badge now">Available now</span>
+          <h3>Command line</h3>
+          <p>Import scripts, set start dates and day breaks, list shoot days, write every
+            report as text, CSV or Excel, compare and merge schedules, and run a git merge
+            driver that combines edits on its own.
+            <a href="https://github.com/method-production-suite/method-scheduling/blob/main/README.md" data-repo="README.md">Get started</a></p>
+        </div>
+        <div class="card">
+          <span class="badge now">Available now</span>
+          <h3>Coding agents</h3>
+          <p>An MCP server lets Claude Code and other agents import a script, fill in
+            breakdown sheets, move strips, set day breaks and read the day out of days
+            through the same engine. It only touches the folders you allow and nothing is
+            sent anywhere.
+            <a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/MCP.md" data-repo="docs/MCP.md">How to connect</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="budget" aria-labelledby="budget-title">
+    <div class="wrap">
+      <p class="kicker">Schedule to budget</p>
+      <h2 id="budget-title">The day out of days feeds the budget</h2>
+      <p class="intro">Method Schedule has a sister app, <a href="https://methodbudget.com">Method
+        Budget</a>, built the same way: free, open source, open files on your own computer.
+        The schedule hands the budget its day counts through one open file.</p>
+      <ol class="flow">
+        <li>
+          <h3>Schedule</h3>
+          <p>Break down the script and lay out the board. The day out of days counts every
+            element's work, hold, travel and drop days.</p>
+        </li>
+        <li>
+          <h3>Exchange file</h3>
+          <p>Export for Budget, or <code>method-schedule budget</code>, writes the shoot days
+            and each element's counts, kept apart and never pre-added, to one small JSON
+            file with a published spec.</p>
+        </li>
+        <li>
+          <h3>Budget</h3>
+          <p>Method Budget turning those counts into its shoot day and cast globals is on its
+            roadmap. Any other budgeting tool can read the file too.</p>
+        </li>
+      </ol>
+      <p class="fine"><a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/EXCHANGE.md" data-repo="docs/EXCHANGE.md">Read the exchange file spec</a></p>
+    </div>
+  </section>
+
+  <section class="band" id="download" aria-labelledby="download-title">
+    <div class="wrap">
+      <p class="kicker">Download</p>
+      <h2 id="download-title">Get Method Schedule</h2>
+      <p class="intro">There is no release yet. Until the first one, build it from source in a
+        few minutes with nothing but Rust.</p>
+      <div class="cards">
+        <div class="card">
+          <span class="badge">Coming</span>
+          <h3>Mac app</h3>
+          <p>A Mac app for Apple silicon and Intel, signed and notarized by Apple so it opens
+            like any other app, comes with the first release. Windows and Linux builds
+            follow once they have had a hands-on test.</p>
+          <p><a href="releases/">Release notes</a></p>
+        </div>
+        <div class="card">
+          <span class="badge now">Available now</span>
+          <h3>Build from source</h3>
+          <p>Install <a href="https://rustup.rs">Rust</a>, get the <a href="https://github.com/method-production-suite/method-scheduling" data-repo="">code</a>, then from the checkout:</p>
+          <pre><code>cargo run -p method-schedule-app</code></pre>
+          <p>The command line is <code>cargo run -p method-schedule-cli -- help</code>. More in the
+            <a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/APP.md" data-repo="docs/APP.md">app guide</a>.</p>
+        </div>
+      </div>
+      <div class="alpha-note">
+        <span class="badge alpha">Early alpha</span>
+        <p>Method Schedule is new and not released. Its counting rules are checked case by
+          case, but you will find rough edges, and a count is worth a second look before a
+          schedule goes out. Keep a copy of schedules that matter, and when something looks
+          wrong, <a href="#help">tell us</a>: bugs get fixed fast at this stage.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="help" aria-labelledby="help-title">
+    <div class="wrap">
+      <p class="kicker">Build it with us</p>
+      <h2 id="help-title">Found a bug? Missing something?</h2>
+      <p class="intro">Every report makes the next version better. A wrong count, a crash, a
+        script that doesn't import cleanly or a feature you lean on elsewhere: open an issue
+        and it goes straight to the people building the app.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/method-production-suite/method-scheduling/issues/new?template=bug.yml">Report a bug</a>
+        <a class="btn ghost" href="https://github.com/method-production-suite/method-scheduling/issues/new?template=feature.yml">Ask for a feature</a>
+        <a class="btn ghost" href="https://github.com/method-production-suite/method-scheduling/discussions">Discussions</a>
+      </div>
+      <p class="fine">Please never attach a real schedule or script: an invented one that shows
+        the problem is always enough, and <code>method-schedule sample</code> makes one.</p>
+    </div>
+  </section>
+
+  <section class="band" id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <p class="kicker">FAQ</p>
+      <h2 id="faq-title">Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Is Method Schedule affiliated with other scheduling software?</summary>
+          <p>No. Method Schedule is an independent, clean-room project, not affiliated with
+            Entertainment Partners or Movie Magic Scheduling.</p>
+        </details>
+        <details>
+          <summary>Can it open schedules from other apps?</summary>
+          <p>Not their schedule files. A schedule starts from the script: a Fountain or
+            <code>.fdx</code> file comes in as one breakdown sheet per scene, and later drafts
+            merge into the schedule you already have. See
+            <a href="#formats">Bring your schedules with you</a>.</p>
+        </details>
+        <details>
+          <summary>Where does my data live?</summary>
+          <p>On your own computer, in files you save wherever you like. There is no account
+            and no cloud, and the app makes no network connections.</p>
+        </details>
+        <details>
+          <summary>What does it cost?</summary>
+          <p>Nothing. Method Schedule is free and open source, dual-licensed under MIT or
+            Apache-2.0, so it can't be taken away from you.</p>
+        </details>
+        <details>
+          <summary>Which computers does it run on?</summary>
+          <p>The Mac comes first: the app is built and run there. Windows and Linux builds
+            compile from the same code and are waiting on a hands-on test.</p>
+        </details>
+        <details>
+          <summary>Does it work with Method Budget?</summary>
+          <p>They share the open exchange file: Method Schedule writes the shoot days and day
+            counts today, and Method Budget reading them is on its roadmap. See
+            <a href="#budget">The day out of days feeds the budget</a>.</p>
+        </details>
+        <details>
+          <summary>Can I script it or keep schedules in git?</summary>
+          <p>Yes. The <code>method-schedule</code> command line imports scripts, breaks days,
+            writes reports and compares schedules, and its git merge driver combines two
+            people's edits to the same schedule.</p>
+        </details>
+        <details>
+          <summary>How can I help?</summary>
+          <p>Try it, report what breaks, and send patches. Please never attach a real
+            schedule to an issue: an invented one that shows the problem is always enough.
+            Start with the <a href="https://github.com/method-production-suite/method-scheduling" data-repo="">repository</a>.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <picture>
+      <source srcset="assets/brand/wordmark-dark.svg" media="(prefers-color-scheme: dark)">
+      <img src="assets/brand/wordmark.svg" alt="Method Schedule" width="168" height="16">
+    </picture>
+    <nav aria-label="Footer">
+      <a href="releases/">Release notes</a>
+      <a href="https://github.com/method-production-suite/method-scheduling" data-repo="">Source code</a>
+      <a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/FORMAT.md" data-repo="docs/FORMAT.md">File format</a>
+      <a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/MCP.md" data-repo="docs/MCP.md">Coding agents</a>
+      <a href="https://github.com/method-production-suite/method-scheduling/blob/main/docs/ROADMAP.md" data-repo="docs/ROADMAP.md">Roadmap</a>
+      <a href="https://github.com/method-production-suite/method-scheduling/blob/main/CLEAN-ROOM.md" data-repo="CLEAN-ROOM.md">Clean room</a>
+    </nav>
+    <p class="family">Also: <a href="https://methodbudget.com">Method Budget</a>, film and TV budgeting in the same open way.</p>
+    <p>Free and open source, dual-licensed under MIT or Apache-2.0. An independent,
+      clean-room project by the Method Schedule contributors. Trademarks belong to their
+      respective owners.</p>
+    <p>This site sets no cookies, runs no scripts and loads nothing from anyone else.</p>
+  </div>
+</footer>
+</body>
+</html>

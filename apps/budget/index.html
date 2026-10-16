@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- No scripts, no trackers, no cookies, nothing from anyone else: the policy below
+     holds every page to files served from this site. How the site is built and
+     published: docs/WEBSITE.md. Brand rules: docs/BRAND.md. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Method Budget: open-source film and TV budgeting</title>
+<meta name="description" content="Method Budget is a free, open-source alternative to Movie Magic Budgeting for film and TV. It runs on your own computer, opens Movie Magic Budgeting exports, and explains every number. No subscription.">
+<link rel="canonical" href="https://methodbudget.com/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111417" media="(prefers-color-scheme: dark)">
+<!-- Share cards. og:image is an absolute URL at 1200x630, drawn from og-card.html by
+     scripts/make-og.sh. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Method Budget">
+<meta property="og:url" content="https://methodbudget.com/">
+<meta property="og:title" content="Method Budget: open-source film and TV budgeting">
+<meta property="og:description" content="A free, open-source alternative to Movie Magic Budgeting. Your budgets stay on your computer as open files, and its exports open with every figure checked. No subscription.">
+<meta property="og:image" content="https://methodbudget.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Method Budget: film and TV budgeting that shows its working.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Method Budget: open-source film and TV budgeting">
+<meta name="twitter:description" content="A free, open-source alternative to Movie Magic Budgeting. Open files, keyboard first, every number explained, no subscription.">
+<meta name="twitter:image" content="https://methodbudget.com/og.png">
+<meta name="twitter:image:alt" content="Method Budget: film and TV budgeting that shows its working.">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="home" href="./" aria-label="Method Budget home">
+      <picture>
+        <source srcset="assets/brand/mark-dark.svg" media="(prefers-color-scheme: dark)">
+        <img src="assets/brand/mark.svg" alt="" width="32" height="32">
+      </picture>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#formats">Import</a>
+      <a href="#download">Download</a>
+      <a href="#faq">FAQ</a>
+      <a href="releases/">Release notes</a>
+      <a class="try" href="try/">Try it in your browser</a>
+      <a class="gh" href="https://github.com/ssandweiss/method-budget" data-repo="" aria-label="Source code on GitHub" title="Source code on GitHub"><svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <h1 id="hero-title">
+        <picture>
+          <source srcset="assets/brand/wordmark-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="assets/brand/wordmark.svg" alt="Method Budget" width="660" height="98">
+        </picture>
+      </h1>
+      <p class="status"><span class="badge alpha">Early alpha</span> Version 0.2 is out and changing fast. <a href="#help">Found a bug? Tell us.</a></p>
+      <p class="pitch">Film and TV budgeting that shows its working.</p>
+      <p class="lede">A free, open-source desktop app for production budgets: topsheet,
+        fringes, globals, charges, versions and cost reports. Your budgets are open files on
+        your own computer, the grid is built for the keyboard, and every total can tell you
+        exactly where it came from. Already have budgets elsewhere? Open their exports,
+        Movie Magic Budgeting's included.<a class="fn" href="#formats" aria-label="About importing">*</a></p>
+      <div class="cta">
+        <a class="btn primary" href="#download">Get Method Budget</a>
+        <a class="btn ghost" href="try/">Try it in your browser</a>
+        <a class="btn ghost" href="#features">See what it does</a>
+      </div>
+      <p class="fine">No account, no subscription, no cloud. The Mac app is out; Windows and Linux builds are on the way.</p>
+      <p class="fine footnote">* From the formats it exports for you: JSON, XML, Excel and tab-delimited.
+        Method Budget reads a variety of open export and spreadsheet formats, never another
+        program's native files. <a href="#formats">What comes across</a>.</p>
+    </div>
+  </section>
+
+  <div class="shot">
+    <div class="wrap">
+      <figure class="window" role="img" aria-label="Illustration of the Method Budget window: the Camera account of an invented budget, with six detail lines and the Explain panel showing how the account total of 227,586.25 is made up.">
+        <div aria-hidden="true">
+          <div class="w-bar"><i></i><i></i><i></i><span>Method Budget</span></div>
+          <div class="w-tools">
+            <span><b>New</b><b>Open</b><b>Save</b></span>
+            <span><b>Undo</b><b>Redo</b></span>
+            <span class="opt"><b>Versions</b><b>Compare</b></span>
+            <span class="opt"><b>Setup</b></span>
+            <span class="doc opt">Feature-Draft.mthd</span>
+            <span><b class="on">Tools</b></span>
+          </div>
+          <div class="w-tabs"><span class="on">Feature-Draft</span><span>Feature-Draft, rev 2</span></div>
+          <div class="w-body">
+            <div class="w-main">
+              <div class="w-crumbs">Topsheet &rsaquo; 2000 Production &rsaquo; <b>2300 Camera</b></div>
+              <div class="w-formula"><span>Amount</span>PREP_WKS + SHOOT_WKS</div>
+              <table class="w-grid">
+                <thead><tr><th>Description</th><th class="n">Amt</th><th class="c-unit">Unit</th><th class="n c-x">X</th><th class="n">Rate</th><th class="n">Total</th><th class="c-fr">Fringes</th></tr></thead>
+                <tbody>
+                  <tr class="sel"><td>Director of photography</td><td class="n cur">10</td><td class="c-unit">Weeks</td><td class="n c-x">1</td><td class="n">4,850.00</td><td class="n">48,500.00</td><td class="c-fr"><span class="tag">PT, HP</span></td></tr>
+                  <tr><td>Camera operator</td><td class="n">9</td><td class="c-unit">Weeks</td><td class="n c-x">1</td><td class="n">3,600.00</td><td class="n">32,400.00</td><td class="c-fr"><span class="tag">PT, HP</span></td></tr>
+                  <tr><td>First assistant camera</td><td class="n">9</td><td class="c-unit">Weeks</td><td class="n c-x">1</td><td class="n">2,950.00</td><td class="n">26,550.00</td><td class="c-fr"><span class="tag">PT, HP</span></td></tr>
+                  <tr><td>Second assistant camera</td><td class="n">9</td><td class="c-unit">Weeks</td><td class="n c-x">1</td><td class="n">2,400.00</td><td class="n">21,600.00</td><td class="c-fr"><span class="tag">PT, HP</span></td></tr>
+                  <tr><td>Camera package</td><td class="n">10</td><td class="c-unit">Weeks</td><td class="n c-x">1</td><td class="n">6,500.00</td><td class="n">65,000.00</td><td class="c-fr"></td></tr>
+                  <tr><td>Expendables</td><td class="n">1</td><td class="c-unit">Allow</td><td class="n c-x">1</td><td class="n">4,500.00</td><td class="n">4,500.00</td><td class="c-fr"></td></tr>
+                  <tr class="tot"><td>Total 2300 Camera</td><td class="n"></td><td class="c-unit"></td><td class="n c-x"></td><td class="n"></td><td class="n">227,586.25</td><td class="c-fr"></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="w-panel">
+              <div class="w-ptabs"><span class="on">Explain</span><span>Find</span><span>Apply</span></div>
+              <h4>2300 Camera</h4>
+              <p class="big">227,586.25</p>
+              <ul class="w-steps">
+                <li><span>6 detail lines</span><span>198,550.00</span></li>
+                <li><span>Fringes on 129,050.00 of pay</span><span>29,036.25</span></li>
+                <li class="sub"><span>PT payroll taxes 18%</span><span>23,229.00</span></li>
+                <li class="sub"><span>HP health and pension 4.5%</span><span>5,807.25</span></li>
+                <li class="sum"><span>Account total</span><span>227,586.25</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="w-foot"><span>6 lines</span><span>Budget total 4,862,310.40</span><span class="ok">Saved</span></div>
+        </div>
+        <figcaption>Illustration with an invented budget. <a href="#screenshots">Screenshots of the real app</a> are below.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section class="band" id="screenshots" aria-labelledby="shots-title">
+    <div class="wrap">
+      <p class="kicker">Screenshots</p>
+      <h2 id="shots-title">The app at work</h2>
+      <p class="intro">Screenshots of the Mac app. The budgets in them were made up for these
+        pictures: the titles, the people and every figure are invented.</p>
+      <div class="gallery">
+        <figure class="snap">
+          <a href="assets/shots/topsheet.webp">
+            <picture>
+              <source srcset="assets/shots/topsheet.webp" type="image/webp">
+              <img src="assets/shots/topsheet.png" width="1440" height="900" loading="lazy" decoding="async" alt="The topsheet of an invented one-hour episode: category numbers, names and totals, the above-the-line total of 517,850.00, and the tools panel listing the fringes on the selected Cast category.">
+            </picture>
+          </a>
+          <figcaption><strong>Topsheet.</strong> Every category of an episode budget with its total, and the fringes on the selected category in the tools panel.</figcaption>
+        </figure>
+        <figure class="snap">
+          <a href="assets/shots/detail.webp">
+            <picture>
+              <source srcset="assets/shots/detail.webp" type="image/webp">
+              <img src="assets/shots/detail.png" width="1440" height="900" loading="lazy" decoding="async" alt="The Supporting cast account of an invented feature: eight detail lines with amount, unit, rate, fringe percent, fringe amount and total, and the tools panel showing which fringes the selected line carries.">
+            </picture>
+          </a>
+          <figcaption><strong>Detail lines and fringes.</strong> An account's lines with what each one earns in fringes; the tools panel ticks the fringes on the selected line.</figcaption>
+        </figure>
+        <figure class="snap">
+          <a href="assets/shots/explain.webp">
+            <picture>
+              <source srcset="assets/shots/explain.webp" type="image/webp">
+              <img src="assets/shots/explain.png" width="1440" height="900" loading="lazy" decoding="async" alt="The Explain panel tracing one line's total of 19,500.00: 3 weeks at 6,500, then each fringe with its rate and cutoff, including a state unemployment fringe that stops at its 7,000.00 cutoff.">
+            </picture>
+          </a>
+          <figcaption><strong>Explain this number.</strong> A line's total worked out step by step, down to the fringe that stops at its cutoff.</figcaption>
+        </figure>
+        <figure class="snap">
+          <a href="assets/shots/setup.webp">
+            <picture>
+              <source srcset="assets/shots/setup.webp" type="image/webp">
+              <img src="assets/shots/setup.png" width="1160" height="460" loading="lazy" decoding="async" alt="The Budget Setup window on its Fringes tab: eight fringes with description, rate, percent or flat per hour, cutoff, how many lines use each one and its total.">
+            </picture>
+          </a>
+          <figcaption><strong>Budget Setup.</strong> Every fringe in one grid: percent or flat per hour, its cutoff, the lines that use it and what it adds up to.</figcaption>
+        </figure>
+        <figure class="snap">
+          <a href="assets/shots/compare.webp">
+            <picture>
+              <source srcset="assets/shots/compare.webp" type="image/webp">
+              <img src="assets/shots/compare.png" width="1440" height="900" loading="lazy" decoding="async" alt="The Compare screen: draft 3 of an invented feature next to its saved draft 2, with the difference and the percent change for each category.">
+            </picture>
+          </a>
+          <figcaption><strong>Compare.</strong> This draft against a saved version, category by category, with the difference in money and percent.</figcaption>
+        </figure>
+        <figure class="snap">
+          <a href="assets/shots/cost-report.webp">
+            <picture>
+              <source srcset="assets/shots/cost-report.webp" type="image/webp">
+              <img src="assets/shots/cost-report.png" width="1440" height="900" loading="lazy" decoding="async" alt="The topsheet with cost report columns: actual spending, estimate to complete, estimate at completion, variance and percent spent for each category, with one category over budget shown in red.">
+            </picture>
+          </a>
+          <figcaption><strong>Cost report.</strong> Actual spending from accounting next to the budget: what is left to spend, where each category will land and how much is spent.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="news" aria-labelledby="news-title">
+    <div class="wrap news">
+      <div>
+        <p class="kicker">Release notes</p>
+        <h2 id="news-title">What's new</h2>
+        <p><a href="releases/">Every release</a></p>
+      </div>
+      <div class="box">
+        <!-- whatsnew:start (generated by scripts/site.py from the newest docs/releases/*.md: edit that, then run python3 scripts/site.py) -->
+        <p class="wn-ver">Method Budget 0.2.1</p>
+        <p>Safer saving and opening: budgets are written the same careful way everywhere, and oversized files are refused instead of slowing the app down.</p>
+        <ul class="wn-list">
+          <li><strong>Saving through a link keeps the link.</strong> A budget opened through a symbolic link now saves into the file the link points to, instead of replacing the link with a copy.</li>
+          <li><strong>The command line and shared folders save as carefully as the app.</strong> Each save writes a complete new file before it replaces the old one, so a crash or a full disk mid-save never leaves half a budget or a stray temporary file behind.</li>
+          <li><strong>Oversized files are refused.</strong> A budget or a collaborator's change file larger than 256 MB is turned away with a clear message instead of filling memory.</li>
+        </ul>
+        <!-- whatsnew:end -->
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="formats" aria-labelledby="formats-title">
+    <div class="wrap">
+      <p class="kicker">Works with what you have</p>
+      <h2 id="formats-title">Bring your budgets with you</h2>
+      <p class="intro">Switching shouldn't mean retyping. Method Budget opens the open files
+        other budgeting apps and spreadsheets export, checks every figure against the totals
+        in the file, and saves everything back out in open formats anyone can read.</p>
+      <div class="fmt-grid">
+        <div class="fmt-card">
+          <h3>Budgets from Movie Magic Budgeting</h3>
+          <p>Export from your own copy (File &gt; Export) and open it here. Every account,
+            line, fringe, global, group, charge and credit comes across, then the review
+            compares each total with the export's own.</p>
+          <ul class="fmt-list">
+            <li><span>JSON</span> Best: everything the export carries</li>
+            <li><span>XML (Advanced)</span> The same as JSON</li>
+            <li><span>Excel</span> Nearly the same</li>
+            <li><span>XML (Basic)</span> No groups or globals, whole units</li>
+            <li><span>Tab-delimited</span> Account totals only</li>
+          </ul>
+        </div>
+        <div class="fmt-card">
+          <h3>Spreadsheets and accounting</h3>
+          <p>Map the columns once and bring in the rest of your world.</p>
+          <ul class="fmt-list">
+            <li><span>Excel, CSV, tab</span> Department sheets become budget lines</li>
+            <li><span>Excel, CSV, tab</span> Accounting exports become actuals for cost reports</li>
+            <li><span>.mthd</span> Fringes, globals and setup from any other budget</li>
+          </ul>
+        </div>
+        <div class="fmt-card">
+          <h3>Out, in open formats</h3>
+          <p>Nothing you make here is locked in.</p>
+          <ul class="fmt-list">
+            <li><span>.mthd</span> Plain, documented JSON with a published spec</li>
+            <li><span>Excel</span> Topsheet, accounts, detail and setup in one workbook</li>
+            <li><span>CSV, tab</span> Account-level files for accounting</li>
+            <li><span>PDF</span> Saved report layouts, ready to send</li>
+          </ul>
+        </div>
+      </div>
+      <p class="fine">Method Budget reads only the open files other apps export for their
+        users, never their native files. It is independent and not affiliated with or
+        endorsed by Entertainment Partners. Movie Magic is a trademark of Entertainment
+        Partners.</p>
+    </div>
+  </section>
+
+  <section class="band alt" id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <p class="kicker">Features</p>
+      <h2 id="features-title">Everything a production budget needs</h2>
+      <p class="intro">All of this is built and in the app today. Open a group to see what is in it;
+        the dashed box at the end is what comes next.</p>
+      <!-- features:start (generated by scripts/site.py from docs/features.toml: edit that, then run python3 scripts/site.py) -->
+      <div class="groups">
+        <details class="group" id="g-engine">
+          <summary>
+            <span class="group-head"><span class="group-title">Budgeting engine</span> <span class="group-count">8</span></span>
+            <span class="group-teaser">Topsheet, accounts and detail lines, Money to the cent, Formulas and globals, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Topsheet, accounts and detail lines</strong> The familiar three levels, with every total rolling up live as you type.</li>
+            <li><strong>Money to the cent</strong> Every amount is kept in whole cents and rounds the way production budgets have always rounded, with an exact mode if you want one.</li>
+            <li><strong>Formulas and globals</strong> Amount, quantity and rate cells take formulas and named globals; change a global and every line that uses it follows.</li>
+            <li><strong>Currencies</strong> Any line can be in its own currency, converted to the budget's base currency at rates you set.</li>
+            <li><strong>Groups and what-ifs</strong> Tag lines into groups, leave a group out of the total to see a what-if, and get back to the exact cent when you put it back.</li>
+            <li><strong>Explain this number</strong> Trace any total down to the lines, fringes, cutoffs, ranges and rounding steps that make it up.</li>
+            <li><strong>Overtime helper</strong> Work out a day or a week of straight time, overtime bands and sixth and seventh days, then write the pay into the line.</li>
+            <li><strong>Fast on big budgets</strong> An edit recalculates in about 5 ms on a 5,000-line budget.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-fringes">
+          <summary>
+            <span class="group-head"><span class="group-title">Fringes, globals, charges and credits</span> <span class="group-count">6</span></span>
+            <span class="group-teaser">Fringes with cutoffs and ranges, Globals with details, Contractual charges, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Fringes with cutoffs and ranges</strong> Percent and flat fringes, cutoffs per earner, fringe ranges across several lines, unit-hour flats and four ways to post them.</li>
+            <li><strong>Globals with details</strong> Give a global a description, a unit and decimals, show it by name in cells, and see the formulas behind a selection.</li>
+            <li><strong>Contractual charges</strong> Percent and flat charges with exclusions, a live preview while you type, and the percent shown on the topsheet if you want it.</li>
+            <li><strong>Credits</strong> Credit rows show gross, excluded fringes, net and how far you are from a cap.</li>
+            <li><strong>Apply panel</strong> Select lines, then tick fringes, groups, sets and locations on or off, with live totals for the selection.</li>
+            <li><strong>In-use counts</strong> Every setup list shows how many lines use each item and what they cost, warns before you delete one in use, and finds them in a click.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-editor">
+          <summary>
+            <span class="group-head"><span class="group-title">Editing, split view and history</span> <span class="group-count">9</span></span>
+            <span class="group-teaser">Keyboard-first grid, Type-ahead and add on the fly, Never lose work, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Keyboard-first grid</strong> Drill in, climb out, step between accounts, fill down and move rows without touching the mouse; a shortcut sheet lists every key.</li>
+            <li><strong>Type-ahead and add on the fly</strong> Units, currencies, sets, locations and globals complete as you type, and a new one can be added right from the cell.</li>
+            <li><strong>Never lose work</strong> Autosave into the file, recovery copies for untitled budgets, rolling backups and a restore after a crash.</li>
+            <li><strong>Budget tabs and split view</strong> Open several budgets as tabs, each with its own undo, and put two side by side in one window.</li>
+            <li><strong>History list</strong> Every undo step is listed by name and time; click one to go back to it, or save it as a version.</li>
+            <li><strong>Find and replace</strong> Search descriptions, account numbers, fringes, globals, groups, notes and formulas, then replace only in the results you tick, as one undo step.</li>
+            <li><strong>Copy rows with everything on them</strong> Rows keep their fringes, groups, notes, style and ranges when copied, even between budgets, with a review of what the paste will change.</li>
+            <li><strong>Notes</strong> Dated notes on lines, accounts and categories, and a notes list that works as a review checklist.</li>
+            <li><strong>Signed and notarized Mac app</strong> The Mac app is signed and notarized by Apple, so it opens like any other app with no extra security step.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-versions">
+          <summary>
+            <span class="group-head"><span class="group-title">Versions, compare, diff and merge</span> <span class="group-count">7</span></span>
+            <span class="group-teaser">Named versions, Compare up to 16 budgets, Original and variance columns, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Named versions</strong> Save, rename, annotate and restore versions, all kept inside the budget file.</li>
+            <li><strong>Compare up to 16 budgets</strong> Versions or other files side by side at topsheet and account level, with sum, average and variance columns, down to detail lines.</li>
+            <li><strong>Original and variance columns</strong> Keep a locked baseline and see each account's change from it right in the grid.</li>
+            <li><strong>What changed</strong> A plain-words diff of two budgets or versions: every changed line, field and setup item, with the money it moved.</li>
+            <li><strong>Three-way merge</strong> Two copies that changed apart merge on their own where they touched different things; real clashes are listed for you to pick.</li>
+            <li><strong>Share-ready copies</strong> Save a dated snapshot, optionally without notes or private info, that opens read-only and compares back against the original.</li>
+            <li><strong>Small version history</strong> Versions can be stored as compact patches, so ten versions of a large budget take about the space of one.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-actuals">
+          <summary>
+            <span class="group-head"><span class="group-title">Actuals and cost reports</span> <span class="group-count">2</span></span>
+            <span class="group-teaser">Import actuals, Cost report</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Import actuals</strong> Bring in transactions from CSV, tab-delimited or Excel accounting exports with a column mapping, duplicate checks and a review of unknown accounts.</li>
+            <li><strong>Cost report</strong> Budget, actual to date, estimate to complete and variance by account, with each account's estimate method your choice.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-reports">
+          <summary>
+            <span class="group-head"><span class="group-title">Reports, PDF and spreadsheets</span> <span class="group-count">6</span></span>
+            <span class="group-teaser">Reports saved in the budget, Live preview, More than the topsheet, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Reports saved in the budget</strong> Pick sections, accounts and layout, save them as named presets with header and footer fields, and print straight to PDF.</li>
+            <li><strong>Live preview</strong> The setup dialog shows the printed pages as you change them, with page navigation and a jump list of sections.</li>
+            <li><strong>More than the topsheet</strong> Category summaries, account detail, setup tables, chart of accounts, group totals, budget information and a notes list.</li>
+            <li><strong>Spreadsheet export</strong> One Excel workbook with topsheet, accounts, detail and setup tables, plus CSV and tab-delimited files for accounting.</li>
+            <li><strong>Spreadsheet import</strong> Turn any department's Excel, CSV or tab-delimited sheet into budget lines with a column mapping and a line-by-line check of the totals.</li>
+            <li><strong>Import from other budgeting apps</strong> Open a budget from another program's JSON, XML, Excel or tab-delimited export, with a line-by-line check against that program's own totals.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-setup">
+          <summary>
+            <span class="group-head"><span class="group-title">Setup library and templates</span> <span class="group-count">6</span></span>
+            <span class="group-teaser">Start from another budget, Personal setup library, Tag presets and line blocks, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Start from another budget</strong> Import setup items from any budget, with what they depend on, or start a new budget from a template.</li>
+            <li><strong>Personal setup library</strong> Keep your fringes, globals, groups and the rest in a library file of your own and copy them in and out with a conflict review.</li>
+            <li><strong>Tag presets and line blocks</strong> Save a set of tags or a block of lines once and apply or insert them anywhere.</li>
+            <li><strong>Rename everywhere</strong> Rename a fringe, global, group or unit and every reference follows, formulas included, as one undo step.</li>
+            <li><strong>Renumber accounts</strong> Change the account numbering pattern and preview every old and new number before it applies.</li>
+            <li><strong>Sub-budgets</strong> Make a filtered copy by categories, accounts, groups, sets or locations, for a department or a unit.</li>
+          </ul>
+        </details>
+        <details class="group" id="g-cli">
+          <summary>
+            <span class="group-head"><span class="group-title">Command line and git</span> <span class="group-count">4</span></span>
+            <span class="group-teaser">Open file format, Scriptable command line, Batch edits, and more</span>
+          </summary>
+          <ul class="feats">
+            <li><strong>Open file format</strong> Budgets are <code>.mthd</code> files: plain, documented JSON that diffs cleanly and that any tool can read.</li>
+            <li><strong>Scriptable command line</strong> <code>method</code> checks budgets, prints totals, draws reports as PDF, HTML or CSV, and exports and imports spreadsheets, with no window and no network.</li>
+            <li><strong>Batch edits</strong> <code>method set</code> and <code>method apply</code> run edit scripts all or nothing, with a dry run that shows what would change.</li>
+            <li><strong>Git merge driver</strong> Keep budgets in git and let <code>method merge-driver</code> merge edits to different lines, flagging only real conflicts.</li>
+          </ul>
+        </details>
+      </div>
+      <section class="soon" aria-labelledby="g-soon">
+        <h3 id="g-soon">On the roadmap</h3>
+        <ul class="feats">
+          <li><strong>Windows and Linux, tested</strong> Installers for both are built today; printing, keys and file types still need a hands-on check.</li>
+          <li><strong>Review files</strong> A reviewer marks up a read-only copy, and their comments come back in a small file you merge.</li>
+          <li><strong>Incentive modeling</strong> Qualified spend by location, several programs side by side, caps and what-ifs, from rules you enter yourself.</li>
+          <li><strong>Schedule-linked quantities</strong> Read day counts from a schedule's export and let them drive your globals.</li>
+          <li><strong>Accessibility and translations</strong> A full accessibility pass and the app in more languages.</li>
+          <li><strong>Work on a budget together</strong> Several people in one budget at once, through a shared Dropbox or iCloud folder or a live link, with who changed what and undo that only takes back your own edits.</li>
+          <li><strong>Rate card lookup</strong> Pick a union classification and fill in the rate from public rate cards, with the source and effective date shown.</li>
+          <li><strong>New project window</strong> Start a budget from one window with its title, chart of accounts, schedule, currency and rate setup, ready to fill in.</li>
+        </ul>
+      </section>
+      <!-- features:end -->
+    </div>
+  </section>
+
+  <section class="band" id="open-files" aria-labelledby="open-title">
+    <div class="wrap split">
+      <div>
+        <p class="kicker">Why open files</p>
+        <h2 id="open-title">Your budget is a file you own</h2>
+        <p class="intro">A budget is the record of months of decisions. It should outlive any
+          app, any subscription and any company, including this one.</p>
+        <ul class="points">
+          <li><strong>Plain, documented JSON.</strong> Budgets are <code>.mthd</code> files with a
+            published specification. Any tool can read them, today or in twenty years.</li>
+          <li><strong>Exact money.</strong> Amounts are whole cents and rates are written as
+            typed, so the same budget always produces the same bytes.</li>
+          <li><strong>Made for version control.</strong> Files diff line by line, and a git merge
+            driver combines two people's edits to the same budget.</li>
+          <li><strong>On your disk, not ours.</strong> Save a budget wherever you keep your
+            work. Nothing is uploaded, and the app works with no connection.</li>
+        </ul>
+        <p class="fine"><a href="https://github.com/ssandweiss/method-budget/blob/main/docs/FORMAT.md" data-repo="docs/FORMAT.md">Read the file format</a></p>
+      </div>
+      <div>
+<pre class="code"><code><span class="c">// one detail line, as written in the file</span>
+{
+  <span class="k">"id"</span>: 1042,
+  <span class="k">"description"</span>: "Director of photography",
+  <span class="k">"amount"</span>: "PREP_WKS + SHOOT_WKS",
+  <span class="k">"unit"</span>: "Weeks",
+  <span class="k">"rate"</span>: "4850",
+  <span class="k">"fringes"</span>: ["HP", "PT"],
+  <span class="k">"groups"</span>: ["Main unit"]
+}</code></pre>
+        <p class="caption">Formulas are stored as typed, and fields left at their default are
+          left out, so a change to one line is a change to a few lines of the file.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="keyboard" aria-labelledby="keys-title">
+    <div class="wrap split">
+      <div>
+        <p class="kicker">Keyboard first</p>
+        <h2 id="keys-title">Hands stay on the keys</h2>
+        <p class="intro">Budgeting is typing. Drill into an account, climb back to the
+          topsheet, step to the next account, fill down and move rows without reaching for
+          the mouse.</p>
+        <p>Type-ahead completes units, currencies, sets, locations and globals as you type,
+          and a new one can be added right from the cell. A shortcut sheet lists every key.</p>
+        <p class="fine">Shown with Mac keys. On Windows and Linux, Ctrl takes the place of
+          <span aria-hidden="true">&#8984;</span><span class="sr">Command</span> and Alt the place of
+          <span aria-hidden="true">&#8997;</span><span class="sr">Option</span>.</p>
+      </div>
+      <table class="keys">
+        <caption class="sr">Some of the keyboard shortcuts</caption>
+        <tbody>
+          <tr><th scope="row"><kbd>Return</kbd></th><td>Open the category or account</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd><span aria-hidden="true">&uarr;</span><span class="sr">Up arrow</span></kbd></th><td>Up a level</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd><span aria-hidden="true">&#8679;</span><span class="sr">Shift</span></kbd><kbd><span aria-hidden="true">&uarr;</span><span class="sr">Up arrow</span></kbd></th><td>Go to the topsheet</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd><span aria-hidden="true">&rarr;</span><span class="sr">Right arrow</span></kbd></th><td>Next account (with <span aria-hidden="true">&larr;</span><span class="sr">Left arrow</span>, the previous one)</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd><span aria-hidden="true">&#8679;</span><span class="sr">Shift</span></kbd><kbd>D</kbd></th><td>Fill down</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8997;</span><span class="sr">Option</span></kbd><kbd><span aria-hidden="true">&uarr;</span><span class="sr">Up arrow</span></kbd></th><td>Move the selected rows up (with <span aria-hidden="true">&darr;</span><span class="sr">Down arrow</span>, down)</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd>E</kbd></th><td>Explain the total under the cursor</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd><span aria-hidden="true">&#8679;</span><span class="sr">Shift</span></kbd><kbd>F</kbd></th><td>Find and replace</td></tr>
+          <tr><th scope="row"><kbd><span aria-hidden="true">&#8984;</span><span class="sr">Command</span></kbd><kbd>?</kbd></th><td>Every shortcut, on one sheet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="band" id="cli" aria-labelledby="cli-title">
+    <div class="wrap">
+      <p class="kicker">Command line and coding agents</p>
+      <h2 id="cli-title">The same engine, without the window</h2>
+      <p class="intro">The <code>method</code> command reads and writes budgets with no window
+        and no network, so budgets fit into scripts, build steps and automated checks.</p>
+<pre class="term"><code><span class="p">$ </span>method show my-film.mthd                  <span class="c"># the topsheet</span>
+<span class="p">$ </span>method check my-film.mthd                 <span class="c"># recalculate, report problems</span>
+<span class="p">$ </span>method totals my-film.mthd --json         <span class="c"># every total, in cents</span>
+<span class="p">$ </span>method explain my-film.mthd net           <span class="c"># how a total is made up</span>
+<span class="p">$ </span>method diff old.mthd new.mthd             <span class="c"># what changed, in plain words</span>
+<span class="p">$ </span>method report my-film.mthd -o budget.pdf  <span class="c"># a PDF report</span></code></pre>
+      <div class="cards after-term">
+        <div class="card">
+          <span class="badge now">Available now</span>
+          <h3>Command line</h3>
+          <p>Check budgets, print totals, draw reports as PDF, HTML or CSV, export and import
+            spreadsheets, and run batch edits all or nothing with a dry run first. A git
+            merge driver merges edits to different lines on its own.
+            <a href="https://github.com/ssandweiss/method-budget/blob/main/docs/CLI.md" data-repo="docs/CLI.md">Every command</a></p>
+        </div>
+        <div class="card">
+          <h3>Coding agents</h3>
+          <p>An MCP server lets Claude Code and other agents open, read and edit budgets
+            through the same engine, with the same exact arithmetic. It only touches the
+            folders you allow and nothing is sent anywhere.
+            <a href="https://github.com/ssandweiss/method-budget/blob/main/docs/MCP.md" data-repo="docs/MCP.md">How to connect</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="download" aria-labelledby="download-title">
+    <div class="wrap">
+      <p class="kicker">Download</p>
+      <h2 id="download-title">Get Method Budget</h2>
+      <p class="intro">Download the Mac app, or build it from source in a few minutes with
+        nothing but Rust.</p>
+      <div class="cards">
+        <div class="card">
+          <span class="badge now">Available now</span>
+          <h3>Mac app</h3>
+          <p>For Apple silicon and Intel, signed and notarized by Apple so it opens like any
+            other app. It keeps itself up to date. Windows and Linux builds are included but
+            not tested yet.</p>
+          <p><a href="https://github.com/ssandweiss/method-budget/releases/latest">Download the latest release</a></p>
+        </div>
+        <div class="card">
+          <span class="badge now">Available now</span>
+          <h3>Build from source</h3>
+          <p>Install <a href="https://rustup.rs">Rust</a>, get the <a href="https://github.com/ssandweiss/method-budget" data-repo="">code</a>, then from the checkout:</p>
+          <pre><code>cargo run -p method-app</code></pre>
+          <p>Installers, the command line and the one-time macOS security step are in the
+            <a href="https://github.com/ssandweiss/method-budget/blob/main/docs/INSTALL.md" data-repo="docs/INSTALL.md">install guide</a>.</p>
+        </div>
+      </div>
+      <div class="alpha-note">
+        <span class="badge alpha">Early alpha</span>
+        <p>Method Budget is new. It's tested against thousands of figures, but you will find
+          rough edges, and the math is worth a second look before a number leaves the room.
+          Keep a copy of budgets that matter, and when something looks wrong,
+          <a href="#help">tell us</a>: bugs get fixed fast at this stage.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="help" aria-labelledby="help-title">
+    <div class="wrap">
+      <p class="kicker">Build it with us</p>
+      <h2 id="help-title">Found a bug? Missing something?</h2>
+      <p class="intro">Every report makes the next version better. A wrong total, a crash, an
+        import that doesn't add up or a feature you lean on elsewhere: open an issue and it
+        goes straight to the people building the app.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/ssandweiss/method-budget/issues/new?template=bug.yml">Report a bug</a>
+        <a class="btn ghost" href="https://github.com/ssandweiss/method-budget/issues/new?template=feature.yml">Ask for a feature</a>
+        <a class="btn ghost" href="https://github.com/ssandweiss/method-budget/issues">See open issues</a>
+      </div>
+      <p class="fine">Please never attach a real budget: an invented one that shows the problem
+        is always enough, and the app's sample budgets are a good start.</p>
+    </div>
+  </section>
+
+  <section class="band alt" id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <p class="kicker">FAQ</p>
+      <h2 id="faq-title">Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Is it an alternative to Movie Magic Budgeting?</summary>
+          <p>Yes: a free, open-source one that runs on your own computer and opens Movie Magic
+            Budgeting's exports (JSON, XML, Excel and tab-delimited), checking every figure as
+            it comes in. See <a href="#formats">Bring your budgets with you</a>.</p>
+        </details>
+        <details>
+          <summary>Is Method Budget affiliated with other budgeting software?</summary>
+          <p>No. Method Budget is an independent, clean-room project, not affiliated with
+            Entertainment Partners or Movie Magic Budgeting.</p>
+        </details>
+        <details>
+          <summary>Can it open budgets from other apps?</summary>
+          <p>Yes, from the open files they export, never their native files. A Movie Magic
+            Budgeting budget comes in from its JSON, XML, Excel or tab-delimited export (JSON
+            carries the most), and any spreadsheet comes in with a column mapping, each with a
+            line-by-line check against the totals in the file. See
+            <a href="#formats">Bring your budgets with you</a>.</p>
+        </details>
+        <details>
+          <summary>Where does my data live?</summary>
+          <p>On your own computer, in files you save wherever you like. There is no account
+            and no cloud. The app goes online only to check for its own updates, and you can
+            turn that off.</p>
+        </details>
+        <details>
+          <summary>What does it cost?</summary>
+          <p>Nothing. Method Budget is free and open source, dual-licensed under MIT or
+            Apache-2.0, so it can't be taken away from you.</p>
+        </details>
+        <details>
+          <summary>Which computers does it run on?</summary>
+          <p>The Mac comes first: the app is built and used there every day. Windows and Linux
+            installers are built from the same code and are waiting on a hands-on test.</p>
+        </details>
+        <details>
+          <summary>Can I script it or keep budgets in git?</summary>
+          <p>Yes. The <code>method</code> command line checks budgets, prints totals, draws
+            reports and makes batch edits, and its git merge driver combines two people's
+            edits to the same budget.</p>
+        </details>
+        <details>
+          <summary>How can I help?</summary>
+          <p>Try it, report what breaks, and send patches. Please never attach a real budget
+            to an issue: an invented one that shows the problem is always enough. Start with
+            the <a href="https://github.com/ssandweiss/method-budget" data-repo="">repository</a>.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <picture>
+      <source srcset="assets/brand/wordmark-dark.svg" media="(prefers-color-scheme: dark)">
+      <img src="assets/brand/wordmark.svg" alt="Method Budget" width="148" height="22">
+    </picture>
+    <nav aria-label="Footer">
+      <a href="releases/">Release notes</a>
+      <a href="https://github.com/ssandweiss/method-budget" data-repo="">Source code</a>
+      <a href="https://github.com/ssandweiss/method-budget/blob/main/docs/FORMAT.md" data-repo="docs/FORMAT.md">File format</a>
+      <a href="https://github.com/ssandweiss/method-budget/blob/main/docs/CLI.md" data-repo="docs/CLI.md">Command line</a>
+      <a href="https://github.com/ssandweiss/method-budget/blob/main/docs/ROADMAP.md" data-repo="docs/ROADMAP.md">Roadmap</a>
+      <a href="https://github.com/ssandweiss/method-budget/blob/main/CLEAN-ROOM.md" data-repo="CLEAN-ROOM.md">Clean room</a>
+    </nav>
+    <p>Free and open source, dual-licensed under MIT or Apache-2.0. An independent,
+      clean-room project by the Method Budget contributors. Trademarks belong to their
+      respective owners.</p>
+    <p>This site sets no cookies, runs no scripts and loads nothing from anyone else.</p>
+  </div>
+</footer>
+</body>
+</html>

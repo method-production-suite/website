@@ -1,0 +1,44 @@
+/* The suite's shared furniture, on every page of every app: a bar above the page's own
+   header that links the four apps and the hub, and a band under the page's own footer.
+   It names no color: it uses the token names every Method site defines (tokens.css), so
+   on each app's page it takes that app's accent. Classes are prefixed `ms-` so they never
+   meet an app's own. */
+
+.ms-bar {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--rule);
+  font: 13px/1.3 var(--sans);
+  color: var(--muted);
+}
+.ms-bar .ms-in {
+  max-width: 1120px; margin: 0 auto; padding: 6px 16px;
+  display: flex; align-items: center; gap: 4px 18px; overflow-x: auto; white-space: nowrap;
+  scrollbar-width: none;
+}
+.ms-bar .ms-in::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .ms-bar .ms-in { padding: 6px 28px; } }
+.ms-bar a { color: var(--ink-soft); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 0; }
+.ms-bar a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: .18em; }
+.ms-bar a[aria-current="page"] { color: var(--ink); font-weight: 650; }
+.ms-bar img { width: 14px; height: 14px; display: block; }
+.ms-bar .ms-home { font-weight: 650; color: var(--ink); margin-right: auto; }
+.ms-bar .ms-does { color: var(--muted); font-weight: 400; }
+@media (max-width: 720px) { .ms-bar .ms-does, .ms-bar .ms-name-long { display: none; } }
+
+.ms-band {
+  border-top: 1px solid var(--rule);
+  background: var(--surface-2);
+  font: 14px/1.5 var(--sans);
+  color: var(--muted);
+}
+.ms-band .ms-in { max-width: 1120px; margin: 0 auto; padding: 28px 16px 36px; }
+@media (min-width: 640px) { .ms-band .ms-in { padding: 28px 28px 36px; } }
+.ms-band .ms-title { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 650; text-decoration: none; margin-bottom: 14px; }
+.ms-band .ms-title img { width: 18px; height: 18px; }
+.ms-band ul { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px 24px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.ms-band li a { display: flex; gap: 10px; align-items: flex-start; text-decoration: none; color: var(--ink-soft); }
+.ms-band li a:hover strong { text-decoration: underline; text-underline-offset: .18em; }
+.ms-band li img { width: 28px; height: 28px; flex: none; }
+.ms-band li strong { display: block; color: var(--ink); font-weight: 650; }
+.ms-band .ms-fine { margin: 0; font-size: 13px; }
+.ms-band .ms-fine a { color: var(--ink-soft); }

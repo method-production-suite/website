@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+<!-- Method Budget favicon. Drawn by scripts/make-brand.py; edit that, not this file. -->
+<style>path{fill:#0E7468}@media (prefers-color-scheme:dark){path{fill:#2CC7B2}}</style>
+<path fill-rule="evenodd" d="M3 1H10V4.5a.5.5 0 0 0 .5.5H14V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1ZM6 7h6v2H6ZM4 10.5h8v1H4ZM4 12.5h8v1H4Z"/><path opacity=".5" d="M11 1.6L13.4 4H11.5a.5.5 0 0 1-.5-.5Z"/>
+</svg>

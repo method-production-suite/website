@@ -1,0 +1,91 @@
+/* Method Schedule brand tokens: the one place the site's colors and type are defined.
+   docs/BRAND.md explains them and lists the contrast checks (scripts/make-brand.py
+   --contrast computes them and --check fails on a weak pair).
+
+   The token names, the neutrals (paper, ink, rules, shadow), the amber note and the type
+   are Method Budget's, value for value, so the two sites read as one family and the
+   neutral part can later move into one shared tokens file. What is ours is the accent:
+   the desktop app's own slate blue (crates/method-schedule-app/ui/styles.css, --accent),
+   and the stripboard colors the home page's illustration uses. */
+
+:root {
+  /* Surfaces: warm paper behind white cards (shared with Method Budget). */
+  --bg: #F7F6F2;
+  --surface: #FFFFFF;
+  --surface-2: #EFEDE7;
+
+  /* Text (shared). */
+  --ink: #1C2228;
+  --ink-soft: #3A424C;
+  --muted: #59626D;
+
+  /* Lines (shared). --rule-strong is for borders that carry meaning (3:1 or more). */
+  --rule: #DEDBD3;
+  --rule-strong: #8F897C;
+
+  /* Slate blue, the app's accent. */
+  --accent: #2F5FB3;
+  --accent-strong: #244A8F;
+  --accent-ink: #FFFFFF;  /* text on a slate blue fill */
+  --accent-soft: #E3EAF7; /* close to the app's selection color */
+
+  /* Pencil amber: the family's caution color (the Early alpha pill, notes). Shared. */
+  --note: #8A5A00;
+  --note-fill: #D29A12;
+
+  --code-bg: #EFEDE7;
+  --shadow: 0 1px 2px rgba(28, 34, 40, .06), 0 10px 32px rgba(28, 34, 40, .08);
+
+  /* The terminal sample stays dark in both schemes, like a terminal. */
+  --term-bg: #14181C;
+  --term-ink: #E4E8EC;
+  --term-dim: #9AA3AD;
+  --term-prompt: #7AA2F0;
+  --term-rule: #2B3138;
+
+  /* The app illustration's stripboard: strips by the usual convention (interior day
+     white, exterior day yellow, interior night blue, exterior night green), banners,
+     and the dark day-break row. The app's own values. */
+  --strip-int-day: #FFFFFF;
+  --strip-ext-day: #FFF4BF;
+  --strip-int-night: #D8E5FB;
+  --strip-ext-night: #D6EFD6;
+  --strip-banner: #F3E3F7;
+  --break-bg: #1F2633;
+  --break-ink: #E9EDF3;
+
+  /* Type: the system's own faces, as in the app. Nothing is downloaded (shared). */
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111417;
+    --surface: #1B1F24;
+    --surface-2: #22272E;
+    --ink: #E4E8EC;
+    --ink-soft: #C3CAD2;
+    --muted: #9AA3AD;
+    --rule: #2B3138;
+    --rule-strong: #67717D;
+    --accent: #7AA2F0;     /* the app's dark accent */
+    --accent-strong: #A5C1F6;
+    --accent-ink: #0E1420;
+    --accent-soft: #1C2A44;
+    --note: #E3B341;
+    --note-fill: #E3B341;
+    --code-bg: #22272E;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 32px rgba(0, 0, 0, .3);
+    --strip-int-day: #1F242D;
+    --strip-ext-day: #3A3520;
+    --strip-int-night: #1E2C45;
+    --strip-ext-night: #1F3524;
+    --strip-banner: #3A2A40;
+    --break-bg: #05070A;
+    --break-ink: #C9D1DE;
+    color-scheme: dark;
+  }
+}

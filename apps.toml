@@ -1,0 +1,71 @@
+# The Method Production Suite catalog. One entry per app drives the hub's app cards, the
+# suite bar on every page, the shared footer, the sitemap and the domain routing
+# (tools/build.py writes functions/_hosts.json from it). Copy rules: plain, specific,
+# no hype, no em dashes, never name another vendor's product.
+
+[suite]
+name = "Method Production Suite"
+domain = "methodproduction.com"
+org = "https://github.com/method-production-suite"
+pitch = "Open-source tools for making films, from the first draft to the last shoot day."
+lede = "Write the script, read it anywhere, schedule it and budget it, in free apps that run on your own computer and keep your work in open files."
+# Domains that only redirect, with where they go.
+redirects = [
+  { from = "methodproductionsuite.com", to = "https://methodproduction.com" },
+  { from = "methodscreenplay.com", to = "https://methodstoryteller.com" },
+  { from = "screepub.com", to = "https://methodreader.com" },
+]
+
+# Order is the order of a production: write, read, schedule, budget.
+
+[[app]]
+slug = "storyteller"
+name = "Method Storyteller"
+domain = "methodstoryteller.com"
+repo = "https://github.com/method-production-suite/method-storyteller"
+does = "Write"
+tagline = "Screenwriting that formats itself."
+blurb = "Tab and Enter move between scene heading, action, character and dialogue; pages break the way a production expects; Fountain is the native file, and .fdx files open and save."
+status = "Early alpha"
+# No site of its own yet: tools/build.py writes its page from this entry.
+source = "catalog"
+accent = ["#AE3D56", "#EE8DA2"]
+
+[[app]]
+slug = "reader"
+name = "Method Reader"
+domain = "methodreader.com"
+repo = "https://github.com/ssandweiss/screepub"
+does = "Read"
+tagline = "Screenplay PDFs, readable on your e-reader."
+blurb = "Drag a script PDF onto the window and get an e-book that reflows at any text size with the script's shape intact, then send it to the reader you already own. Formerly Screepub."
+status = "Released"
+source = "screepub"
+source_ref = "site/method-reader"
+accent = ["#7052BA", "#B49CF0"]
+
+[[app]]
+slug = "schedule"
+name = "Method Schedule"
+domain = "methodschedule.com"
+repo = "https://github.com/method-production-suite/method-scheduling"
+does = "Schedule"
+tagline = "Film and TV scheduling, from script to stripboard."
+blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open files on your own computer. Hands its shoot days straight to Method Budget."
+status = "Early alpha"
+source = "method-scheduling"
+source_ref = "main"
+accent = ["#2F5FB3", "#7AA2F0"]
+
+[[app]]
+slug = "budget"
+name = "Method Budget"
+domain = "methodbudget.com"
+repo = "https://github.com/method-production-suite/method-budget"
+does = "Budget"
+tagline = "Film and TV budgeting that shows its working."
+blurb = "Topsheet to detail, fringes, globals, versions and compare, and an explanation for every number. Opens the budgets other tools export."
+status = "Early alpha"
+source = "method-budget"
+source_ref = "main"
+accent = ["#0E7468", "#2CC7B2"]

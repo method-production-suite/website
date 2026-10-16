@@ -1,0 +1,64 @@
+/* Layout for the pages this repo writes (the hub, Method Storyteller's page, 404). The
+   rules are Method Schedule's site.css (the family's layout), cut to what these pages
+   use, plus the hub's app cards. Colors and type come from the page's tokens.css; this
+   file names no color. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 var(--sans); overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+img, svg { display: block; max-width: 100%; }
+a { color: var(--accent); text-underline-offset: .18em; }
+a:hover { color: var(--accent-strong); text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+code, pre { font-family: var(--mono); }
+pre { background: var(--code-bg); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 14px; margin: 0 0 16px; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+h2 { font-size: clamp(27px, 4vw, 38px); font-weight: 700; margin-bottom: 18px; }
+h3 { font-size: 18px; letter-spacing: -.01em; margin-bottom: 8px; }
+p { margin: 0 0 14px; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 640px) { .wrap { padding: 0 28px; } }
+.skip { position: absolute; left: 8px; top: -100px; z-index: 10; background: var(--surface); color: var(--ink); padding: 10px 16px; border: 2px solid var(--accent); border-radius: 8px; }
+.skip:focus { top: 8px; }
+
+.hero { padding: 56px 0 44px; }
+.hero h1 { margin: 0 0 24px; }
+.hero h1 img { height: clamp(26px, 5vw, 52px); width: auto; }
+.pitch { font-size: clamp(26px, 4.6vw, 44px); line-height: 1.15; letter-spacing: -.025em; font-weight: 650; margin: 0 0 18px; max-width: 20em; }
+.lede { font-size: clamp(17px, 2vw, 19px); color: var(--ink-soft); max-width: 40em; margin: 0 0 26px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+.btn { display: inline-block; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 16px; text-decoration: none; border: 2px solid var(--accent); line-height: 1.2; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); }
+.pill { display: inline-block; font-size: 13px; font-weight: 600; color: var(--note); border: 1px solid var(--note-fill); border-radius: 999px; padding: 2px 10px; }
+
+.pill.ok { color: var(--ink-soft); border-color: var(--rule-strong); }
+
+.band { padding: 64px 0; border-top: 1px solid var(--rule); }
+.band.alt { background: var(--surface); }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 760px) { .cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 22px; min-width: 0; }
+.band.alt .card { background: var(--bg); }
+.card p { color: var(--ink-soft); margin: 0; }
+
+/* ------------------------------------------------------------------ the hub */
+.hub-wm { height: clamp(24px, 4.2vw, 44px) !important; }
+.flow { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; counter-reset: step; }
+.flow li { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px 6px 6px; font-size: 15px; color: var(--ink-soft); }
+.flow li span { background: var(--surface-2); color: var(--ink); font-weight: 650; border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+.flow li + li::before { content: "\2192"; margin: 0 4px 0 -2px; color: var(--muted); order: -1; }
+
+.app-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 760px) { .app-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.app-card { background: var(--bg); border: 1px solid var(--rule); border-top: 4px solid var(--app-accent); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; }
+@media (prefers-color-scheme: dark) { .app-card { border-top-color: var(--app-accent-dark); } }
+.app-link { text-decoration: none; color: inherit; display: grid; grid-template-columns: 56px 1fr; column-gap: 16px; align-items: center; margin-bottom: 14px; }
+.app-link picture { grid-row: span 3; }
+.app-link .does { font-size: 13px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.app-link h3 { font-size: 22px; margin: 0; color: var(--ink); }
+.app-link:hover h3 { text-decoration: underline; text-underline-offset: .18em; }
+.app-link .tagline { margin: 2px 0 0; color: var(--ink-soft); font-weight: 600; }
+.app-card > p { color: var(--ink-soft); font-size: 16px; }
+.app-card .meta { margin: auto 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 15px; }

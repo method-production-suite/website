@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Method Reader: screenplay PDFs, readable on your e-reader</title>
+<meta name="description" content="Method Reader turns a screenplay PDF into an e-book that reflows on the reader you already own. Free, open source, and your script never leaves your machine. Formerly Screepub.">
+<link rel="canonical" href="https://methodreader.com/">
+<!-- Share cards. og:image must be absolute, and 1200x630 is the size every unfurler
+     expects. Regenerate og.png from og-card.html with `cargo xtask make-og`. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Method Reader">
+<meta property="og:url" content="https://methodreader.com/">
+<meta property="og:title" content="Method Reader: screenplay PDFs, readable on your e-reader">
+<meta property="og:description" content="Drag a screenplay PDF on the window and get an e-book that reflows at any text size with the script's shape intact. Free and open source. Your script never leaves your machine.">
+<meta property="og:image" content="https://methodreader.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Method Reader: reading scripts on an e-reader shouldn't be difficult.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Method Reader: screenplay PDFs, readable on your e-reader">
+<meta name="twitter:description" content="Drag a screenplay PDF on the window and get an e-book that reflows at any text size with the script's shape intact. Free and open source.">
+<meta name="twitter:image" content="https://methodreader.com/og.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111417" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/site.css">
+<!-- The script in the demo is set in the faces the app ships, self-hosted so nothing
+     about a visit is requested from a third party, which is the line the app holds
+     too. Both are SIL Open Font License 1.1: see THIRD-PARTY-NOTICES.md. The page
+     around them uses the system's own faces, like the rest of the family. -->
+<link rel="preload" href="fonts/courier-prime-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:400;font-display:swap;
+  src:url(fonts/courier-prime-400-latin-ext.woff2) format("woff2");
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:400;font-display:swap;
+  src:url(fonts/courier-prime-400-latin.woff2) format("woff2");
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:700;font-display:swap;
+  src:url(fonts/courier-prime-700-latin-ext.woff2) format("woff2");
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:700;font-display:swap;
+  src:url(fonts/courier-prime-700-latin.woff2) format("woff2");
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Literata";font-style:normal;font-weight:400;font-display:swap;
+  src:url(fonts/literata-400-latin-ext.woff2) format("woff2");
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Literata";font-style:normal;font-weight:400;font-display:swap;
+  src:url(fonts/literata-400-latin.woff2) format("woff2");
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="home" href="#top" aria-label="Method Reader, home">
+      <picture>
+        <source srcset="assets/brand/wordmark-dark.svg" media="(prefers-color-scheme: dark)">
+        <img src="assets/brand/wordmark.svg" width="212" height="22" alt="Method Reader">
+      </picture>
+    </a>
+    <nav class="nav" aria-label="Site">
+      <a href="#act2">How it reads</a>
+      <a href="#who">Who it's for</a>
+      <a href="#all-downloads">Downloads</a>
+      <a href="https://github.com/ssandweiss/screepub/blob/main/ROADMAP.md">Roadmap</a>
+      <a class="gh" href="https://github.com/ssandweiss/screepub" aria-label="Method Reader on GitHub" title="GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    </nav>
+    <a class="btn" href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-macOS.dmg">Download for macOS</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" id="hero"><a id="main" tabindex="-1"></a>
+    <div class="wrap">
+      <h1>
+        <picture>
+          <source srcset="assets/brand/wordmark-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="assets/brand/wordmark.svg" width="558" height="58" alt="Method Reader">
+        </picture>
+      </h1>
+      <p class="pitch">Reading scripts on an e&#8209;reader shouldn't be difficult.
+        <span class="answer">Method Reader makes it easy.</span></p>
+      <p class="lede">Drag a screenplay PDF onto the window and get an e-book that reflows at any text size, with the script's shape intact: scene headings, cues and dialogue where they belong. Then send it to the reader you already own.</p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-macOS.dmg">Download for macOS</a>
+        <span class="fine">Free and open source. No account. Works offline.</span>
+      </div>
+      <p class="renamed"><strong>Screepub is now Method Reader.</strong> Same app, same files, new name: it is joining the Method Production Suite. Until the release that renames it, the app and its downloads still say Screepub, and it keeps updating itself as before.</p>
+    </div>
+  </section>
+
+  <section class="act two" id="act2" aria-label="How it reads">
+    <div class="stick">
+      <div class="phase" id="p1">
+        <div class="slug">INT. YOUR E-READER - PAGE ONE</div>
+        <h2>Reading PDFs on an e&#8209;reader sucks.</h2>
+      </div>
+      <div class="phase out" id="p2">
+        <div class="slug">INT. THE SAME SCENE - TWO FILES</div>
+        <h2>Read scripts natively.<span class="answer">Adjustable to your preferences.</span></h2>
+      </div>
+      <div class="phase col out" id="p3">
+        <div class="slug">INT. ANY TEXT SIZE - CONTINUOUS</div>
+        <h2>Set it how you read.</h2>
+        <p class="lead">Every setting here is live. Change one and the script reflows exactly the way it will on your reader.</p>
+        <div class="panel" id="panel">
+          <!-- role=slider, not five buttons: this is one value with five stops,
+               and it keeps the whole panel to three tab stops instead of
+               seventeen. Segments stay clickable for a mouse. -->
+          <div class="row"><span id="lSize">Text size</span><span class="meter live" id="mSize"
+            data-k="size" role="slider" tabindex="0" aria-labelledby="lSize"
+            aria-valuemin="1" aria-valuemax="5" aria-valuenow="2"></span></div>
+          <div class="row"><span id="lMar">Margins</span><span class="meter live" id="mMar"
+            data-k="mar" role="slider" tabindex="0" aria-labelledby="lMar"
+            aria-valuemin="1" aria-valuemax="5" aria-valuenow="3"></span></div>
+          <div class="row"><span id="lLead">Line spacing</span><span class="meter live" id="mLine"
+            data-k="lead" role="slider" tabindex="0" aria-labelledby="lLead"
+            aria-valuemin="1" aria-valuemax="5" aria-valuenow="2"></span></div>
+          <div class="row"><span>Typeface</span><button class="pick" type="button" id="pFont">Courier Prime</button></div>
+          <div class="row"><span>Page numbers</span><button class="pick" type="button" id="pPg" aria-pressed="false">Off</button></div>
+          <div class="hintline">Every value here is live. Click, or use the arrow keys, to take over.</div>
+        </div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="dev" id="devA">
+          <div class="device"><div class="screen" id="scrA">
+            <!-- Decorative: this page is meant to be illegible, and its text is the
+                 same scene device B carries. Reading it aloud is pure noise. -->
+            <div class="pdfpage" id="pdfp" aria-hidden="true"></div>
+            <div class="zoom">100%</div>
+          </div><span class="chin">PDF</span></div>
+        </div>
+
+        <div class="dev" id="devB">
+          <div class="device"><div class="screen" id="scrB">
+            <div class="ebook" id="ebk">
+              <div class="view" id="ebkView"><div class="flow" id="ebkFlow" aria-hidden="true"></div></div>
+              <div class="loc"><span id="locL">Field Station</span><span id="locR">1 / 1</span></div>
+            </div>
+          </div><span class="chin ours">method reader</span></div>
+          <div class="pager" id="pager">
+            <button id="prev" type="button">&#8592; Prev</button>
+            <span class="count" id="pcount" role="status" aria-live="polite">Page 1 of 1</span>
+            <button id="next" type="button">Next &#8594;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="drop band alt">
+    <div class="wrap">
+    <div class="slug">INT. THE APP - ONE STEP</div>
+    <h2>Drag and drop.</h2>
+    <p class="lead">It's that simple. Fine tune anything you like afterwards, and see exactly what the device gets.</p>
+    <div class="shots">
+      <figure>
+        <img src="img/drop-light.png" width="1392" height="912" loading="lazy" decoding="async"
+          alt="The app's window waiting for a script: a dashed area that says Drop a screenplay PDF, with a Choose PDF button.">
+        <figcaption>Drop a screenplay PDF on the window.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/result-light.png" width="1392" height="912" loading="lazy" decoding="async"
+          alt="The same window after converting Field Station, an invented script: its title, its first page, and the question of what you read on.">
+        <figcaption>The book is ready to read or send.</figcaption>
+      </figure>
+    </div>
+    <div class="trans">CUT TO:</div>
+    </div>
+  </section>
+
+  <section class="beat band" id="who">
+    <div class="wrap">
+    <div class="slug">INT. WHOEVER READS THESE</div>
+    <h2>Built for people who read scripts.</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>WRITERS</h3>
+        <p>Reading your own draft on something that isn't a laptop. And when all you have is the PDF, getting the script back to edit, as Fountain or Final Draft's FDX (beta).</p>
+      </div>
+      <div class="card">
+        <h3>ACTORS</h3>
+        <p>Working from sides, at a text size you can actually read.</p>
+      </div>
+      <div class="card">
+        <h3>EVERYONE ELSE</h3>
+        <p>Anyone handed a production draft who would rather not read it hunched over a phone.</p>
+      </div>
+    </div>
+    <p class="note">Verified on a Kindle: over USB on the models that still mount as a drive, and by email on any of them. Newer Kindles speak MTP instead and never appear in Finder, so those go by email. Over USB a Kindle gets an AZW3 that Method Reader makes itself, with nothing else installed (beta, not yet tried on a Kindle); KFX looks better and is optional, needing Calibre and two other free tools; and email needs no tools at all and gets Amazon's own best layout. Kobo, tolino and reMarkable are written and code-tested, but nobody has plugged one in. <a href="https://github.com/ssandweiss/screepub#which-readers">The full device table is on GitHub.</a></p>
+    <p class="note">Also marked beta: the AZW3 Method Reader makes itself (beta); pictures from the script carried into the book, with a designed title card as its cover (beta); the FDX (beta); eject on Windows and Linux (beta on Windows and Linux); and My device isn't here, with It worked and It did not work (beta). A feature marked (beta) works in our tests, but has not been tried widely on real devices or apps yet: tell us how it goes.</p>
+    <div class="closer">
+      <a class="btn" href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-macOS.dmg">Download for macOS</a>
+      <span class="fine">Free. No account. Your script never leaves your machine.</span>
+    </div>
+    </div>
+  </section>
+
+  <section class="downloads band alt" id="all-downloads">
+    <div class="wrap">
+    <div class="slug">INT. THE DOWNLOAD PAGE - EVERY FILE</div>
+    <h2>Every download.</h2>
+    <p>
+      <strong>On a Mac, download <code>Screepub-macOS.dmg</code></strong>:
+      signed and notarized by Apple, for Macs with Apple silicon,
+      macOS 13 or later. It updates itself. The buttons above are that
+      file, and the same app runs on Windows and Linux. The files still
+      carry the app's earlier name until the release that renames them.
+    </p>
+    <p>
+      <strong>On an Intel Mac, version 0.9.0 is the last version.</strong>
+      It keeps working, but it will not be offered updates. To install it,
+      find 0.9.0 on <a href="https://github.com/ssandweiss/screepub/releases">the
+      releases page</a> and download its <code>Screepub-macOS.dmg</code>.
+    </p>
+    <!-- Each link names the file without a version, so /latest/download/
+         always reaches the newest one. The status column follows
+         docs/verification-ledger.md, the one ledger of who has verified
+         what, in the same words as the README's install table;
+         rust/crates/xtask/tests/site.rs holds this page to the ledger. -->
+    <table class="files" role="table">
+      <thead role="rowgroup">
+        <tr role="row"><th role="columnheader" scope="col">Computer</th><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">Status</th></tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <td role="cell">Mac</td>
+          <td role="cell"><a href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-macOS.dmg"><code>Screepub-macOS.dmg</code></a></td>
+          <td role="cell">Verified by a person, on an Apple silicon Mac. <a href="https://github.com/ssandweiss/screepub/issues">Reports welcome</a>.</td>
+        </tr>
+        <tr role="row">
+          <td role="cell">Linux: Debian, Ubuntu</td>
+          <td role="cell"><a href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-linux-amd64.deb"><code>Screepub-linux-amd64.deb</code></a></td>
+          <td role="cell">Built and checked automatically. Never installed by a person yet: <a href="https://github.com/ssandweiss/screepub/issues">reports welcome</a>.</td>
+        </tr>
+        <tr role="row">
+          <td role="cell">Linux: Fedora, openSUSE</td>
+          <td role="cell"><a href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-linux-x86_64.rpm"><code>Screepub-linux-x86_64.rpm</code></a></td>
+          <td role="cell">Built and checked automatically. Never installed by a person yet: <a href="https://github.com/ssandweiss/screepub/issues">reports welcome</a>.</td>
+        </tr>
+        <tr role="row">
+          <td role="cell">Linux: any other, 64-bit</td>
+          <td role="cell"><a href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-linux-x86_64.AppImage"><code>Screepub-linux-x86_64.AppImage</code></a></td>
+          <td role="cell">Built and checked automatically. Never run by a person yet: <a href="https://github.com/ssandweiss/screepub/issues">reports welcome</a>.</td>
+        </tr>
+        <tr role="row">
+          <td role="cell">Windows, 64-bit</td>
+          <td role="cell"><a href="https://github.com/ssandweiss/screepub/releases/latest/download/Screepub-windows-x64-setup.exe"><code>Screepub-windows-x64-setup.exe</code></a></td>
+          <td role="cell">Built and checked automatically. Never installed by a person yet: <a href="https://github.com/ssandweiss/screepub/issues">reports welcome</a>.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Command line, any platform: see the
+      <a href="https://github.com/ssandweiss/screepub/blob/main/docs/developers.md#install-the-command-line-converter">developer page</a>.
+      Who has checked each file, and how far:
+      <a href="https://github.com/ssandweiss/screepub/blob/main/docs/verification-ledger.md">the verification ledger</a>.
+    </p>
+    <p>
+      <strong>Windows will warn you.</strong> Method Reader for Windows is unsigned:
+      it carries no code-signing certificate, so SmartScreen
+      shows a &ldquo;publisher unknown&rdquo; screen the first time you run
+      it. Choose <strong>More info</strong>, then
+      <strong>Run anyway</strong>. Certificates cost money this project does
+      not spend yet; this note exists so the warning is expected rather than
+      alarming. The Windows installer also fetches Microsoft&rsquo;s WebView2
+      runtime once if your machine has none. Converting never touches the
+      network, on any platform.
+    </p>
+    <p><a href="https://github.com/ssandweiss/screepub/releases/latest">All files on the latest release &rarr;</a></p>
+    </div>
+  </section>
+
+  <div class="wrap end">FADE OUT.</div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <a class="gh" href="https://github.com/ssandweiss/screepub" aria-label="Method Reader on GitHub" title="GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+    </a>
+    <a href="https://github.com/ssandweiss/screepub/blob/main/ROADMAP.md">Roadmap</a>
+    <a href="https://github.com/ssandweiss/screepub/issues">Issues</a>
+    <a href="https://github.com/ssandweiss/screepub#license">MIT OR Apache-2.0</a>
+    <span class="right">&#169; the Method Reader contributors</span>
+  </div>
+</footer>
+
+<script>
+/* The demo script. Invented for this page: no real title, author or character
+   name ever reaches the site. Page markers mirror what Method Reader carries over
+   from the source PDF, and toggle with the PAGE NUMBERS setting. */
+window.SCENE = [
+  ['pg','14.'],
+  ['s','INT. FIELD STATION - NIGHT'],
+  ['x','The generator coughs once and dies. MARA works by the light of her phone, hands steady, and does not look up.'],
+  ['c','MARA'],['d','Give it a minute. It always comes back.'],
+  ['c','DELACROIX'],['d',"And if it doesn't?"],
+  ['x','She finds the housing bolt by feel. Turns it a quarter turn.'],
+  ['c','MARA'],['d','Then we do this in the dark.'],
+  ['x','The wind takes the tarp on the north wall and holds it open like a door nobody opened.'],
+  ['c','DELACROIX'],['d',"That's not an answer."],
+  ['c','MARA'],['d',"It's the one I have."],
+  ['x','He crosses to the window. Outside, the ridge is a black line against a slightly less black sky.'],
+  ['c','DELACROIX'],['d','Nineteen hours until the relief team. I counted.'],
+  ['c','MARA'],['d','Then stop counting.'],
+
+  ['pg','15.'],
+  ['x','The generator catches. Dies again. Catches.'],
+  ['x','Light comes up amber and unsteady, and the room assembles itself around them: the cot, the radio, the map with its four pins.'],
+  ['c','MARA (CONT’D)'],['d','There. Told you.'],
+  ['c','DELACROIX'],['d','You told me a minute. That was six.'],
+  ['c','MARA'],['d','I rounded.'],
+  ['x','She wipes her hands on her thigh and sits, finally, like the sitting costs her something.'],
+  ['c','DELACROIX'],['d','You should sleep.'],
+  ['c','MARA'],['d','You should stop saying that.'],
+  ['x','A long moment. The radio hisses, says nothing, hisses.'],
+  ['c','DELACROIX'],['d',"If the relief doesn't come."],
+  ['c','MARA'],['d',"They'll come."],
+  ['c','DELACROIX'],['d','If.'],
+
+  ['pg','16.'],
+  ['c','MARA'],['d','Then we walk out the way we walked in, and it takes four days instead of one, and you complain the entire time.'],
+  ['c','DELACROIX'],['d',"I don't complain."],
+  ['c','MARA'],['d',"You're complaining now."],
+  ['x',"He almost laughs. It is the first honest sound either of them has made all night."],
+  ['c','DELACROIX'],['d',"Get some sleep. I'll take the radio."],
+  ['x',"She doesn't argue, which frightens him more than the dark did."],
+  ['t','CUT TO:'],
+  ['s','INT. FIELD STATION - DAWN'],
+  ['x','Grey light. The tarp is down. The map is gone from the wall.'],
+
+  ['pg','17.'],
+  ['x','DELACROIX sits exactly where he sat, the handset still in his fist, asleep with his eyes open the way soldiers learn.'],
+  ['x','The radio speaks. One word, clipped, in a voice neither of them has heard.'],
+  ['x','He is awake before he knows he is awake.'],
+  ['c','DELACROIX'],['d','Say again.'],
+  ['x','Nothing. The hiss closes over the word like water.'],
+  ['c','DELACROIX (CONT’D)'],['d','Say again.'],
+  ['x','He turns the dial one notch, then back, then one notch the other way, hunting the frequency the way you hunt a name you have almost remembered.'],
+  ['c','MARA (O.S.)'],['d','What was it?'],
+
+  ['pg','18.'],
+  ['x','She is in the doorway. She has not slept and does not pretend otherwise.'],
+  ['c','DELACROIX'],['d',"A voice. One word. I couldn't hold it."],
+  ['c','MARA'],['d','Which word?'],
+  ['x','He looks at the handset, then at her.'],
+  ['c','DELACROIX'],['d','Ours.'],
+  ['x','Outside, very far off, something that is not the wind moves along the ridge.'],
+  ['t','FADE OUT.'],
+];
+</script>
+<script>
+(function(){
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var $=function(i){return document.getElementById(i)};
+var clamp=function(v,a,b){return v<a?a:(v>b?b:v)};
+var lerp=function(a,b,t){return a+(b-a)*t};
+/* Scroll-driven moves use the gentler curve. A cubic in-out stops dead at
+   both ends, so a steady scroll felt like it met resistance at the start and
+   end of every move. */
+function soft(t){return t*t*(3-2*t)}
+function span(t,a,b){return soft(clamp((t-a)/(b-a),0,1))}
+
+/* Kept inside a range a person would actually read at. The top of the old
+   ramp turned the slugline into a banner and left four words on screen. */
+var SIZE=[12.5,14.5,16.5,18.5,21];
+var MARG=[5.5,7,8.5,10,11.5];
+var LEAD=[1.38,1.44,1.50,1.56,1.62];
+var FONTS=[['Courier Prime',"'Courier Prime','Courier New',ui-monospace,monospace"],
+           ['Literata',"'Literata',Georgia,'Times New Roman',serif"],
+           ['Sans',"-apple-system,'Helvetica Neue',Arial,sans-serif"]];
+var vals={size:1,mar:2,lead:1};
+var dir ={size:1,mar:1,lead:1};
+/* Page markers default OFF: they are the source PDF's page numbers, and with
+   them on the reader opens on a rule instead of on the scene. */
+var fontIx=0, showPg=false, page=0, pages=1;
+
+var act2=$('act2'),stage=$('stage'),devA=$('devA'),devB=$('devB'),panel=$('panel');
+var p1=$('p1'),p2=$('p2'),p3=$('p3'),pager=$('pager');
+var scrA=$('scrA'),scrB=$('scrB'),pdfp=$('pdfp');
+var ebk=$('ebk'),ebkView=$('ebkView'),ebkFlow=$('ebkFlow');
+var locL=$('locL'),locR=$('locR'),pcount=$('pcount');
+
+/* ----- build the script into both devices ----- */
+function render(list,into){
+  var h='';
+  for(var i=0;i<list.length;i++){
+    var cn=list[i][0], txt=list[i][1];
+    h+='<div class="'+cn+'">'+txt+'</div>';
+  }
+  into.innerHTML=h;
+}
+render(window.SCENE,ebkFlow);
+/* Exactly script page 14, blocks 0-19. Slicing past that ran a second page
+   marker into the middle of the sheet and clipped the last line in half. */
+render(window.SCENE.slice(0,20),pdfp);
+
+function meter(el,n){
+  if(!el)return;
+  if(el.childElementCount!==5){
+    var s='';for(var i=0;i<5;i++)s+='<b></b>';el.innerHTML=s;
+    if(el.classList.contains('live')){
+      var key=el.getAttribute('data-k');
+      for(var j=0;j<5;j++)(function(ix){
+        el.children[ix].addEventListener('click',function(){vals[key]=ix;claim();repaint()});
+      })(j);
+      /* Arrow keys, Home and End. Without these the demo is mouse-only,
+         which locks out keyboard and screen-reader users entirely. */
+      el.addEventListener('keydown',function(e){
+        var d=0;
+        if(e.key==='ArrowRight'||e.key==='ArrowUp')d=1;
+        else if(e.key==='ArrowLeft'||e.key==='ArrowDown')d=-1;
+        else if(e.key==='Home')d=-99;
+        else if(e.key==='End')d=99;
+        else return;
+        e.preventDefault();
+        vals[key]=clamp(vals[key]+d,0,4);
+        claim();repaint();
+      });
+    }
+  }
+  for(var k=0;k<5;k++)el.children[k].className=(k<n?'f':'');
+  if(el.getAttribute('role')==='slider')el.setAttribute('aria-valuenow',String(n));
+}
+function prog(el){
+  var r=el.getBoundingClientRect(), span=r.height-innerHeight;
+  if(span<=0)return 0; return clamp(-r.top/span,0,1);
+}
+
+/* Devices size off the viewport rather than a fixed pixel size. */
+/* C is the page's text block, binding rings to gutter, which is the room the
+   devices really have. FRAME is what a device adds around its screen. Two
+   devices side by side never ask for more than half of it each. */
+var FRAME=26;
+function heroSize(W,H,C){var h=clamp(H*0.60,340,560);return{h:Math.min(h,(C-FRAME)/0.77),w:Math.min(h,(C-FRAME)/0.77)*0.77}}
+function pairSize(W,H,C){var h=clamp(H*0.42,200,400),w=Math.min(h*0.77,(C-24)/2-FRAME);return{h:w/0.77,w:w}}
+function zoomSize(W,H,C,stacked){
+  var h=stacked?Math.min(H*0.58,(C-FRAME)/0.77):clamp(H*0.76,380,720);
+  return{h:h,w:Math.min(h*0.77,stacked?C-FRAME:W*0.40)}}
+
+/* Scale only. Never touch font-size here: changing it reflows the page and the
+   text jitters line to line as the device grows. 320px stands for 8.5in, which
+   is what puts the baked 6.27px font at a true 12pt.
+   COVER, not fit-to-width: the screen and the page are near but not identical
+   aspects (0.770 vs 0.773), and the zoom clamps width against canvas size, so
+   scaling by width alone leaves a grey band and reads as off-centre. Cover then
+   centre means the page always fills the screen and sits square in it. */
+function paintPdf(w,h){
+  scrA.style.width=w.toFixed(1)+'px'; scrA.style.height=h.toFixed(1)+'px';
+  var k=Math.max(w/320,h/414);
+  var ox=(w-320*k)/2, oy=(h-414*k)/2;
+  pdfp.style.transform='translate('+ox.toFixed(2)+'px,'+oy.toFixed(2)+'px) scale('+k.toFixed(4)+')';
+}
+
+/* Re-flow the reader, then repaginate. Page count falls out of the content
+   height over the viewport height, exactly the way a real reader does it. */
+function paintReader(iSize,iMar,iLead){
+  var fs=SIZE[iSize], mg=MARG[iMar], lh=LEAD[iLead];
+  ebk.style.fontFamily=FONTS[fontIx][1];
+  ebk.style.fontSize=fs+'px';
+  ebk.style.lineHeight=lh;
+  ebk.classList.toggle('nopg',!showPg);
+  ebkFlow.style.padding=mg+'% '+mg+'% 0';
+  ebk.querySelector('.loc').style.padding='7px '+mg+'%';
+  var kids=ebkFlow.children;
+  for(var i=0;i<kids.length;i++){
+    var k=kids[i],cn=k.className;
+    if(cn==='c'){k.style.margin='0 0 0 37%'}
+    else if(cn==='d'){k.style.margin='0 12% .85em 17%'}
+    else if(cn==='pg'){k.style.margin='1.4em 0 .9em'}
+    else {k.style.margin='0 0 .85em'}
+  }
+  var vh=ebkView.clientHeight||1;
+  pages=Math.max(1,Math.ceil(ebkFlow.scrollHeight/vh));
+  page=clamp(page,0,pages-1);
+  ebkFlow.style.transform='translateY('+(-page*vh)+'px)';
+  if(locR)locR.textContent=(page+1)+' / '+pages;
+  if(pcount)pcount.textContent='Page '+(page+1)+' of '+pages;
+  if($('prev'))$('prev').disabled=(page===0);
+  if($('next'))$('next').disabled=(page>=pages-1);
+  meter($('mSize'),iSize+1); meter($('mMar'),iMar+1); meter($('mLine'),iLead+1);
+  $('pFont').textContent=FONTS[fontIx][0];
+  $('pPg').textContent=showPg?'On':'Off';
+  $('pPg').setAttribute('aria-pressed',showPg?'true':'false');
+}
+
+var lastT=0;
+function repaint(){layout(lastT)}
+
+function layout(t){
+  if(reduce||!act2)return;
+  lastT=t;
+  var W=stage.offsetWidth||innerWidth, H=stage.offsetHeight||innerHeight;
+
+  /* A arrives immediately, centre frame and large, and holds there. Then it
+     shrinks left to let B in, they hold level, A leaves, B takes over.
+     The holds are short on purpose: each is just long enough to read its
+     heading. The old timing spent about 60% of the pinned scroll on holds,
+     the last one most of a screen, which read as the page sticking. */
+  var aIn   =span(t,0,0.14);
+  var shrink=span(t,0.20,0.46);
+  var bIn   =span(t,0.23,0.46);
+  var aOut  =span(t,0.55,0.72);
+  var ze    =span(t,0.55,0.76);
+
+  p1.style.opacity=(1-span(t,0.18,0.24)).toFixed(3);
+  p2.style.opacity=(span(t,0.23,0.30)*(1-span(t,0.55,0.61))).toFixed(3);
+  p3.style.opacity=span(t,0.62,0.70).toFixed(3);
+  p1.classList.toggle('out',t>=0.24);
+  p2.classList.toggle('out',t<0.23||t>=0.61);
+  p3.classList.toggle('out',t<0.62);
+  panel.classList.toggle('on',t>=0.70);
+  pager.classList.toggle('on',t>=0.70);
+  live=(t>=0.62&&t<=1);
+
+  /* Below 1000 wide the settings column and a zoomed reader do not fit side
+     by side, so the act stacks: heading on top, devices under it, in the
+     text block. The CSS hides the settings list at the same width. */
+  var stacked=W<1000, L=p1.offsetLeft, C=p1.offsetWidth||W*0.77, mid=L+C/2;
+  var hs=heroSize(W,H,C), ps=pairSize(W,H,C), zs=zoomSize(W,H,C,stacked);
+  var aW=lerp(hs.w,ps.w,shrink), aH=lerp(hs.h,ps.h,shrink);
+  var bW=lerp(ps.w,zs.w,ze),     bH=lerp(ps.h,zs.h,ze);
+  paintPdf(aW,aH);
+  scrB.style.width=bW.toFixed(1)+'px'; scrB.style.height=bH.toFixed(1)+'px';
+
+  /* Stacked, every centre is measured from the text block, so no device runs
+     under a binding ring or off the right edge: the pair splits the block in
+     two, and the hero and the zoom sit in its middle. */
+  var pa=L+(ps.w+FRAME)/2, pb=L+C-(ps.w+FRAME)/2;
+  var cy=stacked?lerp(lerp(H*0.60,H*0.58,shrink),H*0.55,ze)
+                :lerp(lerp(H*0.58,H*0.56,shrink),H*0.48,ze);
+  var ax=(stacked?lerp(mid,pa,shrink):lerp(W*0.50,Math.max(W*0.33,pa),shrink))-W/2;
+  var bx=(stacked?lerp(pb,mid,ze):Math.min(W*0.68,pb))-W/2;
+  var ay=(cy-H/2)+lerp(H*0.85,0,aIn)+aOut*H*1.1;
+  var by=(cy-H/2)+lerp(H*0.85,0,bIn);
+
+  devA.style.transform='translate(calc(-50% + '+ax.toFixed(1)+'px), calc(-50% + '+ay.toFixed(1)+'px))';
+  devA.style.opacity=(1-aOut).toFixed(2);
+  devB.style.transform='translate(calc(-50% + '+bx.toFixed(1)+'px), calc(-50% + '+by.toFixed(1)+'px))';
+  devB.style.opacity=bIn.toFixed(2);
+
+  paintReader(vals.size,vals.mar,vals.lead);
+}
+
+/* The settings are NOT scroll-driven. Scroll moves the composition; the reader
+   demonstrates itself on a timer. One parameter per tick, walked by a single
+   step, so something is always moving but never everything at once. A click
+   hands control over and freezes the cycle for HOLD_MS. */
+var HOLD_MS=18000, TICK_MS=900;
+var heldUntil=0, tickIx=0, live=false, cycle=null;
+/* Typeface is deliberately NOT in the rotation: swapping the face on its own
+   looks like a fault rather than a setting. It changes only on a click. */
+var ORDER=['size','mar','lead','size','lead','mar'];
+function walk(k,lo,hi){
+  var v=vals[k]+dir[k];
+  if(v>hi){v=hi-1;dir[k]=-1} else if(v<lo){v=lo+1;dir[k]=1}
+  vals[k]=clamp(v,lo,hi);
+}
+function autoTick(){
+  if(!live||Date.now()<heldUntil)return;
+  var k=ORDER[tickIx++%ORDER.length];
+  walk(k,0,4);
+  repaint();
+}
+function claim(){ heldUntil=Date.now()+HOLD_MS; }
+
+/* ----- reader controls ----- */
+function turn(d){
+  var vh=ebkView.clientHeight||1;
+  page=clamp(page+d,0,pages-1);
+  ebkFlow.style.transform='translateY('+(-page*vh)+'px)';
+  if(locR)locR.textContent=(page+1)+' / '+pages;
+  if(pcount)pcount.textContent='Page '+(page+1)+' of '+pages;
+  $('prev').disabled=(page===0); $('next').disabled=(page>=pages-1);
+}
+$('prev').addEventListener('click',function(){claim();turn(-1)});
+$('next').addEventListener('click',function(){claim();turn(1)});
+$('pFont').addEventListener('click',function(){fontIx=(fontIx+1)%FONTS.length;claim();repaint()});
+$('pPg').addEventListener('click',function(){showPg=!showPg;claim();repaint()});
+if(!reduce)cycle=setInterval(autoTick,TICK_MS);
+
+function onScroll(){
+  if(act2)glideTo(prog(act2));
+}
+/* The composition glides behind the scroll instead of jumping to it: each
+   frame it closes part of the gap, a 90 ms time constant, so a wheel's
+   notches become one motion. Native scrolling is untouched; only the
+   drawing trails it. */
+var shown=null, target=0, gliding=false, lastFrame=0;
+function glideTo(t){
+  target=t;
+  if(shown===null){shown=t;layout(t);return}
+  if(!gliding){gliding=true;lastFrame=performance.now();requestAnimationFrame(glide)}
+}
+function glide(now){
+  var dt=Math.min(now-lastFrame,64); lastFrame=now;
+  shown+=(target-shown)*(1-Math.exp(-dt/90));
+  if(Math.abs(target-shown)<0.0004)shown=target;
+  layout(shown);
+  if(shown!==target)requestAnimationFrame(glide); else gliding=false;
+}
+var tick=false;
+addEventListener('scroll',function(){
+  if(!tick){tick=true;requestAnimationFrame(function(){onScroll();tick=false})}
+},{passive:true});
+/* A resize snaps: gliding the devices across a new layout looks like a fault. */
+addEventListener('resize',function(){shown=null;onScroll()});
+if(reduce){paintPdf(300,390);paintReader(2,2,2)} else {onScroll()}
+})();
+</script>
+</body>
+</html>

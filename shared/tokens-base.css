@@ -1,0 +1,42 @@
+/* Method Production Suite tokens for the pages this repo writes (the hub, Method
+   Storyteller's page, 404). The neutrals, amber and type are the family's, value for
+   value (Method Budget's, Method Schedule's and Method Reader's tokens.css); tools/build.py
+   puts each page's own accent where the ACCENT markers are and checks its contrast. */
+
+:root {
+  --bg: #F7F6F2;
+  --surface: #FFFFFF;
+  --surface-2: #EFEDE7;
+  --ink: #1C2228;
+  --ink-soft: #3A424C;
+  --muted: #59626D;
+  --rule: #DEDBD3;
+  --rule-strong: #8F897C;
+  /* ACCENT LIGHT */
+  --note: #8A5A00;
+  --note-fill: #D29A12;
+  --code-bg: #EFEDE7;
+  --shadow: 0 1px 2px rgba(28, 34, 40, .06), 0 10px 32px rgba(28, 34, 40, .08);
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111417;
+    --surface: #1B1F24;
+    --surface-2: #22272E;
+    --ink: #E4E8EC;
+    --ink-soft: #C3CAD2;
+    --muted: #9AA3AD;
+    --rule: #2B3138;
+    --rule-strong: #67717D;
+    /* ACCENT DARK */
+    --note: #E3B341;
+    --note-fill: #E3B341;
+    --code-bg: #22272E;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 32px rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+}
