@@ -96,3 +96,4 @@ p { margin: 0 0 14px; }
 .doors h2 { margin-top: 0; font-size: 20px; }
 .asks .card h3 a { color: var(--ink); text-decoration: none; }
 .asks .card h3 a:hover { text-decoration: underline; }
+.prose .routing { margin: 4px 0 8px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; color: var(--ink); }

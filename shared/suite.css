@@ -46,3 +46,5 @@
 .ms-band .ms-fine a { color: var(--ink-soft); }
 .ms-band .ms-links { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0 0 10px; font-weight: 600; }
 .ms-band .ms-links a { color: var(--ink-soft); }
+.ms-band .ms-contact { margin: 0 0 8px; color: var(--ink-soft); }
+.ms-band .ms-contact a { color: var(--ink-soft); }

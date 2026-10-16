@@ -63,7 +63,7 @@ def fill(text: str) -> str:
         text = text.replace(f"{{page:{n}}}", page_url(n))
     for k in ("org", "discussions", "hello"):
         text = text.replace(f"{{{k}}}", SUITE[k])
-    text = text.replace("{ships}", ships())
+    text = text.replace("{ships}", ships()).replace("{contact}", contact(None))
     left = re.search(r"\{[a-z]+(:[a-z]+)?\}", text)
     if left:
         raise SystemExit(f"build: unfilled placeholder {left.group(0)}")
@@ -78,6 +78,21 @@ def ships() -> str:
         return (f'Write to <a href="mailto:{SUITE["hello"]}">{E(SUITE["hello"])}</a> and we\'ll '
                 f"tell you when Method Schedule ships. {watch.replace('tells you when it ships', 'does the same')}")
     return watch
+
+
+SUPPORT = "https://github.com/method-production-suite/.github/blob/main/SUPPORT.md"
+
+
+def contact(current: str | None) -> str:
+    """Where each kind of message goes (the org's SUPPORT.md, in one line). On an app's own
+    page, "open an issue" goes to that app's issues while they're public."""
+    app = next((a for a in APPS if a["slug"] == current), None)
+    issues = f'{app["repo"]}/issues' if app and app.get("issues_public", True) else SUPPORT
+    line = (f'Found a bug? <a href="{issues}">Open an issue</a>. '
+            f'Have a question? <a href="{SUITE["discussions"]}">Ask in Discussions</a>.')
+    if SUITE.get("hello_live"):
+        line += f' Anything else: <a href="mailto:{SUITE["hello"]}">{E(SUITE["hello"])}</a>.'
+    return line
 
 
 def mark(app: dict, dark: bool = False) -> str:
@@ -118,7 +133,7 @@ def bar(current: str | None) -> str:
         + github(SUITE["org"], f'{SUITE["name"]} on GitHub', 16, "ms-gh") + "</div></nav>")
 
 
-def band() -> str:
+def band(current: str | None = None) -> str:
     items = "".join(
         f'<li><a href="{url(a["slug"])}">{picture(mark(a), mark(a, True), "", " width=\"28\" height=\"28\"")}'
         f'<span><strong>{E(a["name"])}</strong>{E(a["tagline"])}</span></a></li>' for a in APPS)
@@ -130,6 +145,7 @@ def band() -> str:
         f'<p class="ms-links"><a href="{page_url("why")}">Why this exists</a>'
         f'<a href="{page_url("how")}">How it\'s built</a><a href="{page_url("help")}">Help build it</a>'
         f'<a href="{SUITE["discussions"]}">Discussions</a></p>'
+        f'<p class="ms-contact">{contact(current)}</p>'
         f'<p class="ms-fine">Free and open source, every app MIT or Apache-2.0. '
         f'<a href="{SUITE["org"]}">All of it on GitHub</a>.</p></div></aside>')
 
@@ -140,7 +156,7 @@ def furnish(page: str, current: str | None) -> str:
         raise SystemExit("build: a page already has the suite bar")
     page = page.replace("</head>", '<link rel="stylesheet" href="/_suite/suite.css">\n</head>', 1)
     page = re.sub(r"(<body[^>]*>)", lambda m: m.group(1) + "\n" + bar(current), page, count=1)
-    page = page.replace("</body>", band() + "\n</body>", 1)
+    page = page.replace("</body>", band(current) + "\n</body>", 1)
     return page
 
 
