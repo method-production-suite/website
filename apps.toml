@@ -61,8 +61,6 @@ slug = "schedule"
 name = "Method Schedule"
 domain = "methodschedule.com"
 repo = "https://github.com/method-production-suite/method-scheduling"
-# Private until Sam makes it public: no links to its issues from the site until then.
-issues_public = false
 does = "Schedule"
 tagline = "Film and TV scheduling, from script to stripboard."
 blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open files on your own computer. Hands its shoot days straight to Method Budget."
