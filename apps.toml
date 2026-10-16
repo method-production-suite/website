@@ -7,8 +7,11 @@
 name = "Method Production Suite"
 domain = "methodproduction.com"
 org = "https://github.com/method-production-suite"
-discussions = "https://github.com/orgs/method-production-suite/discussions"
+discussions = "https://github.com/method-production-suite/.github/discussions"
 hello = "hello@methodproduction.com"
+# false until the Porkbun forward for `hello` exists; the site then points at GitHub's
+# release notifications instead of an address that would bounce.
+hello_live = false
 mission = "The tools of the trade shouldn't be rented."
 mission_more = "Method makes film's working software free, open and owned by the people who use it, wherever they are and whatever they can spend."
 pitch = "Open-source tools for making films, from the first draft to the last shoot day."

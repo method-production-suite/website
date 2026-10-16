@@ -63,10 +63,21 @@ def fill(text: str) -> str:
         text = text.replace(f"{{page:{n}}}", page_url(n))
     for k in ("org", "discussions", "hello"):
         text = text.replace(f"{{{k}}}", SUITE[k])
+    text = text.replace("{ships}", ships())
     left = re.search(r"\{[a-z]+(:[a-z]+)?\}", text)
     if left:
         raise SystemExit(f"build: unfilled placeholder {left.group(0)}")
     return text
+
+
+def ships() -> str:
+    """How to hear about releases: the hello address once its forward exists, else GitHub."""
+    watch = ("On GitHub, <em>Watch &rarr; Custom &rarr; Releases</em> on any app's repository "
+             "tells you when it ships.")
+    if SUITE.get("hello_live"):
+        return (f'Write to <a href="mailto:{SUITE["hello"]}">{E(SUITE["hello"])}</a> and we\'ll '
+                f"tell you when Method Schedule ships. {watch.replace('tells you when it ships', 'does the same')}")
+    return watch
 
 
 def mark(app: dict, dark: bool = False) -> str:
@@ -222,7 +233,7 @@ def hub() -> str:
   </div></section>
   <section class="band" aria-labelledby="ships-h"><div class="wrap ships">
     <h2 id="ships-h">Hear when it ships</h2>
-    <p>Write to <a href="mailto:{SUITE['hello']}">{E(SUITE['hello'])}</a> and we'll tell you when Method Schedule ships.
+    <p>{ships()}
       Want to help? <a href="{page_url('help')}">Here's how</a>, film knowledge or code.</p>
   </div></section>
   <section class="band alt" aria-labelledby="open-h"><div class="wrap">
