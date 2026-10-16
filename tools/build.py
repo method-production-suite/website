@@ -48,6 +48,27 @@ def url(slug: str | None) -> str:
     return f"https://{next(a for a in APPS if a['slug'] == slug)['domain']}/"
 
 
+PAGES = ["why", "how", "help"]  # shared/pages/<name>.html, served at /<name>/ on the hub
+
+
+def page_url(name: str) -> str:
+    return f"/{name}/" if LOCAL else f"https://{SUITE['domain']}/{name}/"
+
+
+def fill(text: str) -> str:
+    """Put catalog values into a page fragment's {placeholders}."""
+    for a in APPS:
+        text = text.replace(f"{{url:{a['slug']}}}", url(a["slug"])).replace(f"{{repo:{a['slug']}}}", a["repo"])
+    for n in PAGES:
+        text = text.replace(f"{{page:{n}}}", page_url(n))
+    for k in ("org", "discussions", "hello"):
+        text = text.replace(f"{{{k}}}", SUITE[k])
+    left = re.search(r"\{[a-z]+(:[a-z]+)?\}", text)
+    if left:
+        raise SystemExit(f"build: unfilled placeholder {left.group(0)}")
+    return text
+
+
 def mark(app: dict, dark: bool = False) -> str:
     return f"/_suite/marks/{app['slug']}{'-dark' if dark else ''}.svg"
 
@@ -95,6 +116,9 @@ def band() -> str:
         f'<a class="ms-title" href="{url(None)}">'
         f'{picture("/_suite/marks/suite.svg", "/_suite/marks/suite-dark.svg", "", " width=\"18\" height=\"18\"")}'
         f'{E(SUITE["name"])}</a><ul>{items}</ul>'
+        f'<p class="ms-links"><a href="{page_url("why")}">Why this exists</a>'
+        f'<a href="{page_url("how")}">How it\'s built</a><a href="{page_url("help")}">Help build it</a>'
+        f'<a href="{SUITE["discussions"]}">Discussions</a></p>'
         f'<p class="ms-fine">Free and open source, every app MIT or Apache-2.0. '
         f'<a href="{SUITE["org"]}">All of it on GitHub</a>.</p></div></aside>')
 
@@ -173,6 +197,7 @@ def hub() -> str:
           <p class="tagline">{E(a['tagline'])}</p>
         </a>
         <p>{E(a['blurb'])}</p>
+        <p class="platforms"><span>Platforms</span> {E(a['platforms'])}</p>
         <p class="meta"><span class="pill{' ok' if a['status'] == 'Released' else ''}">{E(a['status'])}</span>
           <a href="{url(a['slug'])}">{E(a['domain'])}</a> {github(a['repo'], f"{a['name']} on GitHub", 18)}</p>
       </article>""" for a in APPS)
@@ -183,16 +208,24 @@ def hub() -> str:
 <main id="main">
   <section class="hero"><div class="wrap">
     <h1>{picture("/_suite/brand/suite/wordmark.svg", "/_suite/brand/suite/wordmark-dark.svg", SUITE["name"], ' class="hub-wm" width="640" height="52"')}</h1>
-    <p class="pitch">{E(SUITE['pitch'])}</p>
+    <p class="pitch mission">{E(SUITE['mission'])}</p>
+    <p class="subpitch">{E(SUITE['pitch'])}</p>
     <p class="lede">{E(SUITE['lede'])}</p>
     <ol class="flow" aria-label="How the apps fit together">{flow}</ol>
+    <p class="pages-nav"><a href="{page_url('why')}">Why this exists</a>
+      <a href="{page_url('how')}">How it's built</a> <a href="{page_url('help')}">Help build it</a></p>
   </div></section>
   <section class="band alt" aria-labelledby="apps-h"><div class="wrap">
     <h2 id="apps-h">The apps</h2>
     <div class="app-grid">{cards}
     </div>
   </div></section>
-  <section class="band" aria-labelledby="open-h"><div class="wrap">
+  <section class="band" aria-labelledby="ships-h"><div class="wrap ships">
+    <h2 id="ships-h">Hear when it ships</h2>
+    <p>Write to <a href="mailto:{SUITE['hello']}">{E(SUITE['hello'])}</a> and we'll tell you when Method Schedule ships.
+      Want to help? <a href="{page_url('help')}">Here's how</a>, film knowledge or code.</p>
+  </div></section>
+  <section class="band alt" aria-labelledby="open-h"><div class="wrap">
     <h2 id="open-h">Open, all the way down</h2>
     <div class="cards three">
       <div class="card"><h3>Your computer, your files</h3><p>Every app runs on your own machine and works offline. Nothing about your production is uploaded anywhere.</p></div>
@@ -244,6 +277,26 @@ def storyteller(app: dict) -> str:
 </body>
 </html>
 """
+
+
+def suite_page(name: str) -> tuple[str, str]:
+    """One of the suite's own pages (shared/pages/<name>.html) in the family layout."""
+    raw = (ROOT / "shared" / "pages" / f"{name}.html").read_text()
+    title = re.search(r"<!-- title: (.*?) -->", raw).group(1)
+    desc = re.search(r"<!-- description: (.*?) -->", raw).group(1)
+    body = fill(re.sub(r"<!--.*?-->\n?", "", raw, flags=re.S))
+    page = head(f"{title}: {SUITE['name']}", desc, f"https://{SUITE['domain']}/{name}/",
+                "/_suite/marks/suite-favicon.svg").replace('href="assets/tokens.css"', 'href="/_suite/hub-tokens.css"')
+    return page + f"""<body>
+<a class="skip" href="#main">Skip to content</a>
+{bar(None)}
+<main id="main" class="wrap page">
+{body}
+</main>
+{band()}
+</body>
+</html>
+""", title
 
 
 def page_404() -> str:
@@ -313,8 +366,11 @@ def main() -> int:
     write(s / "hub-tokens.css", tokens(*HUB))
     write(DIST / "index.html", hub())
     write(DIST / "404.html", page_404())
+    for n in PAGES:
+        write(DIST / n / "index.html", suite_page(n)[0])
     write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nSitemap: https://{SUITE['domain']}/sitemap.xml\n")
-    locs = [f"https://{SUITE['domain']}/"] + [f"https://{a['domain']}/" for a in APPS]
+    locs = ([f"https://{SUITE['domain']}/"] + [f"https://{SUITE['domain']}/{n}/" for n in PAGES]
+            + [f"https://{a['domain']}/" for a in APPS])
     write(DIST / "sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
           + "".join(f"  <url><loc>{u}</loc></url>\n" for u in locs) + "</urlset>\n")
 

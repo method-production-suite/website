@@ -37,8 +37,11 @@ test("an app's sub-pages and the shared files resolve", async () => {
   assert.equal(await body(await run("https://methodbudget.com/_suite/suite.css")), "/_suite/suite.css");
 });
 
-test("the hub domain serves the hub", async () => {
+test("the hub domain serves the hub and the suite's own pages", async () => {
   assert.equal(await body(await run("https://methodproduction.com/")), "/index.html");
+  for (const p of ["why", "how", "help"]) {
+    assert.equal(await body(await run(`https://methodproduction.com/${p}/`)), `/${p}/index.html`);
+  }
 });
 
 test("redirect domains and www go where the catalog says, keeping the path", async () => {

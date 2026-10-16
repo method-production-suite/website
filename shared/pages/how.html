@@ -1,0 +1,52 @@
+<!-- title: How it's built -->
+<!-- description: AI coding tools used openly, under tests and review. Clean-room rules, whole-cent money, signed builds, and no generative AI in the apps. -->
+<article class="prose">
+  <p class="kicker">How it's built</p>
+  <h1 class="pitch">Built with AI coding tools, in the open, under rules strict enough for production money.</h1>
+
+  <p>The Method apps are written by a working producer with AI coding agents, under tests
+    and review. That's said openly here so you can judge the work on its checks, not on a
+    guess about how it was made. The apps themselves contain no generative AI: nothing
+    writes your script or invents your numbers.</p>
+
+  <h2>Clean room</h2>
+  <p>Every app is independent work. Nobody on the project decompiles, disassembles or
+    debugs another vendor's software, or copies its code, help text, icons, templates or
+    bundled data. Learning how productions work, using other tools normally and reading
+    the open files they export are fine. Each repository's <code>CLEAN-ROOM.md</code> has
+    the full rules, and every contribution follows them.</p>
+
+  <h2>Tests</h2>
+  <p>Every change runs the full test suite before it lands. Test functions in each app,
+    counted on 16 October 2026:</p>
+  <table class="counts">
+    <thead><tr><th scope="col">App</th><th scope="col">Tests</th><th scope="col">Also</th></tr></thead>
+    <tbody>
+      <tr><td><a href="{url:storyteller}">Method Storyteller</a></td><td>43</td><td>Strict lint rules; early days.</td></tr>
+      <tr><td><a href="{url:reader}">Method Reader</a></td><td>3,573</td><td>Every conversion checked against a frozen set of expected answers.</td></tr>
+      <tr><td><a href="{url:schedule}">Method Schedule</a></td><td>622</td><td>Timing budgets: an edit and redraw must stay under 5 ms on a big board.</td></tr>
+      <tr><td><a href="{url:budget}">Method Budget</a></td><td>1,255</td><td>Seeded property tests, and nightly fuzzing of every file format it reads.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Money and files</h2>
+  <ul>
+    <li>Money is whole cents, never floating point. Rates and percentages use an exact
+      decimal type with a written rounding rule.</li>
+    <li>Saves are atomic, with autosave and recovery: a crash never costs you the file.</li>
+    <li>Every file format is plain, documented text, specified in its repository, so your
+      work opens in twenty years with or without these apps.</li>
+  </ul>
+
+  <h2>Supply chain</h2>
+  <ul>
+    <li>Every dependency must be at least 14 days old before it's used, and every licence
+      and security advisory is checked on every change.</li>
+    <li>Build steps are pinned to exact versions. Released Mac apps are signed and notarized
+      by Apple.</li>
+    <li>MIT OR Apache-2.0, every line on <a href="{org}">GitHub</a>.</li>
+  </ul>
+
+  <p class="cta"><a class="btn primary" href="{page:help}">Help build it</a>
+    <a href="{page:why}">Why this exists</a></p>
+</article>

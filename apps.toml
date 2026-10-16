@@ -7,8 +7,12 @@
 name = "Method Production Suite"
 domain = "methodproduction.com"
 org = "https://github.com/method-production-suite"
+discussions = "https://github.com/orgs/method-production-suite/discussions"
+hello = "hello@methodproduction.com"
+mission = "The tools of the trade shouldn't be rented."
+mission_more = "Method makes film's working software free, open and owned by the people who use it, wherever they are and whatever they can spend."
 pitch = "Open-source tools for making films, from the first draft to the last shoot day."
-lede = "Write the script, read it anywhere, schedule it and budget it, in free apps that run on your own computer and keep your work in open files."
+lede = "Write the script, read it anywhere, schedule it and budget it, in free apps that run on your own computer and keep your work in open files you own. No subscription, no account, for good."
 # Domains that only redirect, with where they go.
 redirects = [
   { from = "methodproductionsuite.com", to = "https://methodproduction.com" },
@@ -27,6 +31,7 @@ does = "Write"
 tagline = "Screenwriting that formats itself."
 blurb = "Tab and Enter move between scene heading, action, character and dialogue; pages break the way a production expects; Fountain is the native file, and .fdx files open and save."
 status = "In development"
+platforms = "Builds from source on macOS, Windows and Linux. No installers yet."
 # No site of its own yet: tools/build.py writes its page from this entry.
 source = "catalog"
 accent = ["#AE3D56", "#EE8DA2"]
@@ -40,6 +45,7 @@ does = "Read"
 tagline = "Screenplay PDFs into e-books and editable scripts."
 blurb = "Turn a script PDF into an e-book that reflows on a Kindle or any e-reader with the script's shape intact, and send it straight to the device. Or get the script back to edit, as Fountain or .fdx. Formerly Screepub."
 status = "Released"
+platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 # MReader (2026-10-16): never sync from rename/method-reader, and once the rename is
 # merged into site/method-reader, do not sync it until MReader says the 0.13 rename
 # release is published (its download links name files that only exist after it).
@@ -56,6 +62,7 @@ does = "Schedule"
 tagline = "Film and TV scheduling, from script to stripboard."
 blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open files on your own computer. Hands its shoot days straight to Method Budget."
 status = "Early alpha"
+platforms = "Not released yet: builds from source. Mac first, then Windows and Linux."
 source = "method-scheduling"
 source_ref = "main"
 accent = ["#2F5FB3", "#7AA2F0"]
@@ -69,6 +76,7 @@ does = "Budget"
 tagline = "Film and TV budgeting that shows its working."
 blurb = "Topsheet to detail, fringes, globals, versions and compare, and an explanation for every number. Opens the budgets other tools export."
 status = "Alpha, ready for testing"
+platforms = "Mac: signed. Windows and Linux: on the way."
 source = "method-budget"
 source_ref = "main"
 # The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs

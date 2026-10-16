@@ -65,3 +65,34 @@ p { margin: 0 0 14px; }
 .app-card .meta .gh:hover { color: var(--ink); }
 .app-card .meta .gh svg { display: block; }
 .app-card .meta { margin: auto 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 15px; }
+
+/* ------------------------------------------------------------------ the suite's own pages */
+.hero .mission { margin-bottom: 10px; }
+.subpitch { font-size: clamp(19px, 2.4vw, 24px); font-weight: 600; color: var(--ink-soft); margin: 0 0 16px; max-width: 34em; letter-spacing: -.01em; }
+.pages-nav { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 22px 0 0; font-weight: 600; }
+.app-card .platforms { font-size: 14px; color: var(--muted); margin: 0 0 14px; }
+.app-card .platforms span { font-weight: 650; color: var(--ink-soft); margin-right: 4px; }
+.ships p { max-width: 44em; color: var(--ink-soft); }
+
+.page { padding-top: 48px; padding-bottom: 72px; }
+.prose { max-width: 42em; }
+.prose.wide { max-width: none; }
+.prose .kicker { font-size: 13px; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; }
+.prose h1.pitch { margin-bottom: 26px; }
+.prose h2 { font-size: 24px; margin: 40px 0 12px; }
+.prose p, .prose li { color: var(--ink-soft); }
+.prose p.lede { color: var(--ink-soft); }
+.prose ul { padding-left: 1.2em; }
+.prose li { margin-bottom: 8px; }
+.prose .cta { margin: 32px 0 0; }
+.prose .mission-close { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink); font-weight: 600; }
+.prose .fine { font-size: 14px; color: var(--muted); }
+.counts { border-collapse: collapse; width: 100%; margin: 8px 0 8px; font-size: 16px; }
+.counts th { text-align: left; font-size: 13px; color: var(--muted); font-weight: 650; padding: 0 16px 8px 0; border-bottom: 1px solid var(--rule-strong); }
+.counts td { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-soft); }
+.counts td:nth-child(2) { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 650; text-align: right; }
+.doors { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; margin: 28px 0 12px; }
+@media (min-width: 760px) { .doors { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.doors h2 { margin-top: 0; font-size: 20px; }
+.asks .card h3 a { color: var(--ink); text-decoration: none; }
+.asks .card h3 a:hover { text-decoration: underline; }
