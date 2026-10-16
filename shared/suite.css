@@ -21,6 +21,8 @@
 .ms-bar a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: .18em; }
 .ms-bar a[aria-current="page"] { color: var(--ink); font-weight: 650; }
 .ms-bar img { width: 14px; height: 14px; display: block; }
+.ms-bar .ms-gh { padding: 3px 0 3px 4px; }
+.ms-bar .ms-gh svg { display: block; }
 .ms-bar .ms-home { font-weight: 650; color: var(--ink); margin-right: auto; }
 .ms-bar .ms-does { color: var(--muted); font-weight: 400; }
 @media (max-width: 720px) { .ms-bar .ms-does, .ms-bar .ms-name-long { display: none; } }
