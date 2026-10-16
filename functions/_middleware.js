@@ -40,8 +40,7 @@ export async function onRequest(context) {
   }
   const inner = new URL(url);
   inner.pathname = prefix + url.pathname;
-  const res = await env.ASSETS.fetch(new Request(inner, request));
-  if (res.status !== 404) return res;
-  const notFound = await env.ASSETS.fetch(new Request(new URL(`${prefix}/404.html`, url), request));
-  return new Response(notFound.body, { status: 404, headers: notFound.headers });
+  // A missing page comes back as the nearest 404.html with status 404 (Pages does that
+  // itself), which for an app is its own dist/<slug>/404.html.
+  return env.ASSETS.fetch(new Request(inner, request));
 }

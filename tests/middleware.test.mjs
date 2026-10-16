@@ -10,7 +10,14 @@ const assets = {
   async fetch(req) {
     const p = new URL(req.url).pathname;
     const file = DIST + (p.endsWith("/") ? p + "index.html" : p);
-    return new Response(existsSync(file) ? file : "missing", { status: existsSync(file) ? 200 : 404 });
+    if (existsSync(file)) return new Response(file, { status: 200 });
+    // Like Pages: a miss serves the nearest 404.html up the path, with status 404.
+    let dir = p.slice(0, p.lastIndexOf("/"));
+    for (;;) {
+      if (existsSync(DIST + dir + "/404.html")) return new Response(DIST + dir + "/404.html", { status: 404 });
+      if (!dir) return new Response("missing", { status: 404 });
+      dir = dir.slice(0, dir.lastIndexOf("/"));
+    }
   },
 };
 const run = (u) => onRequest({ request: new Request(u), env: { ASSETS: assets }, next: () => assets.fetch(new Request(u)) });
