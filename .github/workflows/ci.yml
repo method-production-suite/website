@@ -1,0 +1,23 @@
+# Build the site and test the domain routing on every push and pull request.
+# Standard library Python and Node's built-in test runner: nothing is installed.
+# Third-party actions are pinned to SHAs, like every Method repo.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Brand files are up to date
+        run: python3 tools/make-brand.py --check
+      - name: Build
+        run: python3 tools/build.py
+      - name: Domain routing
+        run: node --test tests/
