@@ -211,7 +211,7 @@ def storyteller(app: dict) -> str:
   <section class="hero"><div class="wrap">
     <h1>{picture("assets/brand/wordmark.svg", "assets/brand/wordmark-dark.svg", app["name"], ' width="560" height="52"')}</h1>
     <p class="pitch">{E(app['tagline'])}</p>
-    <p class="lede">An open-source screenwriting app for macOS, Windows and Linux, written from scratch in Rust. {E(app['blurb'])}</p>
+    <p class="lede">An open-source screenwriting app for macOS, Windows and Linux, being written from scratch in Rust. {E(app['blurb'])}</p>
     <div class="cta">
       <a class="btn primary" href="{app['repo']}">Get it on GitHub</a>
       <span class="pill">{E(app['status'])}: build it from source today; installers come with the first release.</span>
