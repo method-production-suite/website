@@ -20,4 +20,4 @@ jobs:
       - name: Build
         run: python3 tools/build.py
       - name: Domain routing
-        run: node --test tests/
+        run: node --test tests/middleware.test.mjs

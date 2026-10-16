@@ -22,7 +22,7 @@ so the apps link to each other.
 python3 tools/sync.py          # copy every app's committed site/ in (or: sync.py budget)
 python3 tools/make-brand.py    # redraw brand/ (--check to verify)
 python3 tools/build.py         # production build into dist/ (--local for /<slug>/ links)
-node --test tests/             # domain routing, against the last build
+node --test tests/middleware.test.mjs   # domain routing, against the last build
 ```
 
 Standard library Python and Node's built-in test runner only: no npm, no dependencies.

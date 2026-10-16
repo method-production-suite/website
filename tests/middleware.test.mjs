@@ -1,5 +1,5 @@
 // Runs functions/_middleware.js against every host in the table with a stand-in for
-// Cloudflare's asset server (dist/ on disk). `node --test tests/` after a build.
+// Cloudflare's asset server (dist/ on disk). `node --test tests/middleware.test.mjs` after a build.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
