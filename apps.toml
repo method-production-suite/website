@@ -35,7 +35,7 @@ accent = ["#AE3D56", "#EE8DA2"]
 slug = "reader"
 name = "Method Reader"
 domain = "methodreader.com"
-repo = "https://github.com/ssandweiss/screepub"
+repo = "https://github.com/method-production-suite/method-reader"
 does = "Read"
 tagline = "Screenplay PDFs into e-books and editable scripts."
 blurb = "Turn a script PDF into an e-book that reflows on a Kindle or any e-reader with the script's shape intact, and send it straight to the device. Or get the script back to edit, as Fountain or .fdx. Formerly Screepub."
@@ -71,4 +71,9 @@ blurb = "Topsheet to detail, fringes, globals, versions and compare, and an expl
 status = "Alpha, ready for testing"
 source = "method-budget"
 source_ref = "main"
+# The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs
+# this in an export of the synced commit and copies `build_output` in as try/, the
+# way method-budget's old pages.yml did at deploy time.
+build = ["cargo", "xtask", "web", "--demo", "--out", "site/try"]
+build_output = "site/try"
 accent = ["#0E7468", "#2CC7B2"]

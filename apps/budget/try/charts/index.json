@@ -1,0 +1,730 @@
+[
+  {
+    "accounts": 255,
+    "categories": 44,
+    "description": "Our own chart for a studio-scale feature, 2 + 2 numbering",
+    "group": "Feature",
+    "id": "feature",
+    "name": "Feature film"
+  },
+  {
+    "accounts": 78,
+    "categories": 26,
+    "description": "Our own compact chart for an independent feature",
+    "group": "Feature",
+    "id": "low-budget-feature",
+    "name": "Low-budget feature"
+  },
+  {
+    "accounts": 151,
+    "categories": 44,
+    "description": "Our own chart for a one-hour series episode, with amortized series costs",
+    "group": "Television",
+    "id": "tv-one-hour",
+    "name": "TV episodic, one hour"
+  },
+  {
+    "accounts": 92,
+    "categories": 32,
+    "description": "Our own chart for a half-hour series episode, single or multi-camera",
+    "group": "Television",
+    "id": "tv-half-hour",
+    "name": "TV episodic, half hour"
+  },
+  {
+    "accounts": 63,
+    "categories": 23,
+    "description": "Our own chart for a commercial or branded spot",
+    "group": "Commercial",
+    "id": "commercial",
+    "name": "Commercial"
+  },
+  {
+    "accounts": 44,
+    "categories": 19,
+    "description": "Our own chart for a music video",
+    "group": "Commercial",
+    "id": "music-video",
+    "name": "Music video"
+  },
+  {
+    "accounts": 77,
+    "categories": 27,
+    "description": "Our own chart for a documentary feature or series episode",
+    "group": "Other",
+    "id": "documentary",
+    "name": "Documentary"
+  },
+  {
+    "accounts": 739,
+    "categories": 49,
+    "description": "Follows the ABC CABLE NETWORK GROUP chart of accounts",
+    "group": "Television",
+    "id": "abc-cable-network-group",
+    "name": "ABC CABLE NETWORK GROUP"
+  },
+  {
+    "accounts": 763,
+    "categories": 37,
+    "description": "Follows the AE GLOBAL MEDIA UNSCRIPTED chart of accounts",
+    "group": "Television",
+    "id": "ae-global-media-unscripted",
+    "name": "AE GLOBAL MEDIA UNSCRIPTED"
+  },
+  {
+    "accounts": 555,
+    "categories": 62,
+    "description": "Follows the AMERICAN CINEMA chart of accounts",
+    "group": "Feature",
+    "id": "american-cinema",
+    "name": "AMERICAN CINEMA"
+  },
+  {
+    "accounts": 585,
+    "categories": 41,
+    "description": "Follows the ASMITH & COMPANY chart of accounts",
+    "group": "Other",
+    "id": "asmith-company",
+    "name": "ASMITH & COMPANY"
+  },
+  {
+    "accounts": 252,
+    "categories": 33,
+    "description": "Follows the Academic Template chart of accounts",
+    "group": "Other",
+    "id": "academic-template",
+    "name": "Academic Template"
+  },
+  {
+    "accounts": 247,
+    "categories": 33,
+    "description": "Follows the Academic chart of accounts",
+    "group": "Other",
+    "id": "academic",
+    "name": "Academic"
+  },
+  {
+    "accounts": 718,
+    "categories": 42,
+    "description": "Follows the BET CHART OF ACCOUNTS TEMPLATE chart of accounts",
+    "group": "Television",
+    "id": "bet-chart-of-accounts-template",
+    "name": "BET CHART OF ACCOUNTS TEMPLATE"
+  },
+  {
+    "accounts": 741,
+    "categories": 43,
+    "description": "Follows the BRAD GREY chart of accounts",
+    "group": "Other",
+    "id": "brad-grey",
+    "name": "BRAD GREY"
+  },
+  {
+    "accounts": 308,
+    "categories": 49,
+    "description": "Follows the BRITISH FORM chart of accounts",
+    "group": "Other",
+    "id": "british-form",
+    "name": "BRITISH FORM"
+  },
+  {
+    "accounts": 356,
+    "categories": 40,
+    "description": "Follows the CARSEY-WERNER TELEVISION chart of accounts",
+    "group": "Television",
+    "id": "carsey-werner-television",
+    "name": "CARSEY-WERNER TELEVISION"
+  },
+  {
+    "accounts": 585,
+    "categories": 41,
+    "description": "Follows the CBS TELEVISION chart of accounts",
+    "group": "Television",
+    "id": "cbs-television",
+    "name": "CBS TELEVISION"
+  },
+  {
+    "accounts": 744,
+    "categories": 42,
+    "description": "Follows the CRUSADER ENTERTAINMENT chart of accounts",
+    "group": "Feature",
+    "id": "crusader-entertainment",
+    "name": "CRUSADER ENTERTAINMENT"
+  },
+  {
+    "accounts": 1003,
+    "categories": 50,
+    "description": "Follows the DISNEY FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "disney-features",
+    "name": "DISNEY FEATURES"
+  },
+  {
+    "accounts": 508,
+    "categories": 44,
+    "description": "Follows the DREAMWORKS FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "dreamworks-features",
+    "name": "DREAMWORKS FEATURES"
+  },
+  {
+    "accounts": 596,
+    "categories": 48,
+    "description": "Follows the DREAMWORKS TELEVISION chart of accounts",
+    "group": "Television",
+    "id": "dreamworks-television",
+    "name": "DREAMWORKS TELEVISION"
+  },
+  {
+    "accounts": 383,
+    "categories": 37,
+    "description": "Follows the DUFFERIN GATE chart of accounts",
+    "group": "Other",
+    "id": "dufferin-gate",
+    "name": "DUFFERIN GATE"
+  },
+  {
+    "accounts": 192,
+    "categories": 24,
+    "description": "Follows the ECO-CHALLENGE chart of accounts",
+    "group": "Television",
+    "id": "eco-challenge",
+    "name": "ECO-CHALLENGE"
+  },
+  {
+    "accounts": 262,
+    "categories": 48,
+    "description": "Follows the EVOLUTION FILM & TAPE chart of accounts",
+    "group": "Feature",
+    "id": "evolution-film-tape",
+    "name": "EVOLUTION FILM & TAPE"
+  },
+  {
+    "accounts": 168,
+    "categories": 38,
+    "description": "Follows the GOLDHEART chart of accounts",
+    "group": "Other",
+    "id": "goldheart",
+    "name": "GOLDHEART"
+  },
+  {
+    "accounts": 478,
+    "categories": 38,
+    "description": "Follows the HALLMARK ENT chart of accounts",
+    "group": "Television",
+    "id": "hallmark-ent",
+    "name": "HALLMARK ENT"
+  },
+  {
+    "accounts": 482,
+    "categories": 45,
+    "description": "Follows the HBO EPISODIC chart of accounts",
+    "group": "Television",
+    "id": "hbo-episodic",
+    "name": "HBO EPISODIC"
+  },
+  {
+    "accounts": 482,
+    "categories": 45,
+    "description": "Follows the HBO MASTER chart of accounts",
+    "group": "Television",
+    "id": "hbo-master",
+    "name": "HBO MASTER"
+  },
+  {
+    "accounts": 95,
+    "categories": 18,
+    "description": "Follows the HEARST ACTUALITY chart of accounts",
+    "group": "Television",
+    "id": "hearst-actuality",
+    "name": "HEARST ACTUALITY"
+  },
+  {
+    "accounts": 95,
+    "categories": 18,
+    "description": "Follows the HEARST ENT USA chart of accounts",
+    "group": "Other",
+    "id": "hearst-ent-usa",
+    "name": "HEARST ENT USA"
+  },
+  {
+    "accounts": 523,
+    "categories": 38,
+    "description": "Follows the HENSON FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "henson-features",
+    "name": "HENSON FEATURES"
+  },
+  {
+    "accounts": 479,
+    "categories": 48,
+    "description": "Follows the HENSON PROD TV chart of accounts",
+    "group": "Television",
+    "id": "henson-prod-tv",
+    "name": "HENSON PROD TV"
+  },
+  {
+    "accounts": 539,
+    "categories": 38,
+    "description": "Follows the HIT ENTERTAINMENT chart of accounts",
+    "group": "Other",
+    "id": "hit-entertainment",
+    "name": "HIT ENTERTAINMENT"
+  },
+  {
+    "accounts": 248,
+    "categories": 29,
+    "description": "Follows the KING WORLD chart of accounts",
+    "group": "Television",
+    "id": "king-world",
+    "name": "KING WORLD"
+  },
+  {
+    "accounts": 609,
+    "categories": 39,
+    "description": "Follows the MANDALAY FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "mandalay-features",
+    "name": "MANDALAY FEATURES"
+  },
+  {
+    "accounts": 323,
+    "categories": 36,
+    "description": "Follows the MGM ANIMATION chart of accounts",
+    "group": "Other",
+    "id": "mgm-animation",
+    "name": "MGM ANIMATION"
+  },
+  {
+    "accounts": 550,
+    "categories": 39,
+    "description": "Follows the MGM FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "mgm-features",
+    "name": "MGM FEATURES"
+  },
+  {
+    "accounts": 550,
+    "categories": 39,
+    "description": "Follows the MGM TELEVISION chart of accounts",
+    "group": "Television",
+    "id": "mgm-television",
+    "name": "MGM TELEVISION"
+  },
+  {
+    "accounts": 717,
+    "categories": 64,
+    "description": "Follows the MOTION INTERNATIONAL chart of accounts",
+    "group": "Other",
+    "id": "motion-international",
+    "name": "MOTION INTERNATIONAL"
+  },
+  {
+    "accounts": 1307,
+    "categories": 48,
+    "description": "Follows the Marvel chart of accounts",
+    "group": "Feature",
+    "id": "marvel",
+    "name": "Marvel"
+  },
+  {
+    "accounts": 622,
+    "categories": 55,
+    "description": "Follows the NBC TV chart of accounts",
+    "group": "Television",
+    "id": "nbc-tv",
+    "name": "NBC TV"
+  },
+  {
+    "accounts": 569,
+    "categories": 47,
+    "description": "Follows the New York State Form B chart of accounts",
+    "group": "Other",
+    "id": "new-york-state-form-b",
+    "name": "New York State Form B"
+  },
+  {
+    "accounts": 1225,
+    "categories": 174,
+    "description": "Follows the PARAMOUNT CLASSICS chart of accounts",
+    "group": "Feature",
+    "id": "paramount-classics",
+    "name": "PARAMOUNT CLASSICS"
+  },
+  {
+    "accounts": 115,
+    "categories": 26,
+    "description": "Follows the PARAMOUNT DOMESTIC TV chart of accounts",
+    "group": "Television",
+    "id": "paramount-domestic-tv",
+    "name": "PARAMOUNT DOMESTIC TV"
+  },
+  {
+    "accounts": 1234,
+    "categories": 72,
+    "description": "Follows the PARAMOUNT FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "paramount-features",
+    "name": "PARAMOUNT FEATURES"
+  },
+  {
+    "accounts": 1235,
+    "categories": 73,
+    "description": "Follows the PARAMOUNT MOW chart of accounts",
+    "group": "Television",
+    "id": "paramount-mow",
+    "name": "PARAMOUNT MOW"
+  },
+  {
+    "accounts": 1234,
+    "categories": 72,
+    "description": "Follows the PARAMOUNT NETWORK EPISODIC chart of accounts",
+    "group": "Television",
+    "id": "paramount-network-episodic",
+    "name": "PARAMOUNT NETWORK EPISODIC"
+  },
+  {
+    "accounts": 1234,
+    "categories": 72,
+    "description": "Follows the PARAMOUNT VIACOM EPISODIC chart of accounts",
+    "group": "Television",
+    "id": "paramount-viacom-episodic",
+    "name": "PARAMOUNT VIACOM EPISODIC"
+  },
+  {
+    "accounts": 586,
+    "categories": 68,
+    "description": "Follows the SALTER ST CORP chart of accounts",
+    "group": "Other",
+    "id": "salter-st-corp",
+    "name": "SALTER ST CORP"
+  },
+  {
+    "accounts": 735,
+    "categories": 44,
+    "description": "Follows the SONY COLUMBIA TRISTAR FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "sony-columbia-tristar-features",
+    "name": "SONY COLUMBIA TRISTAR FEATURES"
+  },
+  {
+    "accounts": 850,
+    "categories": 38,
+    "description": "Follows the SONY FEATURES TEMPLATE chart of accounts",
+    "group": "Feature",
+    "id": "sony-features-template",
+    "name": "SONY FEATURES TEMPLATE"
+  },
+  {
+    "accounts": 356,
+    "categories": 34,
+    "description": "Follows the STG Pre-Prelim KY Tier 1 chart of accounts",
+    "group": "Feature",
+    "id": "stg-pre-prelim-ky-tier-1",
+    "name": "STG Pre-Prelim KY Tier 1"
+  },
+  {
+    "accounts": 551,
+    "categories": 64,
+    "description": "Follows the TELEFILM BESI chart of accounts",
+    "group": "Other",
+    "id": "telefilm-besi",
+    "name": "TELEFILM BESI"
+  },
+  {
+    "accounts": 460,
+    "categories": 35,
+    "description": "Follows the TRIAGE ENTERTAINMENT chart of accounts",
+    "group": "Other",
+    "id": "triage-entertainment",
+    "name": "TRIAGE ENTERTAINMENT"
+  },
+  {
+    "accounts": 605,
+    "categories": 43,
+    "description": "Follows the ABC TELEVISION chart of accounts",
+    "group": "Television",
+    "id": "abc-television",
+    "name": "ABC TELEVISION"
+  },
+  {
+    "accounts": 607,
+    "categories": 66,
+    "description": "Follows the ALLIANCE (OLD) chart of accounts",
+    "group": "Other",
+    "id": "alliance-old",
+    "name": "ALLIANCE (OLD)"
+  },
+  {
+    "accounts": 607,
+    "categories": 66,
+    "description": "Follows the ALLIANCE ATLANTIS COMM chart of accounts",
+    "group": "Other",
+    "id": "alliance-atlantis-comm",
+    "name": "ALLIANCE ATLANTIS COMM"
+  },
+  {
+    "accounts": 511,
+    "categories": 43,
+    "description": "Follows the ARTISAN ENTERTAINMENT chart of accounts",
+    "group": "Feature",
+    "id": "artisan-entertainment",
+    "name": "ARTISAN ENTERTAINMENT"
+  },
+  {
+    "accounts": 264,
+    "categories": 33,
+    "description": "Follows the CHANNEL4FORM chart of accounts",
+    "group": "Television",
+    "id": "channel4form",
+    "name": "CHANNEL4FORM"
+  },
+  {
+    "accounts": 748,
+    "categories": 64,
+    "description": "Follows the DISNEY ANIMATION chart of accounts",
+    "group": "Other",
+    "id": "disney-animation",
+    "name": "DISNEY ANIMATION"
+  },
+  {
+    "accounts": 786,
+    "categories": 75,
+    "description": "Follows the DISNEY STAGE chart of accounts",
+    "group": "Other",
+    "id": "disney-stage",
+    "name": "DISNEY STAGE"
+  },
+  {
+    "accounts": 1969,
+    "categories": 49,
+    "description": "Follows the DISNEY chart of accounts",
+    "group": "Other",
+    "id": "disney",
+    "name": "DISNEY"
+  },
+  {
+    "accounts": 748,
+    "categories": 64,
+    "description": "Follows the DREAMWORKS ANIMATION chart of accounts",
+    "group": "Other",
+    "id": "dreamworks-animation",
+    "name": "DREAMWORKS ANIMATION"
+  },
+  {
+    "accounts": 1159,
+    "categories": 38,
+    "description": "Follows the FOX 20TH TV chart of accounts",
+    "group": "Television",
+    "id": "fox-20th-tv",
+    "name": "FOX 20TH TV"
+  },
+  {
+    "accounts": 936,
+    "categories": 72,
+    "description": "Follows the FOX TV ANIMATION PILOT chart of accounts",
+    "group": "Television",
+    "id": "fox-tv-animation-pilot",
+    "name": "FOX TV ANIMATION PILOT"
+  },
+  {
+    "accounts": 936,
+    "categories": 72,
+    "description": "Follows the FOX TV ANIMATION chart of accounts",
+    "group": "Television",
+    "id": "fox-tv-animation",
+    "name": "FOX TV ANIMATION"
+  },
+  {
+    "accounts": 850,
+    "categories": 54,
+    "description": "Follows the FOX TV SERIES chart of accounts",
+    "group": "Television",
+    "id": "fox-tv-series",
+    "name": "FOX TV SERIES"
+  },
+  {
+    "accounts": 850,
+    "categories": 54,
+    "description": "Follows the FOX TV STUDIO chart of accounts",
+    "group": "Television",
+    "id": "fox-tv-studio",
+    "name": "FOX TV STUDIO"
+  },
+  {
+    "accounts": 111,
+    "categories": 56,
+    "description": "Follows the FOX VAN NESS FILMS chart of accounts",
+    "group": "Feature",
+    "id": "fox-van-ness-films",
+    "name": "FOX VAN NESS FILMS"
+  },
+  {
+    "accounts": 850,
+    "categories": 54,
+    "description": "Follows the Fox Tv Pilot chart of accounts",
+    "group": "Television",
+    "id": "fox-tv-pilot",
+    "name": "Fox Tv Pilot"
+  },
+  {
+    "accounts": 454,
+    "categories": 38,
+    "description": "Follows the HALLMARK McGEE STREET chart of accounts",
+    "group": "Other",
+    "id": "hallmark-mcgee-street",
+    "name": "HALLMARK McGEE STREET"
+  },
+  {
+    "accounts": 616,
+    "categories": 43,
+    "description": "Follows the HBO NY chart of accounts",
+    "group": "Television",
+    "id": "hbo-ny",
+    "name": "HBO NY"
+  },
+  {
+    "accounts": 672,
+    "categories": 42,
+    "description": "Follows the HEARST ENT CANADA chart of accounts",
+    "group": "Other",
+    "id": "hearst-ent-canada",
+    "name": "HEARST ENT CANADA"
+  },
+  {
+    "accounts": 1946,
+    "categories": 52,
+    "description": "Follows the MIRAMAX FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "miramax-features",
+    "name": "MIRAMAX FEATURES"
+  },
+  {
+    "accounts": 1953,
+    "categories": 49,
+    "description": "Follows the MIRAMAX chart of accounts",
+    "group": "Other",
+    "id": "miramax",
+    "name": "MIRAMAX"
+  },
+  {
+    "accounts": 4306,
+    "categories": 76,
+    "description": "Follows the NETFLIX - LIVE ACTION V4 chart of accounts",
+    "group": "Other",
+    "id": "netflix-live-action-v4",
+    "name": "NETFLIX - LIVE ACTION V4"
+  },
+  {
+    "accounts": 520,
+    "categories": 46,
+    "description": "Follows the REVOLUTION STUDIOS chart of accounts",
+    "group": "Feature",
+    "id": "revolution-studios",
+    "name": "REVOLUTION STUDIOS"
+  },
+  {
+    "accounts": 1300,
+    "categories": 48,
+    "description": "Follows the SPT chart of accounts",
+    "group": "Television",
+    "id": "spt",
+    "name": "SPT"
+  },
+  {
+    "accounts": 589,
+    "categories": 49,
+    "description": "Follows the SUPERBUDGET EP 2006 chart of accounts",
+    "group": "Other",
+    "id": "superbudget-ep-2006",
+    "name": "SUPERBUDGET EP 2006"
+  },
+  {
+    "accounts": 825,
+    "categories": 71,
+    "description": "Follows the Telefilm Canada EN chart of accounts",
+    "group": "Other",
+    "id": "telefilm-canada-en",
+    "name": "Telefilm Canada EN"
+  },
+  {
+    "accounts": 823,
+    "categories": 71,
+    "description": "Follows the Telefilm Canada FR chart of accounts",
+    "group": "Other",
+    "id": "telefilm-canada-fr",
+    "name": "Telefilm Canada FR"
+  },
+  {
+    "accounts": 595,
+    "categories": 41,
+    "description": "Follows the UNIV NETWORK chart of accounts",
+    "group": "Television",
+    "id": "univ-network",
+    "name": "UNIV NETWORK"
+  },
+  {
+    "accounts": 595,
+    "categories": 41,
+    "description": "Follows the USA CABLE ENTERTAINMENT chart of accounts",
+    "group": "Television",
+    "id": "usa-cable-entertainment",
+    "name": "USA CABLE ENTERTAINMENT"
+  },
+  {
+    "accounts": 345,
+    "categories": 39,
+    "description": "Follows the WARNER BROS AUSTRALIA chart of accounts",
+    "group": "Other",
+    "id": "warner-bros-australia",
+    "name": "WARNER BROS AUSTRALIA"
+  },
+  {
+    "accounts": 345,
+    "categories": 39,
+    "description": "Follows the WARNER BROS BELAIR chart of accounts",
+    "group": "Other",
+    "id": "warner-bros-belair",
+    "name": "WARNER BROS BELAIR"
+  },
+  {
+    "accounts": 345,
+    "categories": 39,
+    "description": "Follows the WARNER BROS CANADA chart of accounts",
+    "group": "Other",
+    "id": "warner-bros-canada",
+    "name": "WARNER BROS CANADA"
+  },
+  {
+    "accounts": 345,
+    "categories": 39,
+    "description": "Follows the WARNER BROS FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "warner-bros-features",
+    "name": "WARNER BROS FEATURES"
+  },
+  {
+    "accounts": 348,
+    "categories": 42,
+    "description": "Follows the WARNER BROS FOREIGN FEATURES chart of accounts",
+    "group": "Feature",
+    "id": "warner-bros-foreign-features",
+    "name": "WARNER BROS FOREIGN FEATURES"
+  },
+  {
+    "accounts": 345,
+    "categories": 39,
+    "description": "Follows the WARNER BROS GENERIC chart of accounts",
+    "group": "Other",
+    "id": "warner-bros-generic",
+    "name": "WARNER BROS GENERIC"
+  },
+  {
+    "accounts": 1711,
+    "categories": 49,
+    "description": "Follows the WARNER BROS TV chart of accounts",
+    "group": "Television",
+    "id": "warner-bros-tv",
+    "name": "WARNER BROS TV"
+  }
+]

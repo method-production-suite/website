@@ -1,0 +1,27 @@
+/* Display settings (js/display.js, js/display-settings.js). Display only. */
+
+/* A line whose hidden X, 4X or currency changes its total: a dot in the #
+   column; what it is shows on hover. The grid never prints (reports are
+   their own pages), and print rules hide it anyway. */
+.grid td.c-num.hidden-factor::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+  pointer-events: none;
+}
+
+@media print {
+  .grid td.c-num.hidden-factor::after {
+    display: none;
+  }
+}
+
+/* A selected cell showing its formula instead of its value. */
+.grid td.alt-shown {
+  color: var(--formula);
+}

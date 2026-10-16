@@ -1,0 +1,1064 @@
+/* Setup panel (globals, fringes, groups, units, currencies).
+   Uses only the app's :root tokens; every class is prefixed with setup-,
+   except the Budget Setup window's shared layout below (sw-).
+
+   THE BUDGET SETUP LAYOUT (js/setupframe.js builds it; any setup tab can use
+   it, from any file). A tab is one frame filling the window's main area,
+   then the window's footer:
+
+   .sw-framed        the element holding a frame (mountFrame() adds it)
+   .sw-frame         a column: the strip, the band, then the scroll
+   .sw-strip         the action strip (actionStrip()): .sw-strip-actions
+                     (the tab's .sw-act buttons, stripButton()), .sw-search
+                     (searchBox(), takes the rest of the row) and
+                     .sw-strip-end (Undo and Redo, always last)
+   .sw-act           a compact button; .sw-act-primary for the main one;
+                     aria-disabled="true" when it can't act now
+   .sw-band          a thin band of tab-wide settings in one row (band()):
+                     .sw-band-field (bandField(): .sw-band-label, then the
+                     control), .sw-band-title for a short heading
+   .sw-scroll        the rest of the height, scrolling on its own
+   .sw-table         a dense table (gridTable()): .sw-grid-head (column
+                     heads, .sw-head cells, .sw-num for figures; it stays in
+                     view while rows scroll) over ul.sw-grid, a
+                     li.sw-grid-row per item (28 pixels, every other row
+                     shaded, .is-selected for the selected one).
+                     .sw-cols-<name> sets the columns of both: one rule per
+                     table, here or in the tab's own stylesheet, e.g.
+                       .sw-cols-credits .sw-grid-head,
+                       .sw-cols-credits .sw-grid-row {
+                         grid-template-columns: 14px minmax(0, 1fr) 96px;
+                       }
+   .sw-cell          a cell (clipped to one line); .sw-num right-aligns
+                     figures; .sw-cell-input is a field drawn flat in its
+                     cell (an outline on hover and focus); .sw-cell-name a
+                     row's name button; .sw-cell-text muted text and
+                     .sw-cell-label plain text
+   .sw-acts          a row's own buttons (details, delete) at its right end
+   .sw-after         anything after the table, in the same scroll
+   .setup-empty      in the scroll: what shows instead of an empty table
+                     ("No charges yet.", "Nothing matches the search.")
+   .sw-foot          the window's footer (setupwin.js): .sw-foot-totals at
+                     the left, Close at the right. A tab sets its totals
+                     with setFooterTotals([{ label, value, title, dim }]):
+                     one .sw-foot-stat each (.sw-foot-label,
+                     .sw-foot-value; .is-dim while not current); a blank
+                     label shows the value alone ("6 fringes")
+   .sw-rail          the left rail (setupwin.css); a tab can put its own
+                     content in it while it shows the budget: railHost() */
+
+.setup {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text);
+  min-width: 0;
+}
+
+.setup *,
+.setup *::before,
+.setup *::after {
+  box-sizing: border-box;
+}
+
+.setup p {
+  margin: 0;
+}
+
+.setup-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.setup-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-muted {
+  color: var(--text-muted);
+}
+
+/* Panel */
+
+.setup-panel {
+  padding: 10px 0 12px;
+}
+
+.setup-panel[aria-busy="true"] .setup-list {
+  cursor: progress;
+}
+
+.setup-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  padding: 6px 0 10px;
+}
+
+.setup-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+
+.setup-item {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+
+.setup-item:hover,
+.setup-item:focus-within {
+  background: var(--row-hover);
+}
+
+.setup-item-bad {
+  box-shadow: inset 2px 0 0 var(--danger);
+}
+
+.setup-item-off .setup-name {
+  color: var(--text-muted);
+}
+
+/* Globals: one line per item */
+
+.setup-grow {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 10fr) 80px 22px;
+  align-items: center;
+  column-gap: 6px;
+  padding: 3px 2px 3px 6px;
+}
+
+.setup-cols {
+  padding-top: 0;
+  padding-bottom: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.setup-right {
+  text-align: right;
+}
+
+.setup-value {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.setup-value-bad {
+  color: var(--danger);
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+
+.setup-grow > .setup-issue,
+.setup-grow > .setup-error,
+.setup-grow > .setup-confirm {
+  grid-column: 1 / -1;
+}
+
+/* Other tabs: a header line and a small grid of fields per item */
+
+.setup-block {
+  padding: 6px 2px 8px 6px;
+}
+
+.setup-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.setup-name {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setup-head .setup-name {
+  flex: 0 1 auto;
+}
+
+.setup-figs {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 12px;
+  min-width: 0;
+  text-align: right;
+}
+
+.setup-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px 8px;
+  margin-top: 4px;
+}
+
+.setup-fields-3 {
+  grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1.3fr);
+}
+
+.setup-field {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setup-field-wide {
+  grid-column: 1 / -1;
+}
+
+.setup-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.setup-adorned {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.setup-adorned .setup-input {
+  flex: 1 1 auto;
+}
+
+.setup-adorn {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.setup-check-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.setup-check {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+}
+
+.setup-check-label {
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+/* Controls */
+
+.setup-input {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.setup-input.setup-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.setup-input:hover {
+  border-color: var(--text-muted);
+}
+
+.setup-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+
+.setup-input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.setup-select {
+  padding-right: 2px;
+}
+
+.setup-btn {
+  appearance: none;
+  font: inherit;
+  font-size: 12.5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.setup-btn:focus-visible,
+.setup-name:focus-visible,
+.setup-del:focus-visible,
+.setup-check:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.setup-btn[aria-disabled="true"],
+.setup-del[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.setup-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.setup-btn-quiet {
+  background: transparent;
+}
+
+.setup-btn-danger {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.setup-del {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.setup-del:hover:not([aria-disabled="true"]) {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+/* Messages */
+
+.setup-issue,
+.setup-error {
+  font-size: 12px;
+  margin-top: 4px;
+  padding: 3px 6px;
+  border-radius: var(--radius);
+  color: var(--danger);
+  background: var(--danger-bg);
+  overflow-wrap: anywhere;
+}
+
+.setup-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.setup-hint-bad {
+  color: var(--danger);
+}
+
+.setup-confirm {
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface);
+  display: grid;
+  gap: 6px;
+}
+
+.setup-confirm-text {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.setup-confirm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Add form */
+
+.setup-add {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.setup-add-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.setup-add .setup-fields {
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+}
+
+.setup-add-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.setup-add-actions .setup-btn {
+  flex: 0 0 auto;
+}
+
+/* Setup lists: the name sort, line counts, drag handles (setuplist.js) */
+
+.setup-sort {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.setup-sort:hover {
+  color: var(--text);
+}
+
+.setup-sort.is-sorted {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.setup-sort:focus-visible,
+.setup-uses:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.setup-uses {
+  appearance: none;
+  min-width: 26px;
+  height: 20px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.setup-uses.is-zero {
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+.setup-uses:hover:not(.is-zero) {
+  background: var(--row-hover);
+}
+
+.setup-handle {
+  align-self: stretch;
+  width: 10px;
+  min-height: 18px;
+  border-radius: 2px;
+  background-image: radial-gradient(circle, var(--text-muted) 1px, transparent 1.3px);
+  background-size: 5px 5px;
+  background-position: 1px 2px;
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
+}
+
+.setup-handle:hover {
+  opacity: 1;
+}
+
+.setup-handle.is-off {
+  background-image: none;
+  cursor: default;
+}
+
+body.setup-dragging,
+body.setup-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.setup-listtools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.setup-show {
+  width: auto;
+  height: 22px;
+  font-size: 12px;
+}
+
+.setup-namewrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.setup-namewrap .setup-name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.setup-item.drop-before {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.setup-item.drop-after {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.setup-item.is-dragging {
+  opacity: 0.55;
+}
+
+/* The tools panel's compact Units tab: a unit's plural and hours as text
+   (setup.js; they are edited in the Budget Setup window). */
+.setup-unit-facts {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* The compact tabs' list tools: the sort at the left, then Show and the
+   Setup button (Budget Setup, setup.js). */
+.setup-compact .setup-listtools {
+  justify-content: flex-start;
+}
+
+.setup-compact .setup-listtools > :first-child {
+  margin-right: auto;
+}
+
+/* ------------------------------------------------------------------------ */
+/* The Budget Setup layout (js/setupframe.js; documented at the top). */
+
+.sw-framed,
+.apply.sw-framed {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  gap: 0;
+}
+
+.sw-frame {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The action strip */
+
+.sw-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 6px;
+  min-height: 30px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.sw-strip-actions,
+.sw-strip-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sw-strip-end {
+  padding-left: 6px;
+  border-left: 1px solid var(--border-soft);
+}
+
+.sw-strip-gap {
+  flex: 1 1 auto;
+}
+
+.setup-input.sw-search {
+  flex: 1 1 140px;
+  width: auto;
+  min-width: 120px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.sw-act {
+  appearance: none;
+  flex: none;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sw-act:hover:not([aria-disabled="true"]) {
+  background: var(--row-hover);
+  border-color: var(--border);
+}
+
+.sw-act[aria-disabled="true"] {
+  color: var(--text-muted);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.sw-act-primary {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sw-act:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* The band of tab-wide settings */
+
+.sw-band {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 14px;
+  min-height: 28px;
+  padding: 3px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.sw-band-title {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.sw-band-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sw-band-label {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sw-band .setup-input {
+  width: auto;
+  height: 22px;
+  font-size: 12px;
+}
+
+.sw-band .setup-input.sw-band-short {
+  width: 7em;
+}
+
+/* The scroll and the table */
+
+.sw-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sw-scroll > .setup-empty,
+.sw-scroll > .setup-error {
+  margin: 6px 10px;
+}
+
+.sw-table {
+  min-width: 600px;
+}
+
+.sw-grid-head,
+.sw-grid-row {
+  display: grid;
+  align-items: center;
+  column-gap: 0;
+}
+
+.sw-grid-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  min-height: 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sw-head {
+  min-width: 0;
+  padding: 0 9px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sw-head .setup-sort {
+  max-width: 100%;
+  font-size: 11px;
+}
+
+.sw-head .setup-sort > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sw-head.sw-num {
+  text-align: right;
+}
+
+ul.sw-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sw-grid-row {
+  min-height: 28px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12.5px;
+}
+
+.sw-grid-row:nth-child(even) {
+  background: var(--level-bg);
+}
+
+.sw-grid-row:hover {
+  background: var(--row-hover);
+}
+
+.sw-grid-row.is-selected {
+  background: var(--selection);
+}
+
+.sw-grid-row > .setup-handle {
+  justify-self: center;
+  align-self: center;
+  height: 16px;
+}
+
+.sw-cell {
+  min-width: 0;
+  padding: 0 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sw-num {
+  text-align: right;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.sw-cell > span.sw-num,
+.sw-cell > .sw-cell-text,
+.sw-cell > .sw-cell-label,
+.sw-grid-row > .sw-cell-text {
+  display: block;
+  padding: 0 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sw-cell-text {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sw-cell-label {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* A field drawn flat in its cell: an outline only on hover and focus. */
+.setup-input.sw-cell-input {
+  height: 22px;
+  padding: 1px 4px;
+  border-color: transparent;
+  border-radius: 3px;
+  background: transparent;
+  font-size: 12.5px;
+}
+
+.setup-input.sw-cell-input:hover {
+  border-color: var(--border);
+}
+
+.setup-input.sw-cell-input:focus {
+  background: var(--surface);
+}
+
+.setup-input.sw-cell-input.sw-num,
+.setup-input.sw-cell-input.setup-num {
+  text-align: right;
+}
+
+select.setup-input.sw-cell-input {
+  padding-right: 0;
+}
+
+/* A row's name: the button that selects the row and opens its editor. */
+.sw-grid .apply-check.sw-cell-name,
+.sw-grid .setup-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 22px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: none;
+  font-size: 12.5px;
+}
+
+.sw-grid .apply-item.is-selected .apply-check {
+  background: none;
+}
+
+.sw-grid .sw-cell-name .apply-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sw-cell > .setup-check {
+  display: block;
+  margin: 0 5px;
+}
+
+.sw-cell > .setup-uses {
+  min-width: 0;
+}
+
+.sw-num > .setup-uses {
+  margin-left: auto;
+  display: block;
+}
+
+/* A group's color: a chip, then the pick. */
+.sw-color {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding-left: 5px;
+}
+
+.sw-chip {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sw-after {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* The window's footer: the tab's totals, then Close. */
+
+.sw-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  padding: 3px 8px 3px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.sw-foot-totals {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 16px;
+  min-width: 0;
+}
+
+.sw-foot-stat {
+  display: inline-flex;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.sw-foot-label {
+  color: var(--text-muted);
+}
+
+.sw-foot-value {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.sw-foot-stat.is-dim {
+  opacity: 0.5;
+}
+
+.sw-act.sw-foot-close {
+  padding: 0 14px;
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+/* Each list's columns: the drag handle, then the cells in order. */
+
+.sw-cols-fringes .sw-grid-head,
+.sw-cols-fringes .sw-grid-row {
+  grid-template-columns: 14px minmax(90px, 1fr) minmax(120px, 2fr) 84px 128px 104px 58px 104px;
+}
+
+.sw-cols-groups .sw-grid-head,
+.sw-cols-groups .sw-grid-row {
+  grid-template-columns: 14px minmax(90px, 1fr) minmax(120px, 2fr) 116px 128px 58px 104px 104px;
+}
+
+.sw-cols-sets .sw-grid-head,
+.sw-cols-sets .sw-grid-row {
+  grid-template-columns: 14px minmax(90px, 1fr) minmax(160px, 3fr) 58px 104px;
+}
+
+.sw-cols-locations .sw-grid-head,
+.sw-cols-locations .sw-grid-row {
+  grid-template-columns: 14px minmax(90px, 1fr) minmax(110px, 1.6fr) minmax(80px, 1fr) minmax(60px, 0.7fr) minmax(70px, 0.8fr) 58px 104px;
+}
+
+.sw-cols-currencies .sw-grid-head,
+.sw-cols-currencies .sw-grid-row {
+  grid-template-columns: 14px 84px minmax(140px, 2fr) 72px 58px 104px 104px;
+}
+
+.sw-cols-globals .sw-grid-head,
+.sw-cols-globals .sw-grid-row {
+  grid-template-columns: 14px 58px minmax(100px, 1fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) 112px 92px 54px;
+}
+
+.sw-cols-units .sw-grid-head,
+.sw-cols-units .sw-grid-row {
+  grid-template-columns: 14px 58px minmax(90px, 1fr) minmax(90px, 1fr) minmax(140px, 2fr) 72px 30px;
+}
+
+.sw-cols-library .sw-grid-head,
+.sw-cols-library .sw-grid-row {
+  grid-template-columns: 26px minmax(100px, 1fr) minmax(160px, 2.5fr) minmax(80px, 0.8fr);
+}
+
+.sw-cols-library .library-tickbox {
+  justify-self: center;
+  padding: 0;
+}
+
+.sw-cols-library .library-name {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 5px;
+  background: none;
+}
+
+/* A row's own buttons (a global's details, delete), at its right end. */
+.sw-acts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 2px;
+}
+
+/* A row's messages and its delete question span the whole row. */
+.sw-grid-row > .setup-confirm,
+.sw-grid-row > .setup-error,
+.sw-grid-row > .setup-issue {
+  grid-column: 1 / -1;
+  margin: 2px 8px 6px 20px;
+}

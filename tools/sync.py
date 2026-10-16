@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -53,8 +54,36 @@ def sync(app: dict) -> None:
             out = dest / rel
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_bytes(t.extractfile(m).read())
+    if app.get("build"):
+        build(app, repo, commit, tar, dest)
     (dest / "SOURCE").write_text(f"{app['source']} {ref} {commit}\n")
     print(f"{app['slug']}: {app['source']}@{ref} ({commit[:9]})")
+
+
+def build(app: dict, repo: Path, commit: str, _site_tar: bytes, dest: Path) -> None:
+    """Run the app's own build for files its site/ doesn't commit (Method Budget's demo),
+    in a throwaway export of the same commit, never in the app's working checkout. A
+    shared target folder outside the repo keeps rebuilds fast."""
+    full = subprocess.run(["git", "-C", str(repo), "archive", "--format=tar", commit],
+                          check=True, capture_output=True).stdout
+    cache = Path.home() / "Library" / "Caches" / "method-website" / f"target-{app['slug']}"
+    with tempfile.TemporaryDirectory(prefix=f"method-website-{app['slug']}-") as tmp:
+        with tarfile.open(fileobj=io.BytesIO(full)) as t:
+            t.extractall(tmp, filter="data")
+        # The repo's own target/ is linked to the cache (some xtasks read target/ by
+        # path, so CARGO_TARGET_DIR alone isn't enough).
+        cache.mkdir(parents=True, exist_ok=True)
+        (Path(tmp) / "target").symlink_to(cache, target_is_directory=True)
+        print(f"{app['slug']}: building {' '.join(app['build'])} at {commit[:9]}")
+        subprocess.run(app["build"], cwd=tmp, check=True)
+        out = Path(tmp) / app["build_output"]
+        if not (out / "index.html").is_file():
+            raise SystemExit(f"sync: {app['slug']}: the build wrote no {app['build_output']}/index.html")
+        target = dest / Path(app["build_output"]).relative_to("site")
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(out, target)
+        print(f"{app['slug']}: copied {sum(1 for _ in target.rglob('*') if _.is_file())} built files into {target.relative_to(ROOT)}")
 
 
 def main(argv: list[str]) -> int:

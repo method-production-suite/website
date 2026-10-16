@@ -1,0 +1,1483 @@
+/* Method Budget: app shell, grid, footer and dialogs.
+   Colors and type come from the tokens below; dark mode just swaps them. */
+
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --surface-ro: #f8f9fb;
+  --border: #dde1e6;
+  --border-soft: #eceef1;
+  --text: #1c2228;
+  --text-muted: #69727d;
+  --accent: #0e7468;
+  --accent-text: #ffffff;
+  --formula: #0b5f8a;
+  --danger: #c0392b;
+  --danger-bg: #fdecea;
+  --selection: #e1f1ee;
+  --row-hover: #f2f5f7;
+  --level-bg: #f3f5f8;
+  --subtotal-bg: #f6f8f4;
+  --note: #d29a12;
+  --shadow: 0 12px 40px rgba(16, 24, 32, 0.22);
+  --backdrop: rgba(16, 22, 28, 0.36);
+  --radius: 6px;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-num: var(--font-ui);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171b;
+    --surface: #1b1f24;
+    --surface-2: #22272e;
+    --surface-ro: #1e2227;
+    --border: #313840;
+    --border-soft: #262c33;
+    --text: #e4e8ec;
+    --text-muted: #8d97a2;
+    --accent: #2cc7b2;
+    --accent-text: #08201d;
+    --formula: #7cc4ef;
+    --danger: #f07361;
+    --danger-bg: #3a1e1a;
+    --selection: #173a35;
+    --row-hover: #20262d;
+    --level-bg: #20252b;
+    --subtotal-bg: #1f2622;
+    --note: #e3b341;
+    --shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    --backdrop: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.35 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Layout */
+
+.app {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100vh;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+}
+
+.doc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-weight: 600;
+}
+
+.doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-dirty {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.workspace {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.panel {
+  flex: none;
+  width: 380px;
+  overflow: auto;
+  padding: 8px 12px 12px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Budget tabs (js/tabs.js): one per open budget, under the toolbar */
+
+.tabbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 8px 0;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.tabbar-tabs {
+  position: relative; /* offsetLeft of a tab is within the strip */
+  flex: 0 1 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tabbar-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.doc-tab {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  max-width: 220px;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  color: var(--text-muted);
+}
+
+.doc-tab:hover {
+  color: var(--text);
+  background: var(--row-hover);
+}
+
+.doc-tab.is-active {
+  color: var(--text);
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.doc-tab-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 5px 4px 5px 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.doc-tab.is-active .doc-tab-btn {
+  font-weight: 600;
+}
+
+.doc-tab-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius);
+}
+
+.doc-tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-tab-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* The close button shows on the tab in front and the one under the pointer;
+   elsewhere it keeps its room, so tabs don't shift on hover. */
+.doc-tab-close {
+  flex: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0 5px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.doc-tab.is-active .doc-tab-close,
+.doc-tab:hover .doc-tab-close {
+  visibility: visible;
+}
+
+.doc-tab-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Dragging a tab: where it will land. */
+body.tabs-dragging,
+body.tabs-dragging .doc-tab-btn {
+  cursor: grabbing;
+}
+
+.doc-tab.is-dragging {
+  opacity: 0.5;
+}
+
+.doc-tab.drop-before::before,
+.doc-tab.drop-after::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.doc-tab.drop-before::before {
+  left: -2px;
+}
+
+.doc-tab.drop-after::after {
+  right: -2px;
+}
+
+.tabbar-scroll,
+.tabbar-new {
+  flex: none;
+  appearance: none;
+  align-self: center;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tabbar-scroll:hover:not(:disabled),
+.tabbar-new:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+
+.tabbar-scroll:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Small chevrons, drawn like the breadcrumb's. */
+.tabbar-scroll::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.tabbar-scroll-left::before {
+  transform: translateX(1px) rotate(135deg);
+}
+
+.tabbar-scroll-right::before {
+  transform: translateX(-1px) rotate(-45deg);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Split view (js/pane.js): two panes side by side, each with its own tab
+   strip, breadcrumb, grid and footer. The target pane (the one the toolbar,
+   menus and tools act on) has an accent along its strip and its tab in front
+   in bold; the other pane's tab in front is in plain weight. */
+
+.app.is-split {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.panes {
+  flex: 1 1 0;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pane {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pane > .main {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.pane.is-target > .tabbar {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.pane:not(.is-target) .doc-tab.is-active .doc-tab-btn {
+  font-weight: 400;
+}
+
+/* A tab dragged from the other pane, over an empty end of this strip. */
+.tabbar.is-drop-target .tabbar-tabs {
+  box-shadow: inset -2px 0 0 var(--accent);
+}
+
+.pane-divider {
+  flex: none;
+  position: relative;
+  z-index: 3;
+  width: 7px;
+  margin: 0 -3px;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.pane-divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+  background: var(--border);
+}
+
+.pane-divider:hover::after,
+.pane-divider:focus-visible::after,
+body.panes-resizing .pane-divider::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 3px;
+  background: var(--accent);
+}
+
+body.panes-resizing {
+  cursor: col-resize;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Buttons */
+
+.btn {
+  appearance: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--row-hover);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn-quiet {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.08);
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger);
+  filter: brightness(1.08);
+}
+
+.btn-danger-text {
+  color: var(--danger);
+}
+
+#btn-panel[aria-pressed="true"] {
+  background: var(--selection);
+  border-color: transparent;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Breadcrumb, banner, level actions */
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.crumb {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  margin: 0 -4px;
+  border-radius: var(--radius);
+  color: var(--accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crumb:hover {
+  background: var(--row-hover);
+}
+
+.crumb.current {
+  color: var(--text);
+  font-weight: 600;
+  cursor: default;
+}
+
+.crumb-sep {
+  color: var(--text-muted);
+}
+
+/* A segment with its jump list, and the previous/next account buttons. */
+.crumb-seg {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.crumb-seg .crumb {
+  margin-right: 0;
+}
+
+.crumb-pick {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  width: 20px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* A small chevron pointing down. */
+.crumb-pick::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-top: -4px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.crumb-pick:hover,
+.crumb-pick[aria-expanded="true"] {
+  background: var(--row-hover);
+  color: var(--text);
+}
+
+.crumb-steps {
+  flex: none;
+  display: flex;
+  gap: 3px;
+  margin-left: 4px;
+}
+
+.crumb-step {
+  appearance: none;
+  width: 24px;
+  height: 22px;
+  padding: 0 0 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.crumb-step:hover {
+  background: var(--row-hover);
+}
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+}
+
+.banner strong {
+  color: var(--danger);
+}
+
+.banner-detail {
+  overflow-wrap: anywhere;
+}
+
+/* A budget converted from an export (js/convertbanner.js): a quiet note on
+   its tab until it is closed or first saved. */
+.convert-banner {
+  display: flex;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--level-bg);
+  color: var(--text);
+}
+
+.convert-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.convert-banner-close {
+  flex: none;
+  padding: 0 8px;
+  color: var(--text-muted);
+  font-size: 1.15em;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap; /* a narrow window wraps the buttons rather than cutting them off */
+  align-items: center;
+  gap: 2px 4px;
+  margin: 0 -6px;
+}
+
+.actions .btn-danger-text {
+  margin-left: auto;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Grid */
+
+.grid-host {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  scroll-padding-top: 32px;
+  outline: none;
+}
+
+.grid-host:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+table.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid td {
+  position: relative;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--surface); /* opaque, so pinned cells cover what scrolls under them */
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid .num {
+  text-align: right;
+  font-family: var(--font-num);
+}
+
+.grid td.ro {
+  background: var(--surface-ro);
+}
+
+.grid tr.drill td {
+  cursor: default;
+}
+
+.grid tbody tr:not(.static):hover td {
+  background: var(--row-hover);
+}
+
+.grid tr.sel td,
+.grid tbody tr.sel:hover td {
+  background: var(--selection);
+}
+
+.grid td.cursor {
+  outline: 2px solid var(--text-muted);
+  outline-offset: -2px;
+}
+
+.grid-host:focus-within td.cursor {
+  outline-color: var(--accent);
+}
+
+.grid td.has-error {
+  color: var(--danger);
+  background: var(--danger-bg);
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+.grid td.has-error::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 7px 7px 0;
+  border-color: transparent var(--danger) transparent transparent;
+}
+
+.grid td.editing {
+  overflow: visible;
+}
+
+.cell-editor {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  padding: 0 6px;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: inherit;
+  outline: none;
+}
+
+.grid .ph {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.grid td.muted,
+.grid td.na {
+  color: var(--text-muted);
+}
+
+.grid td.formula {
+  color: var(--formula);
+}
+
+.grid td.auto {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Detail row kinds */
+
+.grid tr.subtotal td {
+  font-weight: 600;
+  background: var(--subtotal-bg);
+  border-top: 1px solid var(--border);
+}
+
+.grid tr.adjustment td.c-num {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.grid tr.adjustment td.c-description {
+  font-style: italic;
+}
+
+.grid tr.suppressed td {
+  color: var(--text-muted);
+}
+
+.grid tr.suppressed td.c-description {
+  text-decoration: line-through;
+}
+
+/* A separator row is a drawn rule across the description. */
+.grid tr.separator td.c-description::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  border-top: 1px solid var(--text-muted);
+}
+
+/* Row styles (levels.js rowClasses): bold, italic, indent. The text color comes
+   from generated rules (grid.js, tr.tc-rrggbb). */
+.grid tr.row-bold td {
+  font-weight: 700;
+}
+
+.grid tr.row-italic td {
+  font-style: italic;
+}
+
+.grid tr.indent-1 td.c-description { padding-left: 24px; }
+.grid tr.indent-2 td.c-description { padding-left: 40px; }
+.grid tr.indent-3 td.c-description { padding-left: 56px; }
+.grid tr.indent-4 td.c-description { padding-left: 72px; }
+
+/* A note on a row: a corner mark on the description; the note is its tooltip. */
+.grid td.has-note::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-style: solid;
+  border-width: 7px 7px 0 0;
+  border-color: var(--note) transparent transparent transparent;
+}
+
+/* A fringe range: a bracket in the # column spanning its lines. */
+.grid tr.fr td.c-num::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: -1px;
+  width: 5px;
+  border-left: 2px solid var(--accent);
+  pointer-events: none;
+}
+
+.grid tr.fr-start td.c-num::before,
+.grid tr.fr-single td.c-num::before {
+  top: 7px;
+  border-top: 2px solid var(--accent);
+  border-top-left-radius: 3px;
+}
+
+.grid tr.fr-end td.c-num::before,
+.grid tr.fr-single td.c-num::before {
+  bottom: 7px;
+  border-bottom: 2px solid var(--accent);
+  border-bottom-left-radius: 3px;
+}
+
+/* Topsheet and account rows */
+
+.grid tr.level td {
+  font-weight: 600;
+  background: var(--level-bg);
+  border-top: 1px solid var(--border);
+}
+
+.grid tr.posted td {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* The category's fringe account in its account list (fringes posted by category). */
+.grid tr.fringe-account td {
+  font-weight: 700;
+}
+
+.grid tr.static td {
+  background: var(--surface);
+}
+
+.grid tr.summary td {
+  font-weight: 500;
+}
+
+.grid tr.summary.first td {
+  border-top: 2px solid var(--border);
+}
+
+.grid tr.grand td {
+  font-weight: 700;
+}
+
+.grid tr.credit td {
+  color: var(--text-muted);
+}
+
+/* Column widths. The detail grid's preferred widths live in levels.js
+   (DETAIL_COLUMNS), and grid.js squeezes them when the window is short of room;
+   these are the same widths, used where it can't. */
+
+.grid col.c-code { width: 110px; }
+.grid col.c-name { width: 360px; }
+.grid col.c-total { width: 140px; }
+:where(.grid-host[data-level="details"]) .grid col.c-total { width: 130px; }
+.grid col.c-num { width: 44px; }
+.grid col.c-description { width: 240px; }
+.grid col.c-amount { width: 110px; }
+.grid col.c-unit { width: 72px; }
+.grid col.c-x { width: 52px; }
+.grid col.c-unit2 { width: 72px; }
+.grid col.c-rate { width: 100px; }
+.grid col.c-unit3 { width: 76px; }
+.grid col.c-currency { width: 52px; }
+.grid col.c-x4 { width: 52px; }
+.grid col.c-unit4 { width: 72px; }
+.grid col.c-fringes { width: 140px; }
+.grid col.c-fringe_pct { width: 76px; }
+.grid col.c-fringe_full_pct { width: 96px; }
+.grid col.c-fringe_total { width: 104px; }
+.grid col.c-groups { width: 130px; }
+.grid col.c-set { width: 90px; }
+.grid col.c-location { width: 110px; }
+
+/* Pinned columns: # and Description stay at the left and Total at the right
+   while the detail grid scrolls sideways. grid.js sets the offsets to match
+   squeezed widths; these match the preferred ones. */
+.grid td.pin {
+  position: sticky;
+  z-index: 1;
+}
+
+.grid th.pin {
+  z-index: 3;
+}
+
+.grid .pin-l.c-num { left: 0; }
+.grid .pin-l.c-description { left: 44px; }
+.grid .pin-r.c-total { right: 0; }
+
+.grid .pin-edge-l {
+  border-right: 1px solid var(--border);
+}
+
+.grid .pin-edge-r {
+  border-left: 1px solid var(--border);
+}
+
+/* The column menu button in the grid's top-left corner. */
+.grid th .col-chooser {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.grid th .col-chooser:hover,
+.grid th .col-chooser[aria-expanded="true"] {
+  background: var(--row-hover);
+  color: var(--text);
+}
+
+.col-chooser svg {
+  fill: currentColor;
+}
+
+/* Selection wins over row-kind shading; a flagged cell stays flagged. */
+.grid tbody tr.sel td {
+  background: var(--selection);
+}
+
+.grid tbody tr td.has-error {
+  background: var(--danger-bg);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Footer */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap; /* a narrow window puts the right-hand group on a second line */
+  align-items: center;
+  gap: 6px 22px;
+  min-height: 46px;
+  padding: 6px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.footer-totals,
+.footer-context,
+.footer-right,
+.footer-selection,
+.footer-changes {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.footer-context:empty {
+  display: none;
+}
+
+.footer-context {
+  padding-left: 18px;
+  border-left: 1px solid var(--border-soft);
+}
+
+.footer-right {
+  margin-left: auto;
+  gap: 22px;
+}
+
+.stat.context {
+  max-width: 210px;
+}
+
+.stat.context .stat-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat.change .stat-value {
+  text-align: right;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-family: var(--font-num);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stat.strong .stat-value {
+  font-weight: 700;
+}
+
+.footer-note {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.sel-count {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Dialogs and toast */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  background: var(--backdrop);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-message {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.modal-input {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.modal-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.modal-error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 62px;
+  z-index: 60;
+  max-width: 70vw;
+  padding: 8px 14px;
+  transform: translateX(-50%);
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--surface);
+  box-shadow: var(--shadow);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Keyboard work: selected cell ranges and the shortcut sheet (js/help.js).  */
+/* Kept in one block; reuses the tokens and dialog look above.               */
+
+/* Cells in a multi-cell selection (Shift+arrows, select all). */
+.grid tbody tr td.in-range {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.grid tbody tr td.in-range.has-error {
+  background: var(--danger-bg);
+}
+
+.help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 6vh;
+  background: var(--backdrop);
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  width: 760px;
+  max-width: calc(100vw - 32px);
+  max-height: 86vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.help-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.help-body {
+  overflow: auto;
+  padding: 6px 18px 12px;
+  columns: 2 320px;
+  column-gap: 28px;
+}
+
+.help-group {
+  break-inside: avoid;
+  padding-top: 8px;
+}
+
+.help-group h3 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.help-table th,
+.help-table td {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: baseline;
+}
+
+.help-table th {
+  font-weight: 400;
+  text-align: left;
+  padding-right: 12px;
+}
+
+.help-keys {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.help-keys kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font: 12px/1.4 var(--font-ui);
+  text-align: center;
+}
+
+.help-or {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.help-foot {
+  margin: 0;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* The setup panel's draggable edge (main.js) and popup menus (js/menu.js).  */
+
+.panel-resizer {
+  flex: none;
+  position: relative;
+  z-index: 4;
+  width: 7px;
+  margin: 0 -4px 0 -3px;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.panel-resizer:hover::after,
+.panel-resizer:focus-visible::after,
+body.panel-resizing .panel-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 3px;
+  background: var(--accent);
+}
+
+body.panel-resizing {
+  cursor: col-resize;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Placed under its button by a generated rule (.popup-menu.placed); without
+   one it sits near the top, centered. */
+.popup-menu {
+  position: fixed;
+  z-index: 45;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  max-width: min(440px, calc(100vw - 16px));
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.popup-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 12px 5px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.popup-item:hover {
+  background: var(--row-hover);
+}
+
+.popup-item:focus {
+  outline: none;
+  background: var(--selection);
+}
+
+.popup-item[role="menuitemradio"].checked {
+  font-weight: 600;
+}
+
+.popup-check {
+  flex: none;
+  width: 14px;
+  color: var(--accent);
+  font-weight: 700;
+  text-align: center;
+}
+
+.popup-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Saving safety: the Autosave switch, recovered budgets, backups (js/safety.js) */
+
+.autosave-switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.autosave-switch input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.modal.modal-wide {
+  width: 540px;
+}
+
+.safety-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 50vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.safety-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.safety-item + .safety-item {
+  border-top: 1px solid var(--border);
+}
+
+.safety-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.safety-item-main,
+.safety-item-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.safety-item-main {
+  font-weight: 600;
+}
+
+.safety-item-sub {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.safety-item-actions {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}

@@ -1,0 +1,279 @@
+/* The Budget Setup window (ui/js/setupwin.js, src/setupwin.rs): a tab strip
+   over a narrow left rail and the tab's main area, then a footer with the
+   tab's totals and Close. The pieces a tab draws itself (the action strip,
+   the band, the table, the footer's totals) are setup.css's shared layout,
+   documented at its top. Everything here is under body.setup-window, so the
+   main window and the tools window never match it (they load the same
+   page). Colors are the theme's tokens (styles.css), so the window follows
+   light and dark. */
+
+body.setup-window {
+  background: var(--surface);
+}
+
+body.setup-window > .sw-host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sw {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+}
+
+/* Tabs */
+
+.sw-tabs {
+  flex: none;
+  display: flex;
+  gap: 1px;
+  min-height: 27px;
+  padding: 3px 8px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sw-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.sw-tab {
+  flex: 0 0 auto;
+  appearance: none;
+  margin-bottom: -1px;
+  padding: 3px 9px 4px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.sw-tab:hover {
+  color: var(--text);
+}
+
+.sw-tab[aria-selected="true"] {
+  color: var(--text);
+  font-weight: 600;
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.sw-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* The rail and the tab's main area */
+
+.sw-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sw-body.has-rail {
+  grid-template-columns: 192px minmax(0, 1fr);
+}
+
+.sw-main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px 12px;
+}
+
+/* A tab drawn as a frame (setupframe.js) fills the area and scrolls inside. */
+.sw-main.sw-framed,
+.sw-main.sw-main-framed {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.sw-main-framed > .sw-framed {
+  flex: 1 1 auto;
+}
+
+/* The left rail: Budget or Library, then the tab's or the library's
+   controls (sort, Show, kind, folders). */
+
+.sw-rail {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  border-right: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.sw-switch {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.sw-source {
+  appearance: none;
+  height: 22px;
+  padding: 0 6px;
+  border: 0;
+  background: var(--surface);
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.sw-source + .sw-source {
+  border-left: 1px solid var(--border);
+}
+
+.sw-source:hover {
+  color: var(--text);
+}
+
+.sw-source[aria-pressed="true"] {
+  background: var(--selection);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.sw-source:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.sw-rail-body,
+.sw-rail-section,
+.sw-rail-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sw-rail-slot:empty {
+  display: none;
+}
+
+.sw-rail-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-width: 0;
+}
+
+.sw-rail-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sw-rail .setup-input {
+  height: 22px;
+  font-size: 12px;
+}
+
+.sw-rail .setup-show {
+  width: 100%;
+}
+
+/* The library in the rail (library.js renderLibrarySetup): its name, the
+   folder tree and the folder buttons. */
+
+.sw-rail .library-head {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sw-rail .library-title {
+  flex: 1 0 100%;
+}
+
+.sw-rail .library-actions {
+  gap: 4px;
+}
+
+.sw-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sw-tree-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  height: 22px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sw-tree-item.is-folder {
+  padding-left: 16px;
+}
+
+.sw-tree-item:hover {
+  background: var(--row-hover);
+}
+
+.sw-tree-item[aria-pressed="true"],
+.sw-tree-item[aria-current="true"] {
+  background: var(--selection);
+  font-weight: 600;
+}
+
+.sw-tree-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.sw-tree-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sw-tree-count {
+  flex: none;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A narrow window keeps the rail, slimmer. */
+@media (max-width: 720px) {
+  .sw-body.has-rail {
+    grid-template-columns: 156px minmax(0, 1fr);
+  }
+}

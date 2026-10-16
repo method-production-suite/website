@@ -295,9 +295,12 @@ def main() -> int:
                 write(out / f, (ROOT / "brand/storyteller" / f).read_bytes())
             continue
         shutil.copytree(ROOT / "apps" / a["slug"], out, ignore=shutil.ignore_patterns("SOURCE"))
+        built = [out / Path(a["build_output"]).relative_to("site")] if a.get("build_output") else []
         for page in out.rglob("*.html"):
             if page.name == "og-card.html":
                 continue  # drawn to og.png, never shown
+            if any(page.is_relative_to(d) for d in built):
+                continue  # an app's own built UI (Budget's demo), not a site page
             write(page, furnish(page.read_text(), a["slug"]))
 
     # Every app answers a missing page with its own 404, or the suite's.
