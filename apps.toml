@@ -40,6 +40,9 @@ does = "Read"
 tagline = "Screenplay PDFs into e-books and editable scripts."
 blurb = "Turn a script PDF into an e-book that reflows on a Kindle or any e-reader with the script's shape intact, and send it straight to the device. Or get the script back to edit, as Fountain or .fdx. Formerly Screepub."
 status = "Released"
+# MReader (2026-10-16): never sync from rename/method-reader, and once the rename is
+# merged into site/method-reader, do not sync it until MReader says the 0.13 rename
+# release is published (its download links name files that only exist after it).
 source = "screepub"
 source_ref = "site/method-reader"
 accent = ["#7052BA", "#B49CF0"]
