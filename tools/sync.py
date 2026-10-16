@@ -5,9 +5,10 @@
     python3 tools/sync.py budget     copy one
 
 Each app keeps drawing its own page, brand files and pictures in its own repo (its
-`site/` folder, held to its releases by that repo's tests). This takes the COMMITTED
-state of `site/` at the catalog's `source_ref` from the sibling checkout
-(../<source>), never the working tree, so half-done local work is never published.
+`site/` folder, held to its releases by that repo's tests). This takes the PUSHED
+state of `site/` at the catalog's `source_ref` (origin/<ref>, fetched first) through the
+sibling checkout (../<source>), never the working tree or an unpushed local commit, so
+half-done local work is never published.
 It writes apps/<slug>/SOURCE with the commit it came from. Run it, review the diff,
 commit: the website repo's history is the record of what went live.
 
@@ -33,7 +34,10 @@ DROP = {"CNAME"}  # the website's domains are set on the Pages project, not per 
 def sync(app: dict) -> None:
     repo = SUITE / app["source"]
     ref = app["source_ref"]
-    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", ref], check=True,
+    # Only what is pushed goes live: fetch, then read the remote's copy of the branch,
+    # never a local commit nobody has reviewed or pushed.
+    subprocess.run(["git", "-C", str(repo), "fetch", "--quiet", "origin", ref], check=True)
+    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", f"origin/{ref}"], check=True,
                             capture_output=True, text=True).stdout.strip()
     tar = subprocess.run(["git", "-C", str(repo), "archive", "--format=tar", commit, "site"],
                          check=True, capture_output=True).stdout
