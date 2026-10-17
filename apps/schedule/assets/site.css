@@ -297,17 +297,4 @@ footer img { height: 16px; width: auto; }
 footer p { margin: 0; max-width: 54em; }
 footer nav { display: flex; flex-wrap: wrap; gap: 6px 20px; }
 footer a { color: var(--ink-soft); }
-footer .family { color: var(--ink-soft); }
 
-/* ------------------------------------------------------------------ family strip */
-/* Not in use yet. Once methodproduction.com is live, every Method site gets a slim bar
-   above its header; the markup is in docs/WEBSITE.md ("The family strip"). Uncomment
-   these rules when it goes in.
-
-.family-strip { background: var(--surface-2); border-bottom: 1px solid var(--rule); font-size: 13px; color: var(--muted); }
-.family-strip .wrap { display: flex; flex-wrap: wrap; gap: 0 10px; padding-top: 5px; padding-bottom: 5px; }
-.family-strip a { color: var(--muted); text-decoration: none; }
-.family-strip a:hover { color: var(--ink); text-decoration: underline; }
-.family-strip .more { display: none; }
-@media (min-width: 640px) { .family-strip .more { display: inline; } }
-*/
