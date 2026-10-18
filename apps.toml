@@ -35,8 +35,8 @@ tagline = "Screenwriting that formats itself."
 blurb = "Tab and Enter move between scene heading, action, character and dialogue; pages break the way a production expects; Fountain is the native file, and .fdx files open and save."
 status = "In development"
 platforms = "Builds from source on macOS, Windows and Linux. No installers yet."
-# No site of its own yet: tools/build.py writes its page from this entry.
-source = "catalog"
+source = "method-storyteller"
+source_ref = "main"
 accent = ["#AE3D56", "#EE8DA2"]
 
 [[app]]
