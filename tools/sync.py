@@ -36,9 +36,17 @@ def sync(app: dict) -> None:
     repo = SUITE / app["source"]
     ref = app["source_ref"]
     # Only what is pushed goes live: fetch, then read the remote's copy of the branch,
-    # never a local commit nobody has reviewed or pushed.
-    subprocess.run(["git", "-C", str(repo), "fetch", "--quiet", "origin", ref], check=True)
-    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", f"origin/{ref}"], check=True,
+    # never a local commit nobody has reviewed or pushed. `tag:<name>` reads a release
+    # tag instead, so a released app's site describes exactly what its download does.
+    if ref.startswith("tag:"):
+        tag = ref[len("tag:"):]
+        subprocess.run(["git", "-C", str(repo), "fetch", "--quiet", "--force", "origin",
+                        f"refs/tags/{tag}:refs/tags/{tag}"], check=True)
+        rev = f"refs/tags/{tag}^{{commit}}"
+    else:
+        subprocess.run(["git", "-C", str(repo), "fetch", "--quiet", "origin", ref], check=True)
+        rev = f"origin/{ref}"
+    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", rev], check=True,
                             capture_output=True, text=True).stdout.strip()
     tar = subprocess.run(["git", "-C", str(repo), "archive", "--format=tar", commit, "site"],
                          check=True, capture_output=True).stdout
