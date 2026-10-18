@@ -67,6 +67,8 @@ blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open f
 status = "Early alpha"
 platforms = "Not released yet: builds from source. Mac first, then Windows and Linux."
 source = "method-scheduling"
+# HOLD (2026-10-18): main from 7e986e7 (#19) links Method-Schedule-macOS.dmg, which exists
+# only once v0.1.0 is published. Do not sync until MSchedule says it is.
 source_ref = "main"
 accent = ["#2F5FB3", "#7AA2F0"]
 
