@@ -81,6 +81,8 @@ blurb = "Topsheet to detail, fringes, globals, versions and compare, and an expl
 status = "Alpha, ready for testing"
 platforms = "Mac: signed. Windows and Linux: on the way."
 source = "method-budget"
+# HOLD (2026-10-18): main from 1fb12dc (#3) links Method-Budget-macOS.dmg, which exists
+# only once the next Budget release is published. Live is f226e2d; do not sync until then.
 source_ref = "main"
 # The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs
 # this in an export of the synced commit and copies `build_output` in as try/, the
