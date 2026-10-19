@@ -89,8 +89,9 @@ table.top { width: 100%; border-collapse: collapse; font-size: 14px; font-varian
   .js .view { display: block; position: relative; aspect-ratio: 4 / 3.3; }
   .js .pane { position: absolute; inset: 0; opacity: 0; transform: translateY(16px) scale(.98); transition: opacity .5s, transform .5s; }
   .js .story:not([data-live]) .pane:first-child, .js .story[data-live] .pane.on { opacity: 1; transform: none; }
-  .js .story[data-live] .step { opacity: .45; transition: opacity .35s; }
-  .js .story[data-live] .step.on { opacity: 1; }
+  /* Steps still to come are quieter, in colors that keep their contrast (no opacity). */
+  .js .story[data-live] .step h3, .js .story[data-live] .step p { transition: color .35s; }
+  .js .story[data-live] .step:not(.on) h3, .js .story[data-live] .step:not(.on) p { color: var(--muted); }
   .js .story[data-live] .dot { background: var(--bg); }
   .js .story[data-live] .step.on .dot { background: var(--c); }
   .js .steps .bar { transition: height .2s linear; }
