@@ -214,6 +214,16 @@ def head(title: str, desc: str, canonical: str, favicon: str) -> str:
 """
 
 
+def download_row(a: dict) -> str:
+    """A released app's direct Mac download and its other platforms, on the hub card. The
+    link names the version-free file on the latest release, so it never goes stale."""
+    if not a.get("download"):
+        return ""
+    repo = a["repo"].rstrip("/")
+    return (f'<p class="get"><a class="btn primary" href="{repo}/releases/latest/download/{E(a["download"])}">'
+            f'Download for Mac</a> <a class="other" href="{repo}/releases/latest">Other platforms</a></p>')
+
+
 def hub() -> str:
     cards = "".join(f"""
       <article class="app-card" style="--app-accent:{a['accent'][0]};--app-accent-dark:{a['accent'][1]}">
@@ -225,6 +235,7 @@ def hub() -> str:
         </a>
         <p>{E(a['blurb'])}</p>
         <p class="platforms"><span>Platforms</span> {E(a['platforms'])}</p>
+        {download_row(a)}
         <p class="meta"><span class="pill{' ok' if a['status'] == 'Released' else ''}">{E(a['status'])}</span>
           <a href="{url(a['slug'])}">{E(a['domain'])}</a> {github(a['repo'], f"{a['name']} on GitHub", 18)}</p>
       </article>""" for a in APPS)
@@ -256,7 +267,7 @@ def hub() -> str:
     <h2 id="open-h">Open, all the way down</h2>
     <div class="cards three">
       <div class="card"><h3>Your computer, your files</h3><p>Every app runs on your own machine and works offline. Nothing about your production is uploaded anywhere.</p></div>
-      <div class="card"><h3>Open formats</h3><p>Scripts are Fountain, budgets and schedules are documented text files you can read, diff and keep in version control.</p></div>
+      <div class="card"><h3>Open formats</h3><p>Scripts are Open Screenplay Format or Fountain, budgets and schedules are documented text files you can read, diff and keep in version control.</p></div>
       <div class="card"><h3>Free and open source</h3><p>MIT or Apache-2.0, on GitHub, with every decision written down in each repo.</p></div>
     </div>
   </div></section>
