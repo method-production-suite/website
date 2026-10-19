@@ -313,6 +313,17 @@ def page_404() -> str:
 
 # ------------------------------------------------------------------ build
 
+# The repos Method Launcher has built in (crates/core/src/catalog.rs). It rejects a file
+# that gives a known app any other repo, so a tampered list can't swap one app's installer
+# for another's; a new app's repo must be method-<slug>.
+LAUNCHER_KNOWN = {
+    "storyteller": "method-storyteller",
+    "reader": "method-reader",
+    "schedule": "method-scheduling",
+    "budget": "method-budget",
+}
+
+
 def apps_json() -> str:
     """The catalog Method Launcher reads at https://methodproduction.com/apps.json.
 
@@ -336,8 +347,10 @@ def apps_json() -> str:
                 (re.fullmatch(r"[a-z]+", entry["slug"]) and entry["slug"] == noun.lower(), "slug must be the name's noun, lower case"),
                 (re.fullmatch(r"Method [A-Z][a-z]+", entry["name"]), "name must be 'Method <Noun>'"),
                 (0 < len(entry["tagline"]) <= 120 and "\n" not in entry["tagline"], "tagline must be one line, 120 characters at most"),
-                (re.fullmatch(r"method-[a-z-]+", entry["repo"]), "repo must start 'method-'"),
-                (re.fullmatch(r"https://[a-z]+\.com", entry["site"]), "site must be https://<host>.com"),
+                (entry["repo"] == LAUNCHER_KNOWN.get(entry["slug"], f"method-{entry['slug']}"),
+                 "repo must match the launcher's built-in one, or be method-<slug> for a new app"),
+                (entry["site"] in (f"https://method{entry['slug']}.com", f"https://{SUITE['domain']}"),
+                 "site must be https://method<slug>.com or the hub"),
                 (len(entry["accent"]) == 2 and all(re.fullmatch(r"#[0-9A-Fa-f]{6}", c) for c in entry["accent"]), "accent must be [light, dark] #RRGGBB"),
             ] if not ok
         ]
