@@ -33,10 +33,13 @@ repo = "https://github.com/method-production-suite/method-storyteller"
 does = "Write"
 tagline = "Screenwriting that formats itself."
 blurb = "Tab and Enter move between scene heading, action, character and dialogue; pages break the way a production expects; Open Screenplay Format is the native file, and Fountain and .fdx open and save."
-status = "In development"
-platforms = "Builds from source on macOS, Windows and Linux. No installers yet."
+status = "Early alpha"
+platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
+download = "Method-Storyteller-macOS.dmg"
 source = "method-storyteller"
-source_ref = "main"
+# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# tag once published.
+source_ref = "tag:v0.2.0"
 accent = ["#AE3D56", "#EE8DA2"]
 
 [[app]]
