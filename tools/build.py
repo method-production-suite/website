@@ -313,6 +313,53 @@ def page_404() -> str:
 
 # ------------------------------------------------------------------ build
 
+# The repos Method Launcher has built in (crates/core/src/catalog.rs). It rejects a file
+# that gives a known app any other repo, so a tampered list can't swap one app's installer
+# for another's; a new app's repo must be method-<slug>.
+LAUNCHER_KNOWN = {
+    "storyteller": "method-storyteller",
+    "reader": "method-reader",
+    "schedule": "method-scheduling",
+    "budget": "method-budget",
+}
+
+
+def apps_json() -> str:
+    """The catalog Method Launcher reads at https://methodproduction.com/apps.json.
+
+    The launcher refuses the whole file if one entry breaks its rules (and keeps its last
+    good list), so the build checks the same rules and stops instead of deploying it."""
+    out = []
+    for a in APPS:
+        noun = a["name"].removeprefix("Method ")
+        entry = {
+            "slug": a["slug"],
+            "name": a["name"],
+            "tagline": a["tagline"],
+            "repo": a["repo"].rstrip("/").rsplit("/", 1)[-1],
+            "bundle_id": f"com.method{a['slug']}.desktop",
+            "site": f"https://{a['domain']}",
+            "accent": list(a["accent"]),
+            "status": a["status"],
+        }
+        problems = [
+            msg for ok, msg in [
+                (re.fullmatch(r"[a-z]+", entry["slug"]) and entry["slug"] == noun.lower(), "slug must be the name's noun, lower case"),
+                (re.fullmatch(r"Method [A-Z][a-z]+", entry["name"]), "name must be 'Method <Noun>'"),
+                (0 < len(entry["tagline"]) <= 120 and "\n" not in entry["tagline"], "tagline must be one line, 120 characters at most"),
+                (entry["repo"] == LAUNCHER_KNOWN.get(entry["slug"], f"method-{entry['slug']}"),
+                 "repo must match the launcher's built-in one, or be method-<slug> for a new app"),
+                (entry["site"] in (f"https://method{entry['slug']}.com", f"https://{SUITE['domain']}"),
+                 "site must be https://method<slug>.com or the hub"),
+                (len(entry["accent"]) == 2 and all(re.fullmatch(r"#[0-9A-Fa-f]{6}", c) for c in entry["accent"]), "accent must be [light, dark] #RRGGBB"),
+            ] if not ok
+        ]
+        if problems:
+            sys.exit(f"build: apps.json entry {a['slug']!r} breaks the launcher's rules: {'; '.join(problems)}")
+        out.append(entry)
+    return json.dumps({"apps": out}, indent=2, ensure_ascii=False) + "\n"
+
+
 def write(path: Path, text: str | bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     (path.write_bytes if isinstance(text, bytes) else path.write_text)(text)
@@ -360,6 +407,7 @@ def main() -> int:
     write(DIST / "404.html", page_404())
     for n in PAGES:
         write(DIST / n / "index.html", suite_page(n)[0])
+    write(DIST / "apps.json", apps_json())
     write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nSitemap: https://{SUITE['domain']}/sitemap.xml\n")
     locs = ([f"https://{SUITE['domain']}/"] + [f"https://{SUITE['domain']}/{n}/" for n in PAGES]
             + [f"https://{a['domain']}/" for a in APPS])
