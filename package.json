@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT OR Apache-2.0",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.19"
   },
   "scripts": {
     "build": "python3 tools/build.py && python3 tools/catalog.py && ASTRO_TELEMETRY_DISABLED=1 astro build && node tools/merge-astro.mjs",
