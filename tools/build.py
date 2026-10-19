@@ -9,8 +9,6 @@ What it writes:
     dist/index.html, sitemap.xml, 404.html   the hub (methodproduction.com)
     dist/<slug>/...                          each app's site from apps/<slug>/ (tools/sync.py),
                                              with the suite bar and band added to every page
-    dist/storyteller/                        Method Storyteller's page, written from the
-                                             catalog (it has no site of its own yet)
     dist/_suite/                             suite.css and every app's mark, shared by all
     functions/_hosts.js                      host -> app table for functions/_middleware.js
 
@@ -180,10 +178,6 @@ def tokens(light: dict, dark: dict) -> str:
                 .replace("    /* ACCENT DARK */\n", "  " + block(dark).replace("\n  ", "\n    ")))
 
 
-STORYTELLER = (
-    {"accent": "#AE3D56", "accent-strong": "#8C2F44", "accent-ink": "#FFFFFF", "accent-soft": "#F6E4E8"},
-    {"accent": "#EE8DA2", "accent-strong": "#F5B4C3", "accent-ink": "#24101A", "accent-soft": "#3D1F27"},
-)
 HUB = (
     {"accent": "#1C2228", "accent-strong": "#000000", "accent-ink": "#FFFFFF", "accent-soft": "#E6E3DB"},
     {"accent": "#E4E8EC", "accent-strong": "#FFFFFF", "accent-ink": "#111417", "accent-soft": "#2B3138"},
@@ -278,45 +272,6 @@ def hub() -> str:
 """
 
 
-def storyteller(app: dict) -> str:
-    feats = [
-        ("Write without thinking about formatting", "Tab and Enter move between scene heading, action, character, parenthetical, dialogue and transition. Character, location and time-of-day autocomplete."),
-        ("Pages that break like a production's", "Courier Prime 12 point, standard margins, 55 lines a page, (MORE) and (CONT'D) at page breaks, and scene headings that never strand at the bottom of a page."),
-        ("Open formats", "Fountain is the native file: plain text, diff friendly. .fdx files open and save, and PDF export embeds its fonts and bookmarks every scene."),
-        ("Scriptable", "Every action is a named command and a JSON-lines control channel drives the app, or a headless engine, from a script or a coding agent."),
-    ]
-    cards = "".join(f'<div class="card"><h3>{E(t)}</h3><p>{E(d)}</p></div>' for t, d in feats)
-    return head(f"{app['name']}: open-source screenwriting", app["blurb"], f"https://{app['domain']}/", "favicon.svg") + f"""<body>
-<a class="skip" href="#main">Skip to content</a>
-{bar(app['slug'])}
-<main id="main">
-  <section class="hero"><div class="wrap">
-    <h1>{picture("assets/brand/wordmark.svg", "assets/brand/wordmark-dark.svg", app["name"], ' width="560" height="52"')}</h1>
-    <p class="pitch">{E(app['tagline'])}</p>
-    <p class="lede">An open-source screenwriting app for macOS, Windows and Linux, being written from scratch in Rust. {E(app['blurb'])}</p>
-    <div class="cta">
-      <a class="btn primary" href="{app['repo']}">Get it on GitHub</a>
-      <span class="pill">{E(app['status'])}: build it from source today; installers come with the first release.</span>
-    </div>
-  </div></section>
-  <section class="band alt" aria-labelledby="f-h"><div class="wrap">
-    <h2 id="f-h">What it does</h2>
-    <div class="cards two">{cards}</div>
-  </div></section>
-  <section class="band" aria-labelledby="run-h"><div class="wrap">
-    <h2 id="run-h">Run it</h2>
-    <p>With Rust installed, from a checkout of <a href="{app['repo']}">the repository</a>:</p>
-    <pre><code>cargo run --release -p method-storyteller -- path/to/script.fountain</code></pre>
-    <p>The command-line tool converts, paginates and exports without a window:</p>
-    <pre><code>cargo run -p storyteller-cli -- pdf script.fountain script.pdf</code></pre>
-  </div></section>
-</main>
-{band()}
-</body>
-</html>
-"""
-
-
 def suite_page(name: str) -> tuple[str, str]:
     """One of the suite's own pages (shared/pages/<name>.html) in the family layout."""
     raw = (ROOT / "shared" / "pages" / f"{name}.html").read_text()
@@ -366,7 +321,7 @@ def main() -> int:
 
     # One copy of every app's mark for the bar, band and hub.
     for a in APPS:
-        src = ROOT / "brand" / "storyteller" if a["source"] == "catalog" else ROOT / "apps" / a["slug"] / "assets" / "brand"
+        src = ROOT / "apps" / a["slug"] / "assets" / "brand"
         for dark in (False, True):
             name = "mark-dark.svg" if dark else "mark.svg"
             write(s / "marks" / f"{a['slug']}{'-dark' if dark else ''}.svg", (src / name).read_bytes())
@@ -377,14 +332,6 @@ def main() -> int:
     # The apps.
     for a in APPS:
         out = DIST / a["slug"]
-        if a["source"] == "catalog":
-            write(out / "index.html", storyteller(a))
-            write(out / "assets" / "tokens.css", tokens(*STORYTELLER))
-            for f in ("mark.svg", "mark-dark.svg", "wordmark.svg", "wordmark-dark.svg"):
-                write(out / "assets" / "brand" / f, (ROOT / "brand/storyteller" / f).read_bytes())
-            for f in ("favicon.svg", "favicon.ico", "apple-touch-icon.png"):
-                write(out / f, (ROOT / "brand/storyteller" / f).read_bytes())
-            continue
         shutil.copytree(ROOT / "apps" / a["slug"], out, ignore=shutil.ignore_patterns("SOURCE"))
         built = [out / Path(a["build_output"]).relative_to("site")] if a.get("build_output") else []
         for page in out.rglob("*.html"):
