@@ -44,6 +44,8 @@
 .ms-band li strong { display: block; color: var(--ink); font-weight: 650; }
 .ms-band .ms-fine { margin: 0; font-size: 13px; }
 .ms-band .ms-fine a { color: var(--ink-soft); }
+.ms-band .ms-launcher { margin: 0 0 10px; font-size: 14px; }
+.ms-band .ms-launcher a { font-weight: 600; }
 .ms-band .ms-links { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0 0 10px; font-weight: 600; }
 .ms-band .ms-links a { color: var(--ink-soft); }
 .ms-band .ms-contact { margin: 0 0 8px; color: var(--ink-soft); }

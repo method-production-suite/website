@@ -46,7 +46,7 @@ def url(slug: str | None) -> str:
     return f"https://{next(a for a in APPS if a['slug'] == slug)['domain']}/"
 
 
-PAGES = ["why", "how", "help"]  # shared/pages/<name>.html, served at /<name>/ on the hub
+PAGES = ["why", "how", "help", "launcher"]  # shared/pages/<name>.html, served at /<name>/ on the hub
 
 
 def page_url(name: str) -> str:
@@ -143,6 +143,7 @@ def band(current: str | None = None) -> str:
         f'<p class="ms-links"><a href="{page_url("why")}">Why this exists</a>'
         f'<a href="{page_url("how")}">How it\'s built</a><a href="{page_url("help")}">Help build it</a>'
         f'<a href="{SUITE["discussions"]}">Discussions</a></p>'
+        f'<p class="ms-launcher">Or get every app at once with <a href="{page_url("launcher")}">Method Launcher</a>.</p>'
         f'<p class="ms-contact">{contact(current)}</p>'
         f'<p class="ms-fine">Free and open source, every app MIT or Apache-2.0. '
         f'<a href="{SUITE["org"]}">All of it on GitHub</a>.</p></div></aside>')
@@ -246,6 +247,14 @@ def hub() -> str:
     <ol class="flow" aria-label="How the apps fit together">{flow}</ol>
     <p class="pages-nav"><a href="{page_url('why')}">Why this exists</a>
       <a href="{page_url('how')}">How it's built</a> <a href="{page_url('help')}">Help build it</a></p>
+  </div></section>
+  <section class="band launcher-band" aria-labelledby="launcher-h"><div class="wrap launcher-hub">
+    <h2 id="launcher-h">Every app, one download.</h2>
+    <p>Method Launcher installs the apps you want, checks each download before anything runs,
+      and tells you when an update is ready. One small app for your whole production, free like the rest.</p>
+    <p class="get"><a class="btn primary" href="https://github.com/method-production-suite/method-launcher/releases/latest/download/Method-Launcher-macOS.dmg">Download Method Launcher for Mac</a>
+      <a class="other" href="https://github.com/method-production-suite/method-launcher/releases/latest">Other platforms</a> <a class="other" href="{page_url('launcher')}">About the launcher</a></p>
+    <p class="fine">Apple silicon. Windows and Linux on the <a href="{page_url('launcher')}">launcher page</a>.</p>
   </div></section>
   <section class="band alt" aria-labelledby="apps-h"><div class="wrap">
     <h2 id="apps-h">The apps</h2>
