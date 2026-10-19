@@ -50,8 +50,7 @@ blurb = "Turn a script PDF into an e-book that reflows on a Kindle or any e-read
 status = "Released"
 platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 # A released app's site follows its latest published release tag (Sam, 2026-10-18), so it
-# describes exactly what the download does. HOLD: v0.13.0 is still a draft; sync once it's
-# published (until then the site stays on the older screepub.com-era content).
+# describes exactly what the download does. Move source_ref to each new tag once published.
 source = "screepub"
 source_ref = "tag:v0.13.0"
 accent = ["#7052BA", "#B49CF0"]
@@ -83,8 +82,8 @@ blurb = "Topsheet to detail, fringes, globals, versions and compare, and an expl
 status = "Alpha, ready for testing"
 platforms = "Mac: signed. Windows and Linux: on the way."
 source = "method-budget"
-# Follows its latest published release tag (Sam, 2026-10-18). HOLD: v0.3.0 is still a
-# draft; sync once it's published. Live is f226e2d from main, from before this rule.
+# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# tag once published.
 source_ref = "tag:v0.3.0"
 # The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs
 # this in an export of the synced commit and copies `build_output` in as try/, the
