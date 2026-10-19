@@ -1,0 +1,30 @@
+---
+// The family layout for pages this repo writes, as tools/build.py's head(): the hub's
+// tokens (shared/tokens-base.css with the hub's accent), site.css and suite.css, bundled.
+import "../../.catalog/hub-tokens.css";
+import "../../shared/site.css";
+import "../../shared/suite.css";
+import "../styles/hub-motion.css";
+interface Props { title: string; description: string; canonical: string }
+const { title, description, canonical } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content={description}>
+<link rel="canonical" href={canonical}>
+<meta property="og:type" content="website">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<link rel="icon" href="/_suite/marks/suite-favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111417" media="(prefers-color-scheme: dark)">
+<script is:inline>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+<slot />
+</body>
+</html>

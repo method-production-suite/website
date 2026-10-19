@@ -8,10 +8,13 @@
 //   - www.<domain> 301s to the bare domain;
 //   - anything else (the *.pages.dev preview address) is served as built: hub at /,
 //     apps at /<slug>/.
-// /_suite/ (the shared stylesheet and marks) is the same for every host.
+// /_suite/ (the shared stylesheet and marks) and /_astro/ (the Astro pages' scripts and
+// stylesheets, named by content hash) are the same for every host.
 // The table comes from apps.toml through tools/build.py.
 
 import { HOSTS } from "./_hosts.js";
+
+const SHARED = ["/_suite/", "/_astro/"];
 
 export async function onRequest(context) {
   const { request, env, next } = context;
@@ -30,7 +33,7 @@ export async function onRequest(context) {
     to.search = url.search;
     return Response.redirect(to.toString(), 301);
   }
-  if (!entry.app || url.pathname.startsWith("/_suite/")) return next();
+  if (!entry.app || SHARED.some((p) => url.pathname.startsWith(p))) return next();
 
   // An app domain: a request for /<slug>/... from its own domain goes to the clean path.
   const prefix = `/${entry.app}`;

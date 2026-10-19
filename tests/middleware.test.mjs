@@ -2,7 +2,7 @@
 // Cloudflare's asset server (dist/ on disk). `node --test tests/middleware.test.mjs` after a build.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { onRequest } from "../functions/_middleware.js";
 
 const DIST = new URL("../dist", import.meta.url).pathname;
@@ -64,4 +64,25 @@ test("a missing page on an app domain is a 404 from that app", async () => {
 
 test("the pages.dev preview address is served as built", async () => {
   assert.equal(await body(await run("https://method-website.pages.dev/schedule/")), "/schedule/index.html");
+});
+
+test("the Astro files under /_astro/ are shared by every host, like /_suite/", async (t) => {
+  if (!existsSync(DIST + "/_astro")) return t.skip("no Astro build in dist/ (npm run build)");
+  const file = readdirSync(DIST + "/_astro").find((f) => f.endsWith(".css"));
+  for (const host of ["methodproduction.com", "methodbudget.com", "methodreader.com", "method-website.pages.dev"]) {
+    assert.equal(await body(await run(`https://${host}/_astro/${file}`)), `/_astro/${file}`, host);
+  }
+});
+
+test("the hub is the Astro page, complete before any script runs", async (t) => {
+  if (!existsSync(DIST + "/_astro")) return t.skip("no Astro build in dist/ (npm run build)");
+  const html = readFileSync(DIST + "/index.html", "utf8");
+  assert.match(html, /<astro-island/);
+  // The content tools/build.py's hub() writes, all in the HTML itself.
+  for (const text of ["The apps", "Hear about new releases", "Open, all the way down", "Every app, one download:",
+                      "Method Storyteller", "Method Reader", "Method Schedule", "Method Budget",
+                      "From first draft to last shoot day.", 'class="ms-bar sticky"', 'class="ms-band"']) {
+    assert.ok(html.includes(text), text);
+  }
+  assert.ok(!/field station/i.test(html), "the sample production is never named");
 });

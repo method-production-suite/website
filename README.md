@@ -14,6 +14,8 @@ so the apps link to each other.
 | `brand/` | Brand files no app repo draws yet: the suite's mark and wordmark, and Method Storyteller's provisional mark, drawn by `tools/make-brand.py` from the family's letters in `tools/glyphs.py`. |
 | `shared/` | `suite.css` (the bar and band, on every page), `site.css` and `tokens-base.css` (for the pages this repo writes). |
 | `tools/build.py` | Writes `dist/`: the hub, each app with the bar and band added, Method Storyteller's page from its catalog entry, and `functions/_hosts.js`. |
+| `src/` | The hub as an Astro page (spike, branch `astro-spike`): `src/pages/index.astro` at parity with `build.py`'s `hub()`, and React islands in `src/components/islands/` for the motion (sticky suite bar, fanning hero, pinned story, dots into cards). Vendored component-library code, with its licence, lives in `src/components/vendor/`. |
+| `tools/catalog.py`, `tools/merge-astro.mjs` | Hand `apps.toml` and the hub's tokens to Astro; put the Astro hub (`index.html`, `/_astro/`) over the Python one in `dist/`. |
 | `functions/_middleware.js` | Picks what each domain serves (Cloudflare Pages Functions). Tested by `tests/middleware.test.mjs`. |
 
 ## Commands
@@ -26,6 +28,21 @@ node --test tests/middleware.test.mjs   # domain routing, against the last build
 ```
 
 Standard library Python and Node's built-in test runner only: no npm, no dependencies.
+
+The Astro hub (spike) adds npm, under the suite's rules: `package-lock.json` committed,
+`npm ci` only, exact versions, `ignore-scripts=true` (`.npmrc`), and only Astro,
+`@astrojs/react`, React and one motion library (`motion`). Every package in the lock must be
+at least 14 days old:
+
+```bash
+npm ci                      # install exactly the lock, no install scripts
+npm run build               # build.py, then the Astro hub over dist/index.html
+npm run build:local         # the same with /<slug>/ links
+npm test                    # domain routing and the hub, against the last build
+npm run age                 # every locked package's npm publish time, 14-day rule
+```
+
+To update, resolve as of 14 days ago: `npm install --before=<date 14 days ago> <pkg>@<version>`.
 
 ## Hosting
 

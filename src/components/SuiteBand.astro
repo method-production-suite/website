@@ -1,0 +1,18 @@
+---
+// The suite band under every page, as tools/build.py's band().
+import Picture from "./Picture.astro";
+import Contact from "./Contact.astro";
+import { APPS, SUITE, mark, pageUrl, url } from "../data/catalog";
+interface Props { current?: string | null }
+const { current = null } = Astro.props;
+---
+<aside class="ms-band" aria-label="The Method Production Suite"><div class="ms-in">
+  <a class="ms-title" href={url(null)}><Picture light="/_suite/marks/suite.svg" dark="/_suite/marks/suite-dark.svg" width={18} height={18} />{SUITE.name}</a>
+  <ul>{APPS.map((a) => (
+    <li><a href={url(a.slug)}><Picture light={mark(a)} dark={mark(a, true)} width={28} height={28} /><span><strong>{a.name}</strong>{a.tagline}</span></a></li>
+  ))}</ul>
+  <p class="ms-links"><a href={pageUrl("why")}>Why this exists</a><a href={pageUrl("how")}>How it's built</a><a href={pageUrl("help")}>Help build it</a><a href={SUITE.discussions}>Discussions</a></p>
+  <p class="ms-launcher">Or get every app at once with <a href={pageUrl("launcher")}>Method Launcher</a>.</p>
+  <p class="ms-contact"><Contact current={current} /></p>
+  <p class="ms-fine">Free and open source, every app MIT or Apache-2.0. <a href={SUITE.org}>All of it on GitHub</a>.</p>
+</div></aside>

@@ -1,0 +1,6 @@
+---
+// A light and a dark image, as tools/build.py's picture().
+interface Props { light: string; dark: string; alt?: string; width?: number; height?: number; class?: string }
+const { light, dark, alt = "", width, height, class: cls } = Astro.props;
+---
+<picture><source srcset={dark} media="(prefers-color-scheme: dark)"><img src={light} alt={alt} width={width} height={height} class={cls}></picture>

@@ -2,3 +2,7 @@
 dist/
 .DS_Store
 __pycache__/
+node_modules/
+.astro/
+.astro-dist/
+.catalog/
