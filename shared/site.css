@@ -101,12 +101,10 @@ p { margin: 0 0 14px; }
 .asks .card h3 a { color: var(--ink); text-decoration: none; }
 .asks .card h3 a:hover { text-decoration: underline; }
 .prose .routing { margin: 4px 0 8px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; color: var(--ink); }
-/* Method Launcher on the hub: the suite's front door, in the launcher's ochre. */
-.launcher-band .launcher-hub { text-align: center; }
-.launcher-band .launcher-hub p { max-width: 60ch; margin-left: auto; margin-right: auto; }
-.launcher-band .get, .launcher-get { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 16px; }
-.launcher-get { justify-content: flex-start; }
-.launcher-band .get .btn, .launcher-get .btn { --accent: #9A5B00; --accent-strong: #9A5B00; --accent-ink: #FFFFFF; font-size: 16px; padding: 10px 18px; }
-.launcher-band .get .other, .launcher-get .other { color: var(--ink-soft); }
-.launcher-band .fine { font-size: 13px; color: var(--ink-soft); }
-@media (prefers-color-scheme: dark) { .launcher-band .get .btn, .launcher-get .btn { --accent: #F0B54A; --accent-strong: #F0B54A; --accent-ink: #111417; } }
+/* Method Launcher on the hub: one line in the hero, in the launcher's ochre. */
+.hero .launcher-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 18px 0 6px; font-size: 15px; color: var(--ink-soft); }
+.hero .launcher-line .btn, .launcher-get .btn { --accent: #9A5B00; --accent-strong: #9A5B00; --accent-ink: #FFFFFF; font-size: 14px; padding: 7px 14px; }
+.launcher-get { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.launcher-get .btn { font-size: 16px; padding: 10px 18px; }
+.launcher-get .other { color: var(--ink-soft); }
+@media (prefers-color-scheme: dark) { .hero .launcher-line .btn, .launcher-get .btn { --accent: #F0B54A; --accent-strong: #F0B54A; --accent-ink: #111417; } }
