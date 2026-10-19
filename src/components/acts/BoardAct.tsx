@@ -65,7 +65,7 @@ export const BOARD_CSS = sx.css();
 
 export default function BoardAct({ title = "Method Schedule" }: { title?: string }) {
   return (
-    <div className="act act-board" aria-hidden="true">
+    <div className="act act-board" aria-hidden="true"><div className="lens">
       <div className={`win k in ${C.win}`}>
         <div className="win-bar"><i /><i /><i /><b>{title}</b></div>
       </div>
@@ -86,6 +86,6 @@ export default function BoardAct({ title = "Method Schedule" }: { title?: string
       </div>
       {breaks.map((b, j) => <div key={b.day} className={`brk k in mv ${C.brk[j]}`} />)}
       {cards.map((c) => <div key={c.n} className={`pin k out mv ${c.pin}`} />)}
-    </div>
+    </div></div>
   );
 }

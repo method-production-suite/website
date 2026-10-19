@@ -1,0 +1,23 @@
+/* What the website adds to an app's own page (src/layouts/AppPage.astro), on top of the
+   app's site.css: the value-first opening, and a header that stays one line on a phone. */
+
+/* The value first: the problem, then the app's answer in its accent (Method Reader's way). */
+.pitch.value .answer { display: block; color: var(--accent); }
+
+/* The app's header: under the suite bar, keep the mark and the nav on one row, the nav
+   scrolling sideways rather than wrapping into a stack of rows. */
+@media (max-width: 899px) {
+  .top .wrap { flex-wrap: nowrap; gap: 16px; padding-top: 8px; padding-bottom: 8px; }
+  .top .home { flex: none; }
+  .top .nav { width: auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+            mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); padding-right: 20px; }
+  .top .nav::-webkit-scrollbar { display: none; }
+  .top .nav a { flex: none; }
+  .hero { padding-top: 32px; }
+}
+/* Buttons side by side while they fit, full width when they don't. */
+@media (max-width: 420px) {
+  .hero .cta { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .hero .cta .btn { text-align: center; }
+}

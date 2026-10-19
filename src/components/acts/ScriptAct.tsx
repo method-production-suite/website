@@ -66,7 +66,7 @@ export const SCRIPT_CSS = sx.css();
 
 export default function ScriptAct({ title = "Method Storyteller" }: { title?: string }) {
   return (
-    <div className="act act-script" aria-hidden="true">
+    <div className="act act-script" aria-hidden="true"><div className="lens">
       <div className="desk" />
       <div className={`camera k mv ${C.camera}`}>
       <div className={`win k in ${C.win}`}>
@@ -103,6 +103,6 @@ export default function ScriptAct({ title = "Method Storyteller" }: { title?: st
 
       <div className={`typewriter k mv out ${C.typewriter}`} />
       </div>
-    </div>
+    </div></div>
   );
 }

@@ -62,7 +62,7 @@ export default function BudgetAct({ step = BUDGET_STEPS.length, title = "Method 
 
   return (
     <LazyMotion features={domAnimation} strict>
-    <div className="act act-budget" aria-hidden="true" ref={stage}>
+    <div className="act act-budget" aria-hidden="true"><div className="lens" ref={stage}>
       <div className="win"><div className="win-bar"><i /><i /><i /><b>{title}</b></div></div>
       <div className="sched" ref={from}>
         <p>From Method Schedule</p>
@@ -91,7 +91,7 @@ export default function BudgetAct({ step = BUDGET_STEPS.length, title = "Method 
         <span>Total</span>
         <span>{live ? <>$<SlidingNumber value={step >= 3 ? TOTAL : 0} /></> : money(TOTAL)}</span>
       </div>
-    </div>
+    </div></div>
     </LazyMotion>
   );
 }

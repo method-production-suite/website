@@ -103,3 +103,13 @@ test("each app page with an act keeps its policy strict: inline code only by has
   }
   assert.equal(await body(await run("https://methodschedule.com/")), "/schedule/index.html");
 });
+
+test("each app page opens on its value, and its screenshot comes after the act", async (t) => {
+  if (!existsSync(DIST + "/_astro")) return t.skip("no Astro build in dist/ (npm run build)");
+  for (const slug of ["storyteller", "schedule", "budget"]) {
+    const html = readFileSync(`${DIST}/${slug}/index.html`, "utf8");
+    const value = html.indexOf('class="pitch value"'), act = html.indexOf('class="act-section"'), shot = html.indexOf('class="shot"');
+    assert.ok(value > 0 && value < act, `${slug}: the value line opens the page, before the act`);
+    assert.ok(shot > act, `${slug}: the screenshot follows the act`);
+  }
+});

@@ -1,7 +1,7 @@
 /* The hub's motion: the sticky suite bar, the hero's fanning stack, the pinned story and
    the dots that become the app cards. Every rule here reads complete without JavaScript:
    the pinned layout only applies under html.js (set before first paint), on screens wider
-   than 760px, for people who haven't asked for reduced motion. Colors come from the tokens;
+   than 1023px, for people who haven't asked for reduced motion. Colors come from the tokens;
    each app's color is its --app-accent / --app-accent-dark from apps.toml. */
 
 [style*="--app-accent"] { --c: var(--app-accent); }
@@ -58,7 +58,7 @@
 .pane.has-act .act { border-radius: 0; }
 .ghosts { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
 .ghost { position: fixed; left: 0; top: 0; background: var(--c); opacity: 0; will-change: transform, width, height, opacity; }
-@media (max-width: 760px) { .stage-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1023px) { .stage-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* The panes' contents. */
 .ereader { display: grid; place-items: center; height: 100%; min-height: 236px; }
@@ -66,7 +66,7 @@
 .eink { background: #EDECE6; height: 100%; border-radius: 4px; padding: 14px; font: 11px/1.5 Georgia, serif; color: #222; overflow: hidden; }
 .eink b { display: block; font: 700 10px/1.4 "Courier Prime", "Courier New", Courier, monospace; margin: 8px 0 4px; }
 /* ------------------------------------------------------------------ the story, pinned */
-@media (min-width: 761px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   .js .story { height: 420vh; }
   .js .stage { position: sticky; top: 0; height: 100vh; display: grid; align-items: center; padding: 0; }
   .js .stage-grid { align-items: center; }
@@ -80,4 +80,19 @@
   .js .story[data-live] .step.on .dot { background: var(--c); }
   .js .steps .bar { transition: height .2s linear; }
 }
-@media (max-width: 760px), (prefers-reduced-motion: reduce) { .steps .bar { display: none; } }
+@media (max-width: 1023px), (prefers-reduced-motion: reduce) { .steps .bar { display: none; } }
+
+/* Under 1024px the story is a list: each step, then its pane, playing as it scrolls in. */
+@media (max-width: 1023px) { .view { max-width: 640px; } }
+
+/* ------------------------------------------------------------------ the hub on a phone */
+/* The four apps as a tidy two-by-two, without the arrows that land at the start of a
+   wrapped line. */
+@media (max-width: 560px) {
+  .flow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .flow li { padding: 6px 10px 6px 6px; font-size: 14px; min-width: 0; }
+  .flow li + li::before { content: none; }
+  .hero { padding-top: 36px; }
+  .hero .launcher-line { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .hero .launcher-line .btn { text-align: center; font-size: 15px; padding: 10px 14px; }
+}

@@ -7,13 +7,13 @@
 // The server renders every step and every pane finished, so the story reads complete
 // without JavaScript (and for reduced motion): the steps as a list, the panes one after
 // another. With JavaScript the <html> element carries class "js" from the first paint and
-// hub-motion.css pins the stage on wide screens; under 761px each pane plays as it comes
+// hub-motion.css pins the stage on wide screens; under 1024px each pane plays as it comes
 // into view instead.
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import ScriptAct from "../acts/ScriptAct";
 import BoardAct from "../acts/BoardAct";
 import BudgetAct, { BUDGET_STEPS } from "../acts/BudgetAct";
-import { STILL, WIDE, clamp, pinnedProgress, soft, viewProgress } from "../../lib/scrub";
+import { STILL, clamp, pinnedProgress, soft, viewProgress } from "../../lib/scrub";
 
 export interface StoryApp {
   slug: string;
@@ -56,6 +56,8 @@ const STEPS: Record<string, { title: string; text: string; pane: (budgetStep: nu
 };
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+// The story pins only where its steps and pane fit side by side (hub-motion.css).
+const STORY_WIDE = "(min-width: 1024px)";
 
 export default function Story({ apps }: { apps: StoryApp[] }) {
   const root = useRef<HTMLElement>(null);
@@ -66,7 +68,7 @@ export default function Story({ apps }: { apps: StoryApp[] }) {
   useEffect(() => {
     const story = root.current;
     if (!story) return;
-    const still = matchMedia(STILL), wide = matchMedia(WIDE);
+    const still = matchMedia(STILL), wide = matchMedia(STORY_WIDE);
     const steps = story.querySelector<HTMLElement>(".steps")!;
     const dots = [...story.querySelectorAll<HTMLElement>(".dot")];
     const ghosts = [...story.querySelectorAll<HTMLElement>(".ghost")];
