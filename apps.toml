@@ -87,7 +87,7 @@ download = "Method-Budget-macOS.dmg"
 source = "method-budget"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-source_ref = "tag:v0.4.0"
+source_ref = "tag:v0.5.0"
 # The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs
 # this in an export of the synced commit and copies `build_output` in as try/, the
 # way method-budget's old pages.yml did at deploy time.
