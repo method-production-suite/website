@@ -6,8 +6,9 @@ import SuiteBar from "../components/SuiteBar.astro";
 import SuiteBand from "../components/SuiteBand.astro";
 import AppCard from "../components/AppCard.astro";
 import Ships from "../components/Ships.astro";
-import HeroStack from "../components/islands/HeroStack";
+import HeroStack from "../components/HeroStack.astro";
 import Story from "../components/islands/Story";
+import { BlurFade } from "../components/vendor/magicui/blur-fade";
 import { APPS, LAUNCHER_DMG, SUITE, pageUrl } from "../data/catalog";
 
 const story = APPS.map(({ slug, name, does, tagline, accent }) => ({ slug, name, does, tagline, accent }));
@@ -29,9 +30,9 @@ const story = APPS.map(({ slug, name, does, tagline, accent }) => ({ slug, name,
       <p class="pages-nav"><a href={pageUrl("why")}>Why this exists</a>
         <a href={pageUrl("how")}>How it's built</a> <a href={pageUrl("help")}>Help build it</a></p>
     </div>
-    <HeroStack client:idle apps={story} />
+    <HeroStack />
   </div></section>
-  <Story client:idle apps={story} />
+  <Story client:visible={{ rootMargin: "400px" }} apps={story} />
   <section class="band alt" aria-labelledby="apps-h"><div class="wrap">
     <h2 id="apps-h">The apps</h2>
     <p class="sample-line"><strong>Try it on a sample production.</strong> Method Storyteller, Method Schedule and
@@ -48,9 +49,9 @@ const story = APPS.map(({ slug, name, does, tagline, accent }) => ({ slug, name,
   <section class="band alt" aria-labelledby="open-h"><div class="wrap">
     <h2 id="open-h">Open, all the way down</h2>
     <div class="cards three">
-      <div class="card"><h3>Your computer, your files</h3><p>Every app runs on your own machine and works offline. Nothing about your production is uploaded anywhere.</p></div>
-      <div class="card"><h3>Open formats</h3><p>Scripts are Open Screenplay Format or Fountain, budgets and schedules are documented text files you can read, diff and keep in version control.</p></div>
-      <div class="card"><h3>Free and open source</h3><p>MIT or Apache-2.0, on GitHub, with every decision written down in each repo.</p></div>
+      <BlurFade client:visible className="card"><h3>Your computer, your files</h3><p>Every app runs on your own machine and works offline. Nothing about your production is uploaded anywhere.</p></BlurFade>
+      <BlurFade client:visible className="card" delay={0.08}><h3>Open formats</h3><p>Scripts are Open Screenplay Format or Fountain, budgets and schedules are documented text files you can read, diff and keep in version control.</p></BlurFade>
+      <BlurFade client:visible className="card" delay={0.16}><h3>Free and open source</h3><p>MIT or Apache-2.0, on GitHub, with every decision written down in each repo.</p></BlurFade>
     </div>
   </div></section>
 </main>

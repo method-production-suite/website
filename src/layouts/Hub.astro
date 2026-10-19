@@ -4,7 +4,12 @@
 import "../../.catalog/hub-tokens.css";
 import "../../shared/site.css";
 import "../../shared/suite.css";
+import "../styles/acts.css";
 import "../styles/hub-motion.css";
+import { SCRIPT_CSS } from "../components/acts/ScriptAct";
+import { BOARD_CSS } from "../components/acts/BoardAct";
+import { BUDGET_CSS } from "../components/acts/BudgetAct";
+const actCss = [SCRIPT_CSS, BOARD_CSS, BUDGET_CSS].join("\n");
 interface Props { title: string; description: string; canonical: string }
 const { title, description, canonical } = Astro.props;
 ---
@@ -23,6 +28,7 @@ const { title, description, canonical } = Astro.props;
 <meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111417" media="(prefers-color-scheme: dark)">
 <script is:inline>document.documentElement.classList.add("js")</script>
+<style is:inline set:html={actCss}></style>
 </head>
 <body>
 <slot />

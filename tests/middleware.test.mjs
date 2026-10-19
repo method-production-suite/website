@@ -86,3 +86,20 @@ test("the hub is the Astro page, complete before any script runs", async (t) => 
   }
   assert.ok(!/field station/i.test(html), "the sample production is never named");
 });
+
+test("each app page with an act keeps its policy strict: inline code only by hash", async (t) => {
+  if (!existsSync(DIST + "/_astro")) return t.skip("no Astro build in dist/ (npm run build)");
+  for (const [slug, act] of [["storyteller", "act-script"], ["schedule", "act-board"], ["budget", "act-budget"]]) {
+    const html = readFileSync(`${DIST}/${slug}/index.html`, "utf8");
+    assert.ok(html.includes(`class="act ${act}"`), `${slug}: the act is in the HTML`);
+    assert.ok(html.includes('class="ms-bar"') && html.includes('class="ms-band"'), `${slug}: suite bar and band`);
+    const policy = html.match(/Content-Security-Policy" content="([^"]*)"/)[1];
+    assert.match(policy, /default-src 'none'/, slug);
+    assert.doesNotMatch(policy, /unsafe-inline/, slug);
+    assert.match(policy, /script-src 'self' 'sha256-/, slug);
+    assert.ok(!/ style="/.test(html.slice(html.indexOf("<body"))), `${slug}: no inline style attributes`);
+    assert.ok(!/field station/i.test(html.slice(html.indexOf("act-section"), html.indexOf("</section>", html.indexOf("act-section")))),
+              `${slug}: the act never names the sample production`);
+  }
+  assert.equal(await body(await run("https://methodschedule.com/")), "/schedule/index.html");
+});

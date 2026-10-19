@@ -6,4 +6,5 @@ Copied as source from https://github.com/magicuidesign/magicui at commit
 
 | File | Original |
 |---|---|
-| `number-ticker.tsx` | `apps/www/registry/magicui/number-ticker.tsx` |
+| `blur-fade.tsx` | `apps/www/registry/magicui/blur-fade.tsx` |
+| `animated-beam.tsx` | `apps/www/registry/magicui/animated-beam.tsx` |

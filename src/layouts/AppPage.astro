@@ -1,0 +1,54 @@
+---
+// An app's own site page, as its repo wrote it (apps/<slug>/index.html, synced at the
+// release tag), with the suite bar and band around it as tools/build.py's furnish() adds
+// them, and one act (src/components/acts/) placed after the page's hero. The app's words
+// and pictures stay the app's; the act is the website's.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import "../../shared/suite.css";
+import "../styles/acts.css";
+import SuiteBar from "../components/SuiteBar.astro";
+import SuiteBand from "../components/SuiteBand.astro";
+import ActSection from "../components/islands/ActSection";
+import { SCRIPT_CSS } from "../components/acts/ScriptAct";
+import { BOARD_CSS } from "../components/acts/BoardAct";
+import { BUDGET_CSS } from "../components/acts/BudgetAct";
+
+interface Props {
+  slug: string;
+  act: "script" | "board" | "budget";
+  kicker: string;
+  title: string;
+  text: string;
+}
+const { slug, act, kicker, title, text } = Astro.props;
+const page = readFileSync(join(process.cwd(), "apps", slug, "index.html"), "utf8");
+const lang = page.match(/<html[^>]*\blang="([^"]+)"/)?.[1] ?? "en";
+const head = page.match(/<head>([\s\S]*?)<\/head>/)![1];
+const bodyTag = page.match(/<body([^>]*)>/)!;
+const body = page.slice(bodyTag.index! + bodyTag[0].length, page.lastIndexOf("</body>"));
+// The act goes after the hero: before the first section that follows it.
+const hero = body.indexOf('<section class="hero"');
+const cut = body.indexOf("<section", hero + 1);
+if (hero < 0 || cut < 0) throw new Error(`${slug}: no hero section to put the act after`);
+const before = body.slice(0, cut), after = body.slice(cut);
+// Each act's per-piece classes. tools/merge-astro.mjs adds this block's hash (and the
+// islands' scripts') to the page's Content Security Policy, which allows nothing inline.
+const actCss = { script: SCRIPT_CSS, board: BOARD_CSS, budget: BUDGET_CSS }[act];
+const bodyClass = bodyTag[1].match(/class="([^"]*)"/)?.[1];
+---
+<!doctype html>
+<html lang={lang}>
+<head>
+<Fragment set:html={head} />
+<script is:inline>document.documentElement.classList.add("js")</script>
+<style is:inline set:html={actCss}></style>
+</head>
+<body class={bodyClass}>
+<SuiteBar current={slug} />
+<Fragment set:html={before} />
+<ActSection client:visible={{ rootMargin: "400px" }} act={act} id={`act-${act}`} kicker={kicker} title={title} text={text} />
+<Fragment set:html={after} />
+<SuiteBand current={slug} />
+</body>
+</html>

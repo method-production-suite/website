@@ -1,6 +1,6 @@
 ---
-// The suite bar, as tools/build.py's bar(). On the hub it is sticky (class "sticky") and the
-// story island slides it away once the app cards are on screen.
+// The suite bar, as tools/build.py's bar(). On the hub it is sticky (class "sticky") and
+// slides away once the app cards are on screen.
 import Picture from "./Picture.astro";
 import GitHub from "./GitHub.astro";
 import { APPS, SUITE, mark, url } from "../data/catalog";
@@ -14,3 +14,16 @@ const { current, sticky = false } = Astro.props;
   ))}
   <GitHub href={SUITE.org} label={`${SUITE.name} on GitHub`} size={16} class="ms-gh" />
 </div></nav>
+{sticky && (
+  <script>
+    // On the hub the bar stays until the app cards take over, then slides away (CSS).
+    const bar = document.querySelector<HTMLElement>("[data-suite-bar].sticky");
+    const grid = document.querySelector<HTMLElement>("[data-morph-card]")?.parentElement;
+    if (bar && grid) {
+      let frame = 0;
+      const draw = () => { frame = 0; bar.classList.toggle("away", grid.getBoundingClientRect().top < innerHeight * 0.55); };
+      addEventListener("scroll", () => { if (!frame) frame = requestAnimationFrame(draw); }, { passive: true });
+      draw();
+    }
+  </script>
+)}

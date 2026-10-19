@@ -17,13 +17,13 @@
 .hero { overflow: hidden; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; align-items: center; }
 .stack { position: relative; aspect-ratio: 1; max-width: 340px; width: 100%; margin-left: auto; }
-.sheet { position: absolute; inset: 12% 22%; border-radius: 14px; background: var(--surface); border: 1px solid var(--rule);
+.stack .sheet { position: absolute; inset: 12% 22%; border-radius: 14px; background: var(--surface); border: 1px solid var(--rule);
   box-shadow: var(--shadow); display: grid; place-items: end start; padding: 14px; transform: var(--rest); }
-.sheet::before { content: ""; position: absolute; inset: 14px 14px 46px; background: repeating-linear-gradient(var(--rule) 0 2px, transparent 2px 14px); }
-.sheet span { position: relative; background: var(--c); color: var(--bg); font-weight: 700; font-size: 13px; padding: 3px 8px; border-radius: 6px; }
+.stack .sheet::before { content: ""; position: absolute; inset: 14px 14px 46px; background: repeating-linear-gradient(var(--rule) 0 2px, transparent 2px 14px); }
+.stack .sheet span { position: relative; background: var(--c); color: var(--bg); font-weight: 700; font-size: 13px; padding: 3px 8px; border-radius: 6px; }
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .sheet { animation: fan linear both; animation-timeline: scroll(root); animation-range: 0 60vh; }
+    .stack .sheet { animation: fan linear both; animation-timeline: scroll(root); animation-range: 0 60vh; }
     @keyframes fan { from { transform: var(--rest); } to { transform: var(--fan); } }
   }
 }
@@ -52,41 +52,25 @@
 .pane { position: relative; border-radius: 16px; background: var(--surface); border: 1px solid var(--rule); box-shadow: var(--shadow);
   padding: 22px; overflow: hidden; min-height: 280px; }
 .pane .tag { position: absolute; top: 14px; right: 16px; font-size: 12px; font-weight: 700; color: var(--c); }
+/* A pane that plays an act: the act fills it, and its window names the app. */
+.pane.has-act { padding: 0; min-height: 0; }
+.pane.has-act .tag { display: none; }
+.pane.has-act .act { border-radius: 0; }
 .ghosts { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
 .ghost { position: fixed; left: 0; top: 0; background: var(--c); opacity: 0; will-change: transform, width, height, opacity; }
 @media (max-width: 760px) { .stage-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* The panes' contents. */
-.script { font: 13px/1.45 "Courier Prime", "Courier New", Courier, monospace; color: var(--ink); padding: 6px 4px; }
-.script p { margin: 0 0 6px; }
-.script .sh { font-weight: 700; margin-top: 10px; }
-.script .ch { margin: 10px 0 0 38%; }
-.script .dl { margin: 0 18% 6px 22%; }
-.script .num { float: right; color: var(--muted); }
 .ereader { display: grid; place-items: center; height: 100%; min-height: 236px; }
 .device { width: min(62%, 260px); aspect-ratio: 3 / 4; border-radius: 18px; background: #2A2E33; padding: 18px 14px 34px; }
 .eink { background: #EDECE6; height: 100%; border-radius: 4px; padding: 14px; font: 11px/1.5 Georgia, serif; color: #222; overflow: hidden; }
 .eink b { display: block; font: 700 10px/1.4 "Courier Prime", "Courier New", Courier, monospace; margin: 8px 0 4px; }
-.board-legend { display: flex; gap: 6px 14px; font-size: 12px; color: var(--muted); margin: 0 0 10px; flex-wrap: wrap; padding-right: 110px; }
-.board-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
-.board { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); gap: 3px; height: 200px; align-items: end; }
-.board .day { display: grid; gap: 3px; align-content: end; height: 100%; }
-.strip { border-radius: 3px; }
-.k-dx { background: #F2D27A; } .k-nx { background: #9CC3F0; } .k-di { background: #F4F1E8; outline: 1px solid var(--rule); outline-offset: -1px; }
-.k-br { background: var(--ink); height: 4px; }
-.pane .kicker { margin-top: 4px; }
-table.top { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-.top td { padding: 7px 0; border-bottom: 1px solid var(--rule); color: var(--ink-soft); }
-.top td:last-child { text-align: right; color: var(--ink); }
-.top tr.total td { font-weight: 700; border-bottom: 0; padding-top: 12px; font-size: 16px; color: var(--ink); }
-.top .acct { color: var(--muted); width: 3.5em; }
-
 /* ------------------------------------------------------------------ the story, pinned */
 @media (min-width: 761px) and (prefers-reduced-motion: no-preference) {
   .js .story { height: 420vh; }
   .js .stage { position: sticky; top: 0; height: 100vh; display: grid; align-items: center; padding: 0; }
   .js .stage-grid { align-items: center; }
-  .js .view { display: block; position: relative; aspect-ratio: 4 / 3.3; }
+  .js .view { display: block; position: relative; aspect-ratio: 4 / 3; max-height: 82vh; margin-left: auto; width: min(100%, calc(82vh * 4 / 3)); }
   .js .pane { position: absolute; inset: 0; opacity: 0; transform: translateY(16px) scale(.98); transition: opacity .5s, transform .5s; }
   .js .story:not([data-live]) .pane:first-child, .js .story[data-live] .pane.on { opacity: 1; transform: none; }
   /* Steps still to come are quieter, in colors that keep their contrast (no opacity). */
