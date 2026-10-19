@@ -17,8 +17,9 @@
     the full rules, and every contribution follows them.</p>
 
   <h2>Tests</h2>
-  <p>Every change runs the full test suite before it lands. Test functions in each app,
-    counted on 16 October 2026:</p>
+  <p>Every change passes the full test suite on a developer's machine before it lands, and
+    the complete build and test run again every week and for every release. Test functions
+    in each app, counted on 16 October 2026:</p>
   <table class="counts">
     <thead><tr><th scope="col">App</th><th scope="col">Tests</th><th scope="col">Also</th></tr></thead>
     <tbody>
@@ -43,7 +44,8 @@
     <li>Every dependency must be at least 14 days old before it's used, and every licence
       and security advisory is checked on every change.</li>
     <li>Build steps are pinned to exact versions. Released Mac apps are signed and notarized
-      by Apple.</li>
+      by Apple. Windows installers aren't signed yet, so Windows shows an unknown-publisher
+      warning; Linux packages aren't signed, which is usual there.</li>
     <li>MIT OR Apache-2.0, every line on <a href="{org}">GitHub</a>.</li>
   </ul>
 

@@ -70,11 +70,10 @@ def fill(text: str) -> str:
 
 def ships() -> str:
     """How to hear about releases: the hello address once its forward exists, else GitHub."""
-    watch = ("On GitHub, <em>Watch &rarr; Custom &rarr; Releases</em> on any app's repository "
-             "tells you when it ships.")
+    watch = ("On GitHub, <em>Watch &rarr; Custom &rarr; Releases</em> on any app's repository.")
     if SUITE.get("hello_live"):
-        return (f'Write to <a href="mailto:{SUITE["hello"]}">{E(SUITE["hello"])}</a> and we\'ll '
-                f"tell you when Method Schedule ships. {watch.replace('tells you when it ships', 'does the same')}")
+        return (f'{watch} Or write to <a href="mailto:{SUITE["hello"]}">{E(SUITE["hello"])}</a> '
+                "and we'll tell you when the next one is out.")
     return watch
 
 
@@ -253,11 +252,15 @@ def hub() -> str:
   </div></section>
   <section class="band alt" aria-labelledby="apps-h"><div class="wrap">
     <h2 id="apps-h">The apps</h2>
+    <p class="sample-line"><strong>Try it on Field Station.</strong> Method Storyteller, Method Schedule and
+      Method Budget come with the same invented production, an 18-day independent feature, so you can see
+      the suite working before you open your own work. Help &gt; Open Sample in each, or Demo the suite in
+      <a href="{page_url('launcher')}">Method Launcher</a>.</p>
     <div class="app-grid">{cards}
     </div>
   </div></section>
   <section class="band" aria-labelledby="ships-h"><div class="wrap ships">
-    <h2 id="ships-h">Hear when it ships</h2>
+    <h2 id="ships-h">Hear about new releases</h2>
     <p>{ships()}
       Want to help? <a href="{page_url('help')}">Here's how</a>, film knowledge or code.</p>
   </div></section>

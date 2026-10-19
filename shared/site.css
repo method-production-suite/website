@@ -108,3 +108,5 @@ p { margin: 0 0 14px; }
 .launcher-get .btn { font-size: 16px; padding: 10px 18px; }
 .launcher-get .other { color: var(--ink-soft); }
 @media (prefers-color-scheme: dark) { .hero .launcher-line .btn, .launcher-get .btn { --accent: #F0B54A; --accent-strong: #F0B54A; --accent-ink: #111417; } }
+
+.sample-line { max-width: 72ch; margin: -4px 0 20px; color: var(--ink-soft); }
