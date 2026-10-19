@@ -74,7 +74,8 @@ download = "Method-Schedule-macOS.dmg"
 source = "method-scheduling"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-source_ref = "tag:v0.2.0"
+# Site-only audit fix (Sam, 2026-10-19, #50): main until the next tag, then back to tag:<version>.
+source_ref = "main"
 accent = ["#2F5FB3", "#7AA2F0"]
 
 [[app]]
