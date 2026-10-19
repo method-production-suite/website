@@ -64,10 +64,10 @@ does = "Schedule"
 tagline = "Film and TV scheduling, from script to stripboard."
 blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open files on your own computer. Hands its shoot days straight to Method Budget."
 status = "Early alpha"
-platforms = "Not released yet: builds from source. Mac first, then Windows and Linux."
+platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 source = "method-scheduling"
-# Follows its latest published release tag once it has one (Sam, 2026-10-18). HOLD:
-# v0.1.0 isn't tagged or published yet; until then the site stays as it is live now.
+# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# tag once published.
 source_ref = "tag:v0.1.0"
 accent = ["#2F5FB3", "#7AA2F0"]
 
