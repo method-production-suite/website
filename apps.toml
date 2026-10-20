@@ -68,13 +68,12 @@ does = "Schedule"
 tagline = "Film and TV scheduling, from script to stripboard."
 blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open files on your own computer. Hands its shoot days straight to Method Budget."
 status = "Early alpha"
-platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
+platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Schedule-macOS.dmg"
 source = "method-scheduling"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-# Site-only audit fix (Sam, 2026-10-19, #50): main until the next tag, then back to tag:<version>.
-source_ref = "main"
+source_ref = "tag:v0.3.0"
 accent = ["#2F5FB3", "#7AA2F0"]
 
 [[app]]
