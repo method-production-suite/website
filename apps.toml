@@ -39,7 +39,7 @@ download = "Method-Storyteller-macOS.dmg"
 source = "method-storyteller"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-source_ref = "tag:v0.3.0"
+source_ref = "tag:v0.4.0"
 accent = ["#AE3D56", "#EE8DA2"]
 
 [[app]]
