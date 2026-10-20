@@ -407,6 +407,10 @@ def main() -> int:
     write(DIST / "404.html", page_404())
     for n in PAGES:
         write(DIST / n / "index.html", suite_page(n)[0])
+        # A page's own pictures (shared/pages/<name>/), e.g. the launcher's, synced from
+        # method-launcher's site/ at its release tag.
+        if (ROOT / "shared" / "pages" / n).is_dir():
+            shutil.copytree(ROOT / "shared" / "pages" / n, DIST / n, dirs_exist_ok=True)
     write(DIST / "apps.json", apps_json())
     write(DIST / "robots.txt", f"User-agent: *\nAllow: /\nSitemap: https://{SUITE['domain']}/sitemap.xml\n")
     locs = ([f"https://{SUITE['domain']}/"] + [f"https://{SUITE['domain']}/{n}/" for n in PAGES]
