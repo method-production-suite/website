@@ -11,7 +11,7 @@ import { SlidingNumber } from "../vendor/motion-primitives/sliding-number";
 
 // From Method Schedule. y is where each chip sits, in stage units.
 const CHIPS: [string, string, number][] = [
-  ["Shoot days", "18", 14.6], ["Cast days", "64", 19.9], ["Locations", "3", 25.2], ["Company moves", "1", 30.5],
+  ["Shoot days", "18", 18.6], ["Cast days", "64", 23.9], ["Locations", "3", 29.2], ["Company moves", "1", 34.5],
 ];
 // Invented lines: [account, line, working, amount, which chip it comes from].
 const LINES: [string, string, string, number, number][] = [
@@ -36,7 +36,7 @@ export const TOTAL = TOPSHEET.reduce((n, r) => n + r[2], 0);
 /** When the beam runs (steps 1 and 2) and when the total rolls (step 3), as parts of --t. */
 export const BUDGET_STEPS = [0.06, 0.66, 0.84];
 
-const X = 41, TOP = 13.5, ROW = 4.4;
+const X = 41, TOP = 18, ROW = 5.6;
 const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 
 const sx = new Styler(".act-budget", "u");
@@ -62,32 +62,32 @@ export default function BudgetAct({ step = BUDGET_STEPS.length, title = "Method 
 
   return (
     <LazyMotion features={domAnimation} strict>
-    <div className="act act-budget" aria-hidden="true"><div className="lens" ref={stage}>
-      <div className="win"><div className="win-bar"><i /><i /><i /><b>{title}</b></div></div>
-      <div className="sched" ref={from}>
+    <div className="act act-budget" aria-hidden="true"><div className="a-lens" ref={stage}>
+      <div className="a-win"><div className="a-win-bar"><i /><i /><i /><b>{title}</b></div></div>
+      <div className="a-sched" ref={from}>
         <p>From Method Schedule</p>
-        {CHIPS.map(([label, n]) => <div key={label} className="chip"><span>{label}</span><b>{n}</b></div>)}
+        {CHIPS.map(([label, n]) => <div key={label} className="a-chip"><span>{label}</span><b>{n}</b></div>)}
       </div>
-      {live && <AnimatedBeam containerRef={stage} fromRef={from} toRef={to} curvature={-40} play={step === 1 || step === 2} />}
+      {live && (step === 1 || step === 2) && <AnimatedBeam containerRef={stage} fromRef={from} toRef={to} curvature={-40} />}
 
       {/* The detail: lines fly in, then fold away into the topsheet. */}
-      <div className={`k out ${C.detail}`}>
-        <span className={`head k in mv ${C.detailHead}`} ref={to}>Detail</span>
+      <div className={`a-k a-out ${C.detail}`}>
+        <span className={`a-head a-k a-in a-mv ${C.detailHead}`} ref={to}>Detail</span>
         {LINES.map(([acct, line, working, amount], i) => (
-          <div key={acct} className={`row fly k mv in ${C.rows[i]}`}>
-            <span className="a">{acct}</span><span>{line}</span><span className="x">{working}</span><span className="m">{money(amount)}</span>
+          <div key={acct} className={`a-row a-fly a-k a-mv a-in ${C.rows[i]}`}>
+            <span className="a-acct">{acct}</span><span>{line}</span><span className="a-work">{working}</span><span className="a-amt">{money(amount)}</span>
           </div>
         ))}
       </div>
 
       {/* The topsheet. */}
-      <span className={`head k in mv ${C.topHead}`}>Topsheet</span>
+      <span className={`a-head a-k a-in a-mv ${C.topHead}`}>Topsheet</span>
       {TOPSHEET.map(([acct, what, amount], j) => (
-        <div key={acct} className={`top k in mv ${C.top[j]}`}>
-          <span className="a">{acct}</span><span>{what}</span><span className="m">{money(amount)}</span>
+        <div key={acct} className={`a-top a-k a-in a-mv ${C.top[j]}`}>
+          <span className="a-acct">{acct}</span><span>{what}</span><span className="a-amt">{money(amount)}</span>
         </div>
       ))}
-      <div className={`total k in mv ${C.total}`}>
+      <div className={`a-total a-k a-in a-mv ${C.total}`}>
         <span>Total</span>
         <span>{live ? <>$<SlidingNumber value={step >= 3 ? TOTAL : 0} /></> : money(TOTAL)}</span>
       </div>

@@ -124,8 +124,10 @@ export default function Story({ apps }: { apps: StoryApp[] }) {
       const startY = story.offsetTop + story.offsetHeight - innerHeight;
       const endY = grid.getBoundingClientRect().top + scrollY - innerHeight * 0.22;
       const t = clamp((scrollY - startY) / Math.max(1, endY - startY));
+      // The cards are only hidden while the dots are on their way to them; before the morph
+      // starts (and after it ends) they're simply there.
       const fill = t < 0.82 ? 0 : (t - 0.82) / 0.18;
-      cards.forEach((c) => (c!.style.opacity = fill.toFixed(3)));
+      cards.forEach((c) => (c!.style.opacity = t > 0 && t < 1 ? fill.toFixed(3) : ""));
       const fade = Math.min(1, t / 0.22);
       fading.forEach((el) => (el.style.opacity = (1 - fade).toFixed(3)));
       steps.style.setProperty("--rail", (1 - fade).toFixed(3));
@@ -134,13 +136,16 @@ export default function Story({ apps }: { apps: StoryApp[] }) {
         ghosts.forEach((g) => (g.style.opacity = "0"));
         return;
       }
-      const e = soft(Math.max(0, (t - 0.2) / 0.8));
+      // Each dot flies to its card and stretches into the card's colored top edge (4px),
+      // so nothing large ever covers the copy on its way.
+      // They travel as dots and only stretch out as they arrive.
+      const e = soft(Math.max(0, (t - 0.2) / 0.8)), grow = soft(clamp((e - 0.88) / 0.12));
       ghosts.forEach((g, k) => {
         const a = dots[k].getBoundingClientRect(), b = cards[k]!.getBoundingClientRect();
-        g.style.width = `${lerp(a.width, b.width, e)}px`;
-        g.style.height = `${lerp(a.height, b.height, e)}px`;
+        g.style.width = `${lerp(a.width, b.width, grow)}px`;
+        g.style.height = `${lerp(a.height, 4, grow)}px`;
         g.style.transform = `translate(${lerp(a.left, b.left, e)}px, ${lerp(a.top, b.top, e)}px)`;
-        g.style.borderRadius = `${lerp(a.width / 2, 12, e)}px`;
+        g.style.borderRadius = `${lerp(a.width / 2, 2, grow)}px`;
         g.style.opacity = (t < 0.82 ? 1 : 1 - fill).toFixed(3);
       });
     };
@@ -178,7 +183,7 @@ export default function Story({ apps }: { apps: StoryApp[] }) {
                 {apps.map((a, k) => {
                   const s = STEPS[a.slug];
                   return (
-                    <li key={a.slug} className={`step${on(k) ? " on" : ""}`} style={accent(a)}>
+                    <li key={a.slug} className={`step${on(k) ? " on" : ""}`} style={{ ...accent(a), order: 2 * k + 2 }}>
                       <span className="dot" aria-hidden="true" />
                       <div data-fade>
                         <span className="app">{a.name}</span>
@@ -195,7 +200,8 @@ export default function Story({ apps }: { apps: StoryApp[] }) {
             {apps.filter((a) => STEPS[a.slug]).map((a) => {
               const k = apps.indexOf(a);
               return (
-                <div key={a.slug} className={`pane pane-${a.slug}${shown(k) ? " on" : ""}${a.slug === "reader" ? "" : " has-act"}`} style={accent(a)}>
+                <div key={a.slug} className={`pane pane-${a.slug}${shown(k) ? " on" : ""}${a.slug === "reader" ? "" : " has-act"}`}
+                     style={{ ...accent(a), order: 2 * k + 3 }}>
                   <span className="tag">{a.name}</span>
                   {STEPS[a.slug].pane(budgetStep)}
                 </div>

@@ -82,13 +82,24 @@
 }
 @media (max-width: 1023px), (prefers-reduced-motion: reduce) { .steps .bar { display: none; } }
 
-/* Under 1024px the story is a list: each step, then its pane, playing as it scrolls in. */
-@media (max-width: 1023px) { .view { max-width: 640px; } }
+/* Under 1024px the story is a list: each step, then its own pane right under it, playing
+   as it scrolls in. The step and pane wrappers step aside (display: contents) so steps and
+   panes interleave by their order (set per item in Story.tsx). */
+@media (max-width: 1023px) {
+  .stage-grid { display: flex; flex-direction: column; gap: 0; }
+  .stage-grid > div:first-child, .steps, .steps ol, .view { display: contents; }
+  .story .kicker { order: 0; } .story h2 { order: 1; }
+  .steps::before { content: none; }
+  .step { padding: 18px 0 12px; }
+  .pane { width: 100%; max-width: 640px; margin: 4px 0 12px; }
+  .pane .tag { position: static; display: block; text-align: right; margin: -8px 0 8px; }
+}
 
 /* ------------------------------------------------------------------ the hub on a phone */
 /* The four apps as a tidy two-by-two, without the arrows that land at the start of a
    wrapped line. */
 @media (max-width: 560px) {
+  .stack { display: none; }
   .flow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .flow li { padding: 6px 10px 6px 6px; font-size: 14px; min-width: 0; }
   .flow li + li::before { content: none; }

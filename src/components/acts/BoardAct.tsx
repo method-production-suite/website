@@ -47,8 +47,8 @@ const cards = SCENES.map(([n, set, look, pages], i) => {
     n, set, look, pages,
     card: sx.add({ "--d": d, "--s": 0.45, "--x0": c.x, "--y0": c.y, "--r0": TILT[i], "--x1": p.x, "--y1": STRIP.top,
                    "--w0": CARD.w, "--h0": CARD.h, "--w1": STRIP.w, "--h1": STRIP.h }),
-    fill: sx.add({ "--d": d + 0.08, "--s": 0.2 }),
-    face: sx.add({ "--d": d, "--s": 0.14 }),
+    fill: sx.add({ "--d": d + 0.04, "--s": 0.18 }),
+    face: sx.add({ "--d": d + 0.08, "--s": 0.18 }),
     label: sx.add({ "--x0": p.x, "--y0": STRIP.top }),
     pin: sx.add({ "--d": 0.04 + i * 0.006, "--s": 0.08, "--x0": c.x + 5.7, "--y0": c.y - 0.6, "--y1": c.y - 4 }),
   };
@@ -65,27 +65,27 @@ export const BOARD_CSS = sx.css();
 
 export default function BoardAct({ title = "Method Schedule" }: { title?: string }) {
   return (
-    <div className="act act-board" aria-hidden="true"><div className="lens">
-      <div className={`win k in ${C.win}`}>
-        <div className="win-bar"><i /><i /><i /><b>{title}</b></div>
+    <div className="act act-board" aria-hidden="true"><div className="a-lens">
+      <div className={`a-win a-k a-in ${C.win}`}>
+        <div className="a-win-bar"><i /><i /><i /><b>{title}</b></div>
       </div>
-      <div className={`cork k out ${C.cork}`} />
-      <div className={`k in ${C.days}`}>
-        {breaks.map((b, j) => <span key={b.day} className={`day mv ${C.day[j]}`}>Day {b.day}</span>)}
+      <div className={`a-cork a-k a-out ${C.cork}`} />
+      <div className={`a-k a-in ${C.days}`}>
+        {breaks.map((b, j) => <span key={b.day} className={`a-day a-mv ${C.day[j]}`}>Day {b.day}</span>)}
       </div>
       {cards.map((c) => (
-        <div key={c.n} className={`card k mv sz ${c.card}`}>
-          <div className={`fill s-${c.look} k in ${c.fill}`} />
-          <div className={`face k out ${c.face}`}>
+        <div key={c.n} className={`a-card a-k a-mv a-sz ${c.card}`}>
+          <div className={`a-fill s-${c.look} a-k a-in ${c.fill}`} />
+          <div className={`a-face a-k a-out ${c.face}`}>
             <b>{c.n}</b>{c.set}<br /><span>{LOOK[c.look]}, {c.pages} pg</span>
           </div>
         </div>
       ))}
-      <div className={`k in ${C.labels}`}>
-        {cards.map((c) => <div key={c.n} className={`lbl mv ${c.label}`}><span>{c.n} {c.set}</span></div>)}
+      <div className={`a-k a-in ${C.labels}`}>
+        {cards.map((c) => <div key={c.n} className={`a-lbl a-mv ${c.label}`}><span>{c.n} {c.set}</span></div>)}
       </div>
-      {breaks.map((b, j) => <div key={b.day} className={`brk k in mv ${C.brk[j]}`} />)}
-      {cards.map((c) => <div key={c.n} className={`pin k out mv ${c.pin}`} />)}
+      {breaks.map((b, j) => <div key={b.day} className={`a-brk a-k a-in a-mv ${C.brk[j]}`} />)}
+      {cards.map((c) => <div key={c.n} className={`a-pin a-k a-out a-mv ${c.pin}`} />)}
     </div></div>
   );
 }
