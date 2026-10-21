@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Method Schedule</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="print.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="demo/demo.css">
+    <script src="demo/demo.js"></script>
+    <script src="method-schedule-web/tauri-shim.js"></script>
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <div class="ms-demo" id="ms-demo" role="note" aria-label="About this demo" hidden>
+      <a class="ms-demo-home" href="../">Method Schedule</a>
+      <p class="ms-demo-text">This runs entirely in your browser, with Field Station, an invented production. Nothing is uploaded: files you open stay on your computer, and Save downloads a .mtsc file. <span class="ms-demo-phone">It works best on a computer.</span></p>
+      <a class="ms-demo-get" href="../#download">Download the app</a>
+      <button type="button" class="ms-demo-close" id="ms-demo-close" aria-label="Hide this note">&times;</button>
+    </div>
+    <div class="app">
+      <header class="topbar">
+        <div class="group" role="group" aria-label="File">
+          <button type="button" class="btn icon-btn" id="btn-new" aria-label="New"><svg class="ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg></button>
+          <button type="button" class="btn icon-btn" id="btn-open" aria-label="Open"><svg class="ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h4.5l1.5 1.5h7v8.5h-13z"/></svg></button>
+          <button type="button" class="btn icon-btn" id="btn-save" aria-label="Save"><svg class="ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h9l2 2v9h-11z"/><path d="M5 2.5v3.5h5V2.5"/><path d="M5 13.5v-4h6v4"/></svg></button>
+          <button type="button" class="btn icon-btn" id="btn-save-as" aria-label="Save As"><svg class="ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h9l2 2v4"/><path d="M2.5 2.5v11h6"/><path d="M5 2.5v3.5h5V2.5"/><path d="M12 10v5M9.5 12.5h5"/></svg></button>
+        </div>
+        <button type="button" class="btn" id="btn-import">Import Script</button>
+        <span class="sep" aria-hidden="true"></span>
+        <div class="group" role="group" aria-label="History">
+          <button type="button" class="btn icon-btn" id="btn-undo" aria-label="Undo" disabled><svg class="ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3L2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg></button>
+          <button type="button" class="btn icon-btn" id="btn-redo" aria-label="Redo" disabled><svg class="ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3l3 3-3 3"/><path d="M14 6H6.5a4 4 0 0 0 0 8H9"/></svg></button>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Views">
+          <button type="button" class="tab" role="tab" id="tab-board" aria-controls="panel-board" aria-selected="true">Board</button>
+          <button type="button" class="tab" role="tab" id="tab-breakdown" aria-controls="panel-breakdown" aria-selected="false">Breakdown</button>
+          <button type="button" class="tab" role="tab" id="tab-elements" aria-controls="panel-elements" aria-selected="false">Elements</button>
+          <button type="button" class="tab" role="tab" id="tab-dood" aria-controls="panel-dood" aria-selected="false">Day out of days</button>
+          <button type="button" class="tab" role="tab" id="tab-calendar" aria-controls="panel-calendar" aria-selected="false">Calendar</button>
+          <button type="button" class="tab" role="tab" id="tab-reports" aria-controls="panel-reports" aria-selected="false">Reports</button>
+          <button type="button" class="tab" role="tab" id="tab-conflicts" aria-controls="panel-conflicts" aria-selected="false">Conflicts <span class="tab-badge" id="conflicts-badge" hidden></span></button>
+          <button type="button" class="tab" role="tab" id="tab-redflags" aria-controls="panel-redflags" aria-selected="false">Red flags <span class="tab-badge" id="redflags-badge" hidden></span></button>
+        </nav>
+        <div class="doc">
+          <h1 class="doc-title" id="doc-title"></h1>
+          <span class="doc-file" id="doc-file"></span>
+          <span class="doc-dirty" id="doc-dirty" hidden>Edited</span>
+        </div>
+      </header>
+      <div class="boardbar" id="boardbar" role="group" aria-label="Board and sub-board"></div>
+
+      <div class="status error" id="conflict" role="alert" hidden></div>
+
+      <div class="work">
+        <main class="panels">
+          <section class="panel" id="panel-board" role="tabpanel" aria-labelledby="tab-board">
+            <div class="board" id="board" tabindex="0" role="listbox" aria-label="Board"></div>
+          </section>
+          <section class="panel" id="panel-breakdown" role="tabpanel" aria-labelledby="tab-breakdown" hidden>
+            <div class="breakdown" id="breakdown"></div>
+          </section>
+          <section class="panel" id="panel-elements" role="tabpanel" aria-labelledby="tab-elements" hidden>
+            <div class="elements" id="elements"></div>
+          </section>
+          <section class="panel" id="panel-dood" role="tabpanel" aria-labelledby="tab-dood" hidden>
+            <div class="dood" id="dood"></div>
+          </section>
+          <section class="panel" id="panel-calendar" role="tabpanel" aria-labelledby="tab-calendar" hidden>
+            <div class="calendar" id="calendar"></div>
+          </section>
+          <section class="panel" id="panel-reports" role="tabpanel" aria-labelledby="tab-reports" hidden>
+            <div class="reports" id="reports"></div>
+          </section>
+          <section class="panel" id="panel-conflicts" role="tabpanel" aria-labelledby="tab-conflicts" hidden>
+            <div class="conflicts" id="conflicts"></div>
+          </section>
+          <section class="panel" id="panel-redflags" role="tabpanel" aria-labelledby="tab-redflags" hidden>
+            <div class="conflicts" id="redflags"></div>
+          </section>
+          <!-- Panes that only ever show beside the board (split screen, decisions.md, entry 80). -->
+          <section class="panel" id="panel-board2" aria-label="Board beside the board" hidden>
+            <div class="b2-head" id="board2-head"></div>
+            <div class="board" id="board2" tabindex="0" role="listbox" aria-label="Board beside the board"></div>
+          </section>
+          <section class="panel" id="panel-images" aria-label="Images of the selected scene" hidden>
+            <div class="images-pane" id="images-pane"></div>
+          </section>
+        </main>
+        <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Resize the pane beside the board" tabindex="0" hidden></div>
+        <section class="split" id="split" aria-label="Beside the board" hidden>
+          <div class="split-head" id="split-head"></div>
+          <div class="split-body" id="split-body"></div>
+        </section>
+        <aside class="findpanel" id="findpanel" aria-label="Find and replace" hidden></aside>
+      </div>
+
+      <!-- The status line lives in the footer: a fixed line either way, so a message never
+           moves the board under the pointer (decision 48). -->
+      <footer class="footer">
+        <div class="status status-line quiet" id="status" role="status" aria-live="polite"></div>
+        <span class="footer-counts" id="footer"></span>
+        <span class="update-ready" id="update-ready" hidden><span id="update-label">Update ready</span> <button type="button" class="btn btn-primary" id="btn-update-restart">Restart to Update</button></span>
+        <label class="switch"><input type="checkbox" id="autosave" checked> Autosave</label>
+      </footer>
+    </div>
+    <div id="modal-root"></div>
+    <div id="print-root"></div>
+  </body>
+</html>

@@ -1,0 +1,637 @@
+/* Printable reports (js/report.js lays them out, js/reports.js fills them).
+   Our own plain layouts. Loaded for all media; every report rule is scoped to
+   .method-report, so nothing here touches the app. A report is a column of Letter-sized
+   page boxes (.rpt-page), each exactly one sheet of paper with its own header and footer
+   bands, as in Method Budget's print.css (same owner, same license). On screen,
+   #print-root is always hidden; in print, when <html> has the "printing" class, only
+   #print-root is shown. */
+
+#print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  html.printing,
+  html.printing body {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+    color-scheme: light;
+  }
+
+  html.printing body > *:not(#print-root) {
+    display: none !important;
+  }
+
+  html.printing #print-root {
+    display: block !important;
+  }
+
+  /* Each sheet is exactly one page of paper. WebKit lays a printed document out at least
+     1.25 times as wide as the paper (in CSS pixels) and scales it to fit, so a document
+     exactly 96 px to the inch wide prints at exactly 100%. */
+  html.printing #print-root .rpt-sheet {
+    width: 816px;
+    height: 1056px;
+    overflow: visible;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  html.printing #print-root .landscape .rpt-sheet {
+    width: 1056px;
+    height: 816px;
+  }
+
+  html.printing #print-root .rpt-sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* The report: black on white, system font, tabular figures. */
+
+.method-report {
+  color-scheme: light;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  font-size: 8.5pt;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  text-align: left;
+}
+
+.method-report *,
+.method-report *::before,
+.method-report *::after {
+  box-sizing: border-box;
+}
+
+/* Pages: Letter at 96 px to the inch. js/report.js uses the same numbers. */
+
+.method-report .rpt-sheet {
+  overflow: hidden;
+}
+
+.method-report .rpt-page {
+  display: flex;
+  flex-direction: column;
+  width: 816px;
+  height: 1056px;
+  padding: 40px 48px 36px;
+  overflow: hidden;
+  background: #fff;
+  transform-origin: 0 0;
+}
+
+.method-report.landscape .rpt-page {
+  width: 1056px;
+  height: 816px;
+}
+
+.method-report .rpt-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Rows are measured here before they are dealt onto pages: the page's content width. */
+.method-report.rpt-measure {
+  position: absolute;
+  top: 0;
+  left: -30000px;
+  width: 720px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.method-report.rpt-measure.landscape {
+  width: 960px;
+}
+
+/* Header and footer bands: three slots across the page, one line each. */
+
+.method-report .rpt-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12pt;
+  align-items: baseline;
+  flex: 0 0 auto;
+  font-size: 0.88em;
+  line-height: 1.3;
+  color: #333;
+}
+
+.method-report .rpt-band.rpt-head {
+  margin-bottom: 10pt;
+  padding-bottom: 3pt;
+  border-bottom: 0.75pt solid #000;
+}
+
+.method-report .rpt-band.rpt-foot {
+  margin-top: 8pt;
+}
+
+.method-report .rpt-slot {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.method-report .rpt-slot.center {
+  text-align: center;
+  max-width: 60ch;
+}
+
+.method-report .rpt-slot.right {
+  text-align: right;
+}
+
+.method-report .rpt-slot.strong {
+  font-weight: 700;
+  color: #000;
+}
+
+/* Two flows on one page (a category's grid after another's, the summary after them). */
+.method-report .rpt-seg + .rpt-seg {
+  margin-top: 18px;
+}
+
+.method-report .rpt-seg-title {
+  margin: 0 0 4pt;
+  font-size: 1.15em;
+  font-weight: 700;
+}
+
+/* Title block, on the first page */
+
+/* A report header layout (decision 99): rows of items, the title larger, a space pushing
+   what follows across; on every page it sits above the band in .rpt-top. */
+.method-report .rpt-top {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
+.method-report .rpt-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2pt;
+  padding-bottom: 8pt;
+  color: #222;
+}
+
+.method-report .rpt-header.every {
+  padding-bottom: 4pt;
+}
+
+.method-report .rpt-hrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 12pt;
+}
+
+.method-report .rpt-header.al-center .rpt-hrow { justify-content: center; }
+.method-report .rpt-header.al-right .rpt-hrow { justify-content: flex-end; }
+.method-report .rpt-header.hz-small { font-size: 0.88em; }
+.method-report .rpt-header.hz-large { font-size: 1.15em; }
+.method-report .rpt-header.bold { font-weight: 700; }
+.method-report .rpt-header.italic { font-style: italic; }
+.method-report .rpt-hspace { flex: 1 1 0; }
+.method-report .rpt-hitem { min-width: 0; overflow-wrap: anywhere; }
+
+.method-report .rpt-htitle {
+  font-size: 1.9em;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  color: #000;
+}
+
+.method-report .rpt-header.every .rpt-htitle {
+  font-size: 1.3em;
+}
+
+.method-report .rpt-intro {
+  padding-bottom: 12pt;
+}
+
+.method-report .rpt-kicker {
+  font-size: 0.94em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #444;
+}
+
+.method-report .rpt-title {
+  margin: 2pt 0 6pt;
+  font-size: 2.1em;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.method-report .rpt-facts {
+  margin: 0;
+  color: #333;
+}
+
+.method-report .rpt-note {
+  margin: 6pt 0 0;
+  color: #444;
+  font-size: 0.94em;
+}
+
+/* Tables */
+
+.method-report .rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.method-report .rpt-table th,
+.method-report .rpt-table td {
+  padding: 2.5pt 4pt;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  break-inside: avoid;
+}
+
+.method-report .rpt-table thead th {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: #333;
+  border-bottom: 0.75pt solid #000;
+  text-align: left;
+}
+
+.method-report .rpt-table tbody td {
+  border-bottom: 0.4pt solid #d0d0d0;
+}
+
+.method-report .rpt-table .num,
+.method-report .rpt-table .fc-num {
+  text-align: right;
+}
+
+/* A strip layout's fields on paper (strips.js, decision 87): alignment, bold, italic, an
+   omitted scene struck, and the layout's text size step. */
+.method-report .rpt-table .al-left { text-align: left; }
+.method-report .rpt-table .al-center { text-align: center; }
+.method-report .rpt-table .al-right { text-align: right; }
+.method-report .rpt-table .fb { font-weight: 700; }
+.method-report .rpt-table .fi { font-style: italic; }
+/* Line styles (decision 185): a line after a field, a rule under it. */
+.method-report .rpt-table .rl-after { border-right: 1px solid #000; }
+.method-report .rpt-table .rl-under { border-bottom: 1px solid #000; }
+.method-report .rpt-table tr.omitted td { text-decoration: line-through; color: #666; }
+.method-report .rpt-table tr.ts-small td { font-size: 0.9em; }
+.method-report .rpt-table tr.ts-large td { font-size: 1.12em; }
+/* A report column's own text size (the report designer, decision 90), in the report's
+   three steps whatever the report's own size is. */
+.method-report .rpt-table .cz-small { font-size: 7.5pt; }
+.method-report .rpt-table .cz-normal { font-size: 8.5pt; }
+.method-report .rpt-table .cz-large { font-size: 10pt; }
+.method-report .rpt-table tr.bp-line td { border-top: none; padding-top: 0; }
+.method-report .rpt-table tr:has(+ tr.bp-line) td { border-bottom-color: transparent; }
+
+.method-report .rpt-table .mid {
+  text-align: center;
+}
+
+.method-report .rpt-table .muted {
+  color: #555;
+}
+
+.method-report .rpt-table .rpt-empty td {
+  padding: 12pt 4pt;
+  color: #444;
+  border: none;
+}
+
+/* A day's heading and its end line (one-line and shooting schedule), a category's
+   heading (elements, summary). */
+.method-report .rpt-table tr.rpt-day td,
+.method-report .rpt-table tr.rpt-props td { font-size: 0.9em; color: #444; padding-top: 0; }
+.method-report .rpt-table tr.rpt-cat td {
+  padding-top: 8pt;
+  font-weight: 700;
+  border-bottom: 0.75pt solid #000;
+}
+
+.method-report .rpt-table tr.rpt-end td {
+  background: #e9e9e9;
+  font-weight: 600;
+  border-bottom: none;
+}
+
+.method-report .rpt-table tr.rpt-banner td {
+  background: #f4f4f4;
+  font-style: italic;
+}
+
+.method-report .rpt-sub {
+  color: #444;
+  font-size: 0.94em;
+}
+
+/* The printed board (js/boardprint.js): strips in their colors, day breaks dark. The
+   user's own strip colors come from a constructed stylesheet scoped to #print-root. */
+.method-report .bp-title { font-size: 10pt; margin: 0 0 3pt; }
+/* As dense as the screen (decision 188): a strip line holds its text as the board's 22 px
+   line holds 13 px text, so 8.5pt text takes 8.5 x 22 / 13 = 14.4pt: 11.4pt of line,
+   1.25pt above and below, and the 0.5pt rule. A strip's later lines and a day break are
+   lines of the same height; a two-line banner two of them. */
+.method-report .rpt-table tr.bp td { padding-top: 1.25pt; padding-bottom: 1.25pt; line-height: 11.4pt; border-bottom: 0.5pt solid #999; }
+.method-report .rpt-table tr.bp.bp-line td { padding-top: 1.25pt; }
+.method-report .rpt-table tr.bp.banner.tall { height: 28.8pt; }
+.method-report .rpt-table tr.bp.int-day td { background: #fff; }
+.method-report .rpt-table tr.bp.ext-day td { background: #fff4bf; }
+.method-report .rpt-table tr.bp.int-night td { background: #d8e5fb; }
+.method-report .rpt-table tr.bp.ext-night td { background: #d6efd6; }
+.method-report .rpt-table tr.bp.banner td { background: #f3e3f7; font-style: italic; }
+.method-report .rpt-table tr.bp.banner.bold td, .method-report .rpt-table tr.rpt-banner.bold td { font-weight: 700; }
+.method-report .rpt-table tr.rpt-banner.tall td { padding-top: 5pt; padding-bottom: 5pt; }
+.method-report .rpt-table tr.bp.banner.al-center td.banner-text, .method-report .rpt-table tr.rpt-banner.al-center td.banner-text { text-align: center; }
+.method-report .rpt-table tr.bp.banner.al-right td.banner-text, .method-report .rpt-table tr.rpt-banner.al-right td.banner-text { text-align: right; }
+.method-report .rpt-table tr.bp.banner.ts-small td, .method-report .rpt-table tr.rpt-banner.ts-small td { font-size: 0.9em; }
+.method-report .rpt-table tr.bp.banner.ts-large td, .method-report .rpt-table tr.rpt-banner.ts-large td { font-size: 1.12em; }
+.method-report .rpt-table tr.bp.banner.bf-serif td, .method-report .rpt-table tr.rpt-banner.bf-serif td { font-family: Georgia, 'Times New Roman', Times, serif; }
+.method-report .rpt-table tr.bp.banner.bf-sans td, .method-report .rpt-table tr.rpt-banner.bf-sans td { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+.method-report .rpt-table tr.bp.banner.bf-mono td, .method-report .rpt-table tr.rpt-banner.bf-mono td { font-family: Menlo, Consolas, 'Courier New', monospace; }
+.method-report .rpt-table tr.bp.banner.bc-yellow td, .method-report .rpt-table tr.rpt-banner.bc-yellow td { background: #fff1a8; }
+.method-report .rpt-table tr.bp.banner.bc-orange td, .method-report .rpt-table tr.rpt-banner.bc-orange td { background: #ffd9a8; }
+.method-report .rpt-table tr.bp.banner.bc-red td, .method-report .rpt-table tr.rpt-banner.bc-red td { background: #ffc2c2; }
+.method-report .rpt-table tr.bp.banner.bc-pink td, .method-report .rpt-table tr.rpt-banner.bc-pink td { background: #ffd0e8; }
+.method-report .rpt-table tr.bp.banner.bc-purple td, .method-report .rpt-table tr.rpt-banner.bc-purple td { background: #e2d4fb; }
+.method-report .rpt-table tr.bp.banner.bc-blue td, .method-report .rpt-table tr.rpt-banner.bc-blue td { background: #cfe0ff; }
+.method-report .rpt-table tr.bp.banner.bc-teal td, .method-report .rpt-table tr.rpt-banner.bc-teal td { background: #c4ece6; }
+.method-report .rpt-table tr.bp.banner.bc-green td, .method-report .rpt-table tr.rpt-banner.bc-green td { background: #cdeccd; }
+.method-report .rpt-table tr.bp.banner.bc-gray td, .method-report .rpt-table tr.rpt-banner.bc-gray td { background: #e2e5ea; }
+.method-report .rpt-table tr.bp.day-break td { background: #1f2633; color: #fff; font-weight: 600; }
+.method-report .rpt-table tr.bp.day-break.parked td { background: #eee; color: #444; font-weight: 400; }
+
+/* Column widths. The table is fixed-width, so these share the page. */
+
+.method-report col.c-scene { width: 9%; }
+.method-report col.c-ie { width: 8%; }
+.method-report col.c-set { width: 43%; }
+.method-report col.c-tod { width: 10%; }
+.method-report col.c-pages { width: 8%; }
+.method-report col.c-cast { width: 22%; }
+.method-report col.c-wide { width: 100%; }
+
+.method-report col.e-id { width: 9%; }
+.method-report col.e-name { width: 37%; }
+.method-report col.e-num { width: 9%; }
+.method-report col.e-date { width: 13.5%; }
+
+.method-report col.t-day { width: 4em; }
+.method-report col.t-date { width: 11em; }
+.method-report col.t-count { width: auto; }
+
+/* Shooting schedule: one scene per row, its elements below its header line. */
+
+.method-report .sh-line {
+  display: grid;
+  grid-template-columns: 6em 5em minmax(0, 1fr) 6em 4.5em;
+  gap: 2pt 8pt;
+  font-weight: 600;
+}
+
+.method-report .sh-line .num {
+  text-align: right;
+}
+
+.method-report .sh-syn {
+  margin: 1pt 0 0 calc(11em + 16pt);
+}
+
+.method-report .sh-loc {
+  margin: 1pt 0 0 calc(11em + 16pt);
+  color: #444;
+}
+
+.method-report .sh-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3pt 12pt;
+  margin: 4pt 0 2pt calc(11em + 16pt);
+}
+
+.method-report .sh-cat {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: #333;
+}
+
+.method-report .sh-el {
+  display: block;
+}
+
+/* Day out of days grid: narrow date columns with the engine's codes. */
+
+.method-report .rpt-dood .rpt-table {
+  width: auto;
+  font-size: 0.92em;
+}
+
+.method-report .rpt-dood col.g-id { width: 34px; }
+.method-report .rpt-dood col.g-name { width: 150px; }
+.method-report .rpt-dood col.g-date { width: 27px; }
+.method-report.landscape .rpt-dood col.g-date { width: 27.5px; }
+
+.method-report .rpt-dood th.g-date,
+.method-report .rpt-dood td.g-cell {
+  padding: 2pt 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  border-left: 0.4pt solid #d0d0d0;
+}
+
+.method-report .rpt-dood th.g-date span {
+  display: block;
+  line-height: 1.15;
+  font-weight: 400;
+}
+
+.method-report .rpt-dood th.g-date .g-day {
+  font-weight: 700;
+}
+
+.method-report .rpt-dood td.g-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.method-report .rpt-dood .k-off { background: #e6e6e6; }
+.method-report .rpt-dood .k-holiday { background: #dcdcdc; }
+.method-report .rpt-dood .k-move { background: #d2d2d2; }
+.method-report .rpt-dood td.g-cell.span { box-shadow: inset 0 -2pt 0 #000; }
+.method-report .rpt-dood td.g-cell.c-work { font-weight: 700; }
+
+.method-report .rpt-legend {
+  margin: 4pt 0 0;
+  font-size: 0.9em;
+  color: #444;
+}
+
+/* ------------------------------------------------------------------------- */
+/* On screen: the Reports tab's preview, pages scaled down (js/report.js sets the scale). */
+
+@media screen {
+  .rpt-preview .method-report.rpt-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .rpt-preview .method-report .rpt-sheet {
+    flex: 0 0 auto;
+    background: #fff;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.35), 0 0 0 1px rgb(0 0 0 / 0.06);
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Report options and the reports added with them (decision 59). */
+.method-report.text-small { font-size: 7.5pt; }
+.method-report.text-large { font-size: 10pt; }
+.method-report .rpt-intro.compact { padding-bottom: 6pt; }
+.method-report .rpt-facts.strong { font-weight: 700; color: #000; }
+.method-report .rpt-flag { color: #a32020; font-weight: 700; }
+.method-report tr.tone-ext-day td { background: #fff4bf; }
+.method-report tr.tone-int-night td { background: #d8e5fb; }
+.method-report tr.tone-ext-night td { background: #d6efd6; }
+.method-report td.tone-ext-day { background: #fff4bf; }
+.method-report td.tone-int-night { background: #d8e5fb; }
+.method-report td.tone-ext-night { background: #d6efd6; }
+/* Scene blocks with the report's columns (breakdown, shooting schedule). */
+.method-report .sh-line.sh-cells { display: grid; gap: 2pt 10pt; }
+.method-report .sh-line.sh-cells > span { min-width: 0; overflow-wrap: anywhere; }
+.method-report .sh-when { float: right; font-weight: 400; color: #333; }
+.method-report .sh-cells ~ .sh-syn,
+.method-report .sh-cells ~ .sh-loc,
+.method-report .sh-cells ~ .sh-groups { margin-left: 1em; }
+.method-report tr.bk-block td { border-bottom: 0.75pt solid #000; padding-bottom: 5pt; }
+.method-report tr.bk-merged td { padding-top: 4pt; }
+.method-report tr.bk-merged .sh-groups { margin-left: 0; }
+.method-report tr.rpt-sub-row td { border-bottom: none; }
+.method-report col.d-when { width: 16%; }
+/* The calendar: a month a page, a column a weekday. */
+.method-report .rpt-cal .rpt-table th { text-align: center; }
+.method-report .rpt-cal td.cal-cell { height: 84px; padding: 2pt 3pt; border: 0.4pt solid #b8b8b8; overflow: hidden; }
+.method-report.landscape .rpt-cal td.cal-cell { height: 70px; }
+.method-report .rpt-cal td.k-off { background: #eef1f5; }
+.method-report .rpt-cal td.k-holiday,
+.method-report .rpt-cal td.k-move { background: #f3e3f7; }
+.method-report .rpt-cal td.outside { color: #888; }
+.method-report .rpt-cal .cal-top { display: flex; justify-content: space-between; font-weight: 700; }
+.method-report .rpt-cal .cal-what { font-weight: 600; }
+.method-report .rpt-cal .cal-line { font-size: 0.92em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.method-report .rpt-cal .cal-ev { color: #333; }
+/* The vertical one-line: a column per scene. */
+.method-report .rpt-vertical .rpt-table { font-size: 0.92em; }
+.method-report .rpt-vertical col.v-name { width: 150px; }
+.method-report .rpt-vertical col.v-col { width: auto; }
+.method-report .rpt-vertical .v-col { padding: 2pt 0; text-align: center; border-left: 0.4pt solid #d0d0d0; white-space: nowrap; overflow: hidden; }
+/* Behavior note 23: strips as columns with their text turned, day breaks as dark columns
+   carrying the day's totals, production info and the cast down the left. */
+.method-report .rpt-vertical tr.v-head th { height: 150px; vertical-align: bottom; }
+.method-report .rpt-vertical th.v-col { padding: 3pt 0; }
+.method-report .rpt-vertical .v-turn { display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; max-height: 146px; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.method-report .rpt-vertical .v-break { background: #1f1f1f; color: #fff; border-left: 0.4pt solid #1f1f1f; }
+/* A day break's heading is three short lines side by side (live note 26), in a wider column. */
+.method-report .rpt-vertical th.v-break .v-turn { font-weight: 700; white-space: pre-line; line-height: 1.15; font-size: 0.9em; text-align: left; }
+.method-report .rpt-vertical col.v-break { width: 40px; }
+.method-report .rpt-vertical th.v-info { text-align: left; vertical-align: bottom; white-space: normal; font-weight: 400; }
+.method-report .rpt-vertical .v-info-line { overflow-wrap: anywhere; }
+.method-report .rpt-vertical .v-info-label { color: #555; }
+.method-report .rpt-vertical .v-info-cast { margin-top: 4pt; font-weight: 700; }
+/* The conflict and red flag reports. */
+.method-report col.r-date { width: 14%; }
+.method-report col.r-name { width: 20%; }
+.method-report col.r-cat { width: 12%; }
+.method-report col.r-type { width: 12%; }
+.method-report col.r-firm { width: 7%; }
+.method-report col.r-dates { width: 22%; }
+.method-report col.r-wide { width: auto; }
+
+/* The printed call sheet (ui/js/callsheet.js, decision 207). Ink only: rules and weight,
+   no fills, so it copies and faxes cleanly. The call time is the largest thing on the page. */
+
+.method-report .cs-open { padding-bottom: 6pt; }
+.method-report .cs-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15.5em 11em;
+  gap: 9pt;
+  align-items: stretch;
+}
+.method-report .cs-who { display: flex; flex-direction: column; gap: 2pt; min-width: 0; }
+.method-report .cs-title { font-size: 2.1em; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; color: #000; overflow-wrap: anywhere; }
+.method-report .cs-company { color: #333; }
+.method-report .cs-people { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1pt 8pt; margin-top: 3pt; font-size: 0.92em; }
+.method-report .cs-label { font-size: 0.82em; color: #555; }
+.method-report .cs-day,
+.method-report .cs-call {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1pt;
+  padding: 5pt 7pt;
+  border: 0.75pt solid #000;
+  border-radius: 3pt;
+}
+.method-report .cs-call { border-width: 2pt; }
+.method-report .cs-big { font-size: 2.2em; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #000; }
+.method-report .cs-call .cs-big { font-size: 2.6em; }
+.method-report .cs-of { font-size: 0.45em; font-weight: 400; color: #555; }
+.method-report .cs-date { font-weight: 600; white-space: nowrap; }
+.method-report .cs-wrap { font-size: 0.85em; color: #333; }
+.method-report .cs-facts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 8pt 0 10pt;
+  border: 0.75pt solid #999;
+  border-radius: 3pt;
+}
+.method-report .cs-fact { display: flex; flex-direction: column; min-width: 0; padding: 3pt 6pt; border-left: 0.5pt solid #ccc; }
+.method-report .cs-fact:first-child { border-left: none; }
+.method-report .cs-value { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.method-report td.cs-set strong { font-weight: 600; }
+.method-report td.cs-set .cs-sub { display: block; color: #333; }
+.method-report td.cs-set .cs-loc { display: block; color: #555; font-size: 0.88em; }
+.method-report td.cs-cat { font-weight: 700; }
+
+.method-report col.cs-c-time { width: 13%; }
+.method-report col.cs-c-sc { width: 7%; }
+.method-report col.cs-c-ie { width: 7%; }
+.method-report col.cs-c-set { width: 41%; }
+.method-report col.cs-c-dn { width: 8%; }
+.method-report col.cs-c-pg { width: 7%; }
+.method-report col.cs-c-cast { width: 17%; }
+.method-report col.cs-c-id { width: 7%; }
+.method-report col.cs-c-name { width: 38%; }
+.method-report col.cs-c-scenes { width: 35%; }
+.method-report col.cs-c-on { width: 20%; }
+.method-report col.cs-c-cat { width: 22%; }
+.method-report col.cs-c-els { width: 78%; }
