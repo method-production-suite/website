@@ -1,0 +1,109 @@
+/* The hub's motion: the sticky suite bar, the hero's fanning stack, the pinned story and
+   the dots that become the app cards. Every rule here reads complete without JavaScript:
+   the pinned layout only applies under html.js (set before first paint), on screens wider
+   than 1023px, for people who haven't asked for reduced motion. Colors come from the tokens;
+   each app's color is its --app-accent / --app-accent-dark from apps.toml. */
+
+[style*="--app-accent"] { --c: var(--app-accent); }
+@media (prefers-color-scheme: dark) { [style*="--app-accent"] { --c: var(--app-accent-dark); } }
+
+/* ------------------------------------------------------------------ the sticky suite bar */
+.ms-bar.sticky { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: transform .35s ease, opacity .35s ease; }
+.ms-bar.sticky.away { transform: translateY(-110%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .ms-bar.sticky { transition: none; } }
+
+/* ------------------------------------------------------------------ the hero */
+.hero { overflow: hidden; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+.stack { position: relative; aspect-ratio: 1; max-width: 340px; width: 100%; margin-left: auto; }
+.stack .sheet { position: absolute; inset: 12% 22%; border-radius: 14px; background: var(--surface); border: 1px solid var(--rule);
+  box-shadow: var(--shadow); display: grid; place-items: end start; padding: 14px; transform: var(--rest); }
+.stack .sheet::before { content: ""; position: absolute; inset: 14px 14px 46px; background: repeating-linear-gradient(var(--rule) 0 2px, transparent 2px 14px); }
+.stack .sheet span { position: relative; background: var(--c); color: var(--bg); font-weight: 700; font-size: 13px; padding: 3px 8px; border-radius: 6px; }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .stack .sheet { animation: fan linear both; animation-timeline: scroll(root); animation-range: 0 60vh; }
+    @keyframes fan { from { transform: var(--rest); } to { transform: var(--fan); } }
+  }
+}
+@media (max-width: 760px) {
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .stack { max-width: 200px; margin: 0 auto; }
+}
+
+/* ------------------------------------------------------------------ the story, as a list
+   (no JavaScript, reduced motion, narrow screens) */
+.story { border-top: 1px solid var(--rule); }
+.stage { padding: 56px 0; }
+.stage-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 40px; align-items: start; }
+.story .kicker { font-size: 13px; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; }
+.story h2 { margin-bottom: 20px; }
+.steps { position: relative; --p: 0; --rail: 1; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.steps::before { content: ""; position: absolute; left: 11px; top: 14px; bottom: 14px; width: 2px; background: var(--rule); opacity: var(--rail); }
+.steps .bar { position: absolute; left: 11px; top: 14px; width: 2px; height: calc((100% - 28px) * var(--p)); background: var(--ink); z-index: 1; }
+.step { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 14px; padding: 10px 0; }
+.dot { width: 24px; height: 24px; border-radius: 50%; background: var(--c); border: 2px solid var(--c); position: relative; z-index: 2; transition: background .35s; }
+.step h3 { font-size: 20px; margin: 0; }
+.step p { margin: 4px 0 0; color: var(--ink-soft); font-size: 15px; max-width: 40ch; }
+.step .app { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--c); }
+.view { display: grid; gap: 16px; }
+.pane { position: relative; border-radius: 16px; background: var(--surface); border: 1px solid var(--rule); box-shadow: var(--shadow);
+  padding: 22px; overflow: hidden; min-height: 280px; }
+.pane .tag { position: absolute; top: 14px; right: 16px; font-size: 12px; font-weight: 700; color: var(--c); }
+/* A pane that plays an act: the act fills it, and its window names the app. */
+.pane.has-act { padding: 0; min-height: 0; }
+.pane.has-act .tag { display: none; }
+.pane.has-act .act { border-radius: 0; }
+.ghosts { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+.ghost { position: fixed; left: 0; top: 0; background: var(--c); opacity: 0; will-change: transform, width, height, opacity; }
+@media (max-width: 1023px) { .stage-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* The panes' contents. */
+.ereader { display: grid; place-items: center; height: 100%; min-height: 236px; }
+.device { width: min(62%, 260px); aspect-ratio: 3 / 4; border-radius: 18px; background: #2A2E33; padding: 18px 14px 34px; }
+.eink { background: #EDECE6; height: 100%; border-radius: 4px; padding: 14px; font: 11px/1.5 Georgia, serif; color: #222; overflow: hidden; }
+.eink b { display: block; font: 700 10px/1.4 "Courier Prime", "Courier New", Courier, monospace; margin: 8px 0 4px; }
+/* ------------------------------------------------------------------ the story, pinned */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .js .story { height: 420vh; }
+  .js .stage { position: sticky; top: 0; height: 100vh; display: grid; align-items: center; padding: 0; }
+  .js .stage-grid { align-items: center; }
+  .js .view { display: block; position: relative; aspect-ratio: 4 / 3; max-height: 82vh; margin-left: auto; width: min(100%, calc(82vh * 4 / 3)); }
+  .js .pane { position: absolute; inset: 0; opacity: 0; transform: translateY(16px) scale(.98); transition: opacity .5s, transform .5s; }
+  .js .story:not([data-live]) .pane:first-child, .js .story[data-live] .pane.on { opacity: 1; transform: none; }
+  /* Steps still to come are quieter, in colors that keep their contrast (no opacity). */
+  .js .story[data-live] .step h3, .js .story[data-live] .step p { transition: color .35s; }
+  .js .story[data-live] .step:not(.on) h3, .js .story[data-live] .step:not(.on) p { color: var(--muted); }
+  .js .story[data-live] .dot { background: var(--bg); }
+  .js .story[data-live] .step.on .dot { background: var(--c); }
+  .js .steps .bar { transition: height .2s linear; }
+}
+@media (max-width: 1023px), (prefers-reduced-motion: reduce) { .steps .bar { display: none; } }
+
+/* Under 1024px the story is a list: each step, then its own pane right under it, playing
+   as it scrolls in. The step and pane wrappers step aside (display: contents) so steps and
+   panes interleave by their order (set per item in Story.tsx). */
+@media (max-width: 1023px) {
+  .stage-grid { display: flex; flex-direction: column; gap: 0; }
+  .stage-grid > div:first-child, .steps, .steps ol, .view { display: contents; }
+  .story .kicker { order: 0; } .story h2 { order: 1; }
+  .steps::before { content: none; }
+  .step { padding: 18px 0 12px; }
+  .pane { width: 100%; max-width: 640px; margin: 4px 0 12px; }
+  .pane .tag { position: static; display: block; text-align: right; margin: -8px 0 8px; }
+}
+
+/* ------------------------------------------------------------------ the hub on a phone */
+/* The four apps as a tidy two-by-two, without the arrows that land at the start of a
+   wrapped line. */
+@media (max-width: 560px) {
+  .stack { display: none; }
+  .flow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .flow li { padding: 6px 10px 6px 6px; font-size: 14px; min-width: 0; }
+  .flow li + li::before { content: none; }
+  .hero { padding-top: 36px; }
+  .hero .launcher-line { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .hero .launcher-line .btn { text-align: center; font-size: 15px; padding: 10px 14px; }
+}

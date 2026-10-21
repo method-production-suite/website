@@ -1,0 +1,25 @@
+---
+// One app's card on the hub, as tools/build.py's hub() writes it. data-morph-card is where
+// the story's dot for this app lands.
+import Picture from "./Picture.astro";
+import GitHub from "./GitHub.astro";
+import { accentStyle, mark, url, type App } from "../data/catalog";
+interface Props { app: App }
+const { app: a } = Astro.props;
+const repo = a.repo.replace(/\/$/, "");
+---
+<article class="app-card" style={accentStyle(a)} data-morph-card={a.slug}>
+  <a class="app-link" href={url(a.slug)}>
+    <Picture light={mark(a)} dark={mark(a, true)} width={56} height={56} />
+    <span class="does">{a.does}</span>
+    <h3>{a.name}</h3>
+    <p class="tagline">{a.tagline}</p>
+  </a>
+  <p>{a.blurb}</p>
+  <p class="platforms"><span>Platforms</span> {a.platforms}</p>
+  {a.download && (
+    <p class="get"><a class="btn primary" href={`${repo}/releases/latest/download/${a.download}`}>Download for Mac</a> <a class="other" href={`${repo}/releases/latest`}>Other platforms</a></p>
+  )}
+  <p class="meta"><span class:list={["pill", { ok: a.status === "Released" }]}>{a.status}</span>
+    <a href={url(a.slug)}>{a.domain}</a> <GitHub href={a.repo} label={`${a.name} on GitHub`} size={18} /></p>
+</article>

@@ -1,0 +1,29 @@
+---
+// The suite bar, as tools/build.py's bar(). On the hub it is sticky (class "sticky") and
+// slides away once the app cards are on screen.
+import Picture from "./Picture.astro";
+import GitHub from "./GitHub.astro";
+import { APPS, SUITE, mark, url } from "../data/catalog";
+interface Props { current: string | null; sticky?: boolean }
+const { current, sticky = false } = Astro.props;
+---
+<nav class:list={["ms-bar", { sticky }]} aria-label="Method Production Suite" data-suite-bar><div class="ms-in">
+  <a class="ms-home" href={url(null)} aria-current={current === null ? "page" : undefined}><Picture light="/_suite/marks/suite.svg" dark="/_suite/marks/suite-dark.svg" width={14} height={14} />{SUITE.name}</a>
+  {APPS.map((a) => (
+    <a href={url(a.slug)} aria-current={a.slug === current ? "page" : undefined}><Picture light={mark(a)} dark={mark(a, true)} width={14} height={14} /><span><span class="ms-name-long">Method </span>{a.name.replace(/^Method /, "")}</span></a>
+  ))}
+  <GitHub href={SUITE.org} label={`${SUITE.name} on GitHub`} size={16} class="ms-gh" />
+</div></nav>
+{sticky && (
+  <script>
+    // On the hub the bar stays until the app cards take over, then slides away (CSS).
+    const bar = document.querySelector<HTMLElement>("[data-suite-bar].sticky");
+    const grid = document.querySelector<HTMLElement>("[data-morph-card]")?.parentElement;
+    if (bar && grid) {
+      let frame = 0;
+      const draw = () => { frame = 0; bar.classList.toggle("away", grid.getBoundingClientRect().top < innerHeight * 0.55); };
+      addEventListener("scroll", () => { if (!frame) frame = requestAnimationFrame(draw); }, { passive: true });
+      draw();
+    }
+  </script>
+)}
