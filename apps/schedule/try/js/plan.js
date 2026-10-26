@@ -168,11 +168,33 @@ export function planCommands(ctx) {
         const past = d.past_wrap
           ? el('p', { class: 'pl-head' }, d.past_wrap, ...(d.push.length ? [' ', button(`Move to Day ${d.next}`, () => push(d), 'btn btn-mini')] : []))
           : '';
+        // Each person's own call and wrap, empty for the company's (entry 231). Enter or
+        // leaving a field sets both.
+        const people = (d.people || []).map((p) => {
+          const own = [textInput(p.call), textInput(p.wrap)];
+          own[0].placeholder = d.call;
+          own[1].placeholder = d.wrap.replace(' (+1)', '');
+          own[0].setAttribute('aria-label', `${p.name}'s own call`);
+          own[1].setAttribute('aria-label', `${p.name}'s own wrap`);
+          let sent = `${p.call}|${p.wrap}`;
+          const set = async () => {
+            const now = `${own[0].value.trim()}|${own[1].value.trim()}`;
+            if (now === sent) return;
+            sent = now;
+            if (await edit(invoke('set_person_call', { day: d.day, element: p.element, call: own[0].value, wrap: own[1].value }), error)) await reload();
+          };
+          for (const i of own) {
+            i.addEventListener('keydown', (e) => e.key === 'Enter' && set());
+            i.addEventListener('change', set);
+          }
+          return el('tr', {}, el('td', { text: p.name }), el('td', {}, own[0]), el('td', {}, own[1]));
+        });
         body.replaceChildren(
           el('p', { class: 'pl-head', text: head }),
           table(['Start', 'End', 'Strip', 'Note'], rows),
           d.warnings.length ? el('ul', { class: 'pl-lines pl-warnings' }, ...d.warnings.map((w) => el('li', { text: w }))) : '',
           past,
+          people.length ? table(['Called', 'Own call', 'Own wrap'], people) : '',
         );
       }
       pick.addEventListener('change', () => {
@@ -238,6 +260,9 @@ export function planCommands(ctx) {
           el('option', { text: 'EU', attrs: { value: 'eu' } }),
           el('option', { text: 'Australia (south-east)', attrs: { value: 'australia' } }),
           el('option', { text: 'New Zealand', attrs: { value: 'new_zealand' } }),
+          el('option', { text: 'Israel', attrs: { value: 'israel' } }),
+          el('option', { text: 'Egypt', attrs: { value: 'egypt' } }),
+          el('option', { text: 'Chile (mainland)', attrs: { value: 'chile' } }),
         );
         dst.value = l.daylight_saving;
         lat.setAttribute('aria-label', `Latitude of ${l.name}`);
@@ -272,6 +297,39 @@ export function planCommands(ctx) {
         el('p', { class: 'modal-message', text: 'Degrees as 34.0522 and -118.2437 (or 118.2437W); the UTC offset as -7 or +5:30 (empty: from the longitude): the standard one with a daylight saving rule, which adds an hour in summer, else the one on the shoot dates. Clear both degrees to take a location off the map.' }),
         error,
         table(['Location', 'Sheets', 'Latitude', 'Longitude', 'UTC offset', 'Daylight saving', ''], rows),
+        el('div', { class: 'modal-actions' }, closeButton(close)),
+      );
+    });
+  }
+
+  /** The script drafts merged so far, newest first (entry 233): a list, nothing to edit. */
+  async function drafts() {
+    let list;
+    try {
+      list = await invoke('drafts_data');
+    } catch (e) {
+      ctx.say(e, true);
+      return;
+    }
+    if (!list.length) {
+      ctx.say('No script revision has been merged yet: Plan > Import Script Revision... records each draft.');
+      return;
+    }
+    await customDialog((close) => {
+      const scenes = (label, names) => (names.length ? el('li', { text: `${label}: ${names.join('; ')}` }) : '');
+      const rows = [...list].reverse().map((d) =>
+        el(
+          'div',
+          { class: 'pl-draft' },
+          el('p', { class: 'pl-head', text: [d.color, d.date ? showDate(d.date) : ''].filter(Boolean).join(' · ') }),
+          el('ul', { class: 'pl-lines' }, scenes('Changed', d.changed), scenes('New', d.added), scenes('Omitted', d.omitted)),
+        ),
+      );
+      return box(
+        'Script Drafts',
+        'pl-drafts',
+        el('p', { class: 'modal-message', text: 'Each revision merged into this schedule, newest first, with its color and date and the scenes it changed, added and omitted.' }),
+        el('div', { class: 'pl-body' }, ...rows),
         el('div', { class: 'modal-actions' }, closeButton(close)),
       );
     });
@@ -498,7 +556,7 @@ export function planCommands(ctx) {
       box(
         'Print Call Sheet',
         'pl-pcs',
-        el('p', { class: 'modal-message', text: 'The day, its call and wrap, sunrise and sunset, the scenes with their times, the cast with when they are on set, the other elements and the notes.' }),
+        el('p', { class: 'modal-message', text: 'The day, its call and wrap, sunrise and sunset, the scenes with their times, the cast with their calls and when they are on set, the other elements, the notes and the next two days in brief.' }),
         el('div', { class: 'pl-bar' }, field('Day', pick)),
         el(
           'div',
@@ -545,6 +603,7 @@ export function planCommands(ctx) {
   return {
     'plan.import_tags': () => ctx.apply(invoke('import_script_tags')),
     'plan.revise': () => reviseScript(),
+    'plan.drafts': () => drafts(),
     'plan.timeline': () => timeline(),
     'plan.print_call_sheet': () => printCallSheet(),
     'plan.call_sheet': () => callSheet(),
