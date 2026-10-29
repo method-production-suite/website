@@ -87,10 +87,10 @@
   opacity: calc(min(1, var(--e) * 1000) * min(1, (1 - var(--e)) * 1000)); }
 
 /* ------------------------------------------------------------------ corkboard to stripboard */
-.act-board { --fx: 5; --fy: 5; --fw: 90; --fh: 64; }
+.act-board { --fx: 10; --fy: 6; --fw: 80; --fh: 66; }
 @media (max-width: 760px) {
-  .act-board .a-lbl span { font-size: 1.6cqw; }
-  .act-board .a-day { font-size: 1.8cqw; }
+  .act-board .a-lbl { font-size: 1.5cqw; grid-template-columns: 4cqw 12cqw 1fr 8cqw; }
+  .act-board .a-brk { font-size: 1.4cqw; }
   .act-board .a-face { font-size: 1.45cqw; }
   .act-board .a-face b { font-size: 1.8cqw; }
 }
@@ -106,18 +106,20 @@
 .act-board .a-fill { position: absolute; inset: 0; }
 .act-board .a-pin { width: 1.6cqw; height: 1.6cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #F08A7E, #B3261E 60%);
   box-shadow: .2cqw .3cqw .3cqw rgba(0, 0, 0, .35); }
-.act-board .a-brk { width: 1.4cqw; height: 52cqw; background: var(--brk); border-radius: .3cqw; }
-.act-board .a-lbl { width: 3.2cqw; height: 52cqw; display: flex; align-items: center; justify-content: center; }
-.act-board .a-lbl span { transform: rotate(-90deg); white-space: nowrap; font: 650 1.1cqw/1 var(--sans); color: var(--ink); }
-.act-board .a-day { font-size: 1.2cqw; font-weight: 650; color: var(--muted); white-space: nowrap; }
+.act-board .a-brk { width: 74cqw; height: 1.8cqw; background: var(--brk); border-radius: .3cqw; padding: 0 1cqw;
+  display: flex; align-items: center; font: 650 1.05cqw/1 var(--sans); color: var(--brk-ink); }
+.act-board .a-lbl { width: 74cqw; height: 2.3cqw; display: grid; grid-template-columns: 4cqw 10cqw 1fr 7cqw; align-items: center;
+  padding: 0 1cqw; font: 1.15cqw/1 var(--sans); color: var(--ink); white-space: nowrap; }
+.act-board .a-lbl b { font-weight: 700; }
+.act-board .a-lbl .a-pg { text-align: right; color: var(--ink-soft); }
 /* Method Schedule's own strip colors: its tokens where they're on the page (its site),
    the same values elsewhere (the hub). */
 .act-board { --sdx: var(--strip-ext-day, #FFF4BF); --snx: var(--strip-ext-night, #D6EFD6); --sdi: var(--strip-int-day, #FFFFFF);
-  --sni: var(--strip-int-night, #D8E5FB); --brk: var(--break-bg, #1F2633); }
+  --sni: var(--strip-int-night, #D8E5FB); --brk: var(--break-bg, #1F2633); --brk-ink: var(--break-ink, #E9EDF3); }
 @media (prefers-color-scheme: dark) {
   .act-board .a-brk { box-shadow: inset 0 0 0 1px var(--rule-strong); }
   .act-board { --sdx: var(--strip-ext-day, #3A3520); --snx: var(--strip-ext-night, #1F3524); --sdi: var(--strip-int-day, #1F242D);
-    --sni: var(--strip-int-night, #1E2C45); --brk: var(--break-bg, #05070A); }
+    --sni: var(--strip-int-night, #1E2C45); --brk: var(--break-bg, #05070A); --brk-ink: var(--break-ink, #C9D1DE); }
 }
 .s-dx { background: var(--sdx); } .s-nx { background: var(--snx); } .s-ni { background: var(--sni); }
 .s-di { background: var(--sdi); box-shadow: inset 0 0 0 1px var(--rule); }

@@ -7,6 +7,7 @@ import SuiteBand from "../components/SuiteBand.astro";
 import AppCard from "../components/AppCard.astro";
 import Ships from "../components/Ships.astro";
 import HeroStack from "../components/HeroStack.astro";
+import AppTiles from "../components/AppTiles.astro";
 import Story from "../components/islands/Story";
 import { BlurFade } from "../components/vendor/magicui/blur-fade";
 import { APPS, LAUNCHER_DMG, SUITE, pageUrl } from "../data/catalog";
@@ -17,21 +18,26 @@ const story = APPS.map(({ slug, name, does, tagline, accent }) => ({ slug, name,
 <a class="skip" href="#main">Skip to content</a>
 <SuiteBar current={null} sticky />
 <main id="main">
-  <section class="hero"><div class="wrap hero-grid">
-    <div>
-      <h1><Picture light="/_suite/brand/suite/wordmark.svg" dark="/_suite/brand/suite/wordmark-dark.svg" alt={SUITE.name} class="hub-wm" width={640} height={52} /></h1>
-      <p class="pitch mission">{SUITE.mission}</p>
-      <p class="subpitch">{SUITE.pitch}</p>
-      <p class="lede">{SUITE.lede}</p>
-      <ol class="flow" aria-label="How the apps fit together">{APPS.map((a) => <li><span>{a.does}</span> {a.name}</li>)}</ol>
-      <p class="launcher-line"><span>Every app, one download:</span>
-        <a class="btn primary" href={LAUNCHER_DMG}>Get Method Launcher for Mac</a>
-        <a href={pageUrl("launcher")}>What it does</a></p>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1><Picture light="/_suite/brand/suite/wordmark.svg" dark="/_suite/brand/suite/wordmark-dark.svg" alt={SUITE.name} class="hub-wm" width={640} height={52} /></h1>
+        <p class="pitch mission">{SUITE.mission}</p>
+        <p class="subpitch">{SUITE.pitch}</p>
+        <p class="lede">{SUITE.lede}</p>
+        <p class="hero-cta">
+          <a class="btn primary launcher-btn" href={LAUNCHER_DMG}>Get all four apps for Mac</a>
+          <span class="hero-cta-note">One download: <a href={pageUrl("launcher")}>Method Launcher</a> installs the apps you want and keeps them up to date. Or pick one below.</span>
+        </p>
+      </div>
+      <HeroStack />
+    </div>
+    <div class="wrap">
+      <AppTiles />
       <p class="pages-nav"><a href={pageUrl("why")}>Why this exists</a>
         <a href={pageUrl("how")}>How it's built</a> <a href={pageUrl("help")}>Help build it</a></p>
     </div>
-    <HeroStack />
-  </div></section>
+  </section>
   <Story client:visible={{ rootMargin: "400px" }} apps={story} />
   <section class="band alt" aria-labelledby="apps-h"><div class="wrap">
     <h2 id="apps-h">The apps</h2>

@@ -79,7 +79,7 @@ test("the hub is the Astro page, complete before any script runs", async (t) => 
   const html = readFileSync(DIST + "/index.html", "utf8");
   assert.match(html, /<astro-island/);
   // The content tools/build.py's hub() writes, all in the HTML itself.
-  for (const text of ["The apps", "Hear about new releases", "Open, all the way down", "Every app, one download:",
+  for (const text of ["The apps", "Hear about new releases", "Open, all the way down", "Get all four apps for Mac", "Download for Mac",
                       "Method Storyteller", "Method Reader", "Method Schedule", "Method Budget",
                       "From first draft to last shoot day.", 'class="ms-bar sticky"', 'class="ms-band"']) {
     assert.ok(html.includes(text), text);
