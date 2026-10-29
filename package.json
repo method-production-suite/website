@@ -1,0 +1,30 @@
+{
+  "name": "method-website",
+  "private": true,
+  "type": "module",
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "build": "python3 tools/build.py && python3 tools/catalog.py && ASTRO_TELEMETRY_DISABLED=1 astro build && node tools/merge-astro.mjs",
+    "build:local": "python3 tools/build.py --local && python3 tools/catalog.py --local && ASTRO_TELEMETRY_DISABLED=1 astro build && node tools/merge-astro.mjs",
+    "dev": "python3 tools/catalog.py --local && ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "test": "node --test tests/",
+    "age": "node tools/npm-age.mjs"
+  },
+  "dependencies": {
+    "@astrojs/react": "7.0.0",
+    "astro": "7.3.5",
+    "motion": "14.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "overrides": {
+    "vite": "8.3.3",
+    "zod": "4.6.7",
+    "unifont": {
+      "undici": "8.12.2"
+    }
+  }
+}

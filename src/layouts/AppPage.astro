@@ -1,0 +1,67 @@
+---
+// An app's own site page, as its repo wrote it (apps/<slug>/index.html, synced at the
+// release tag), with the suite bar and band around it as tools/build.py's furnish() adds
+// them. The page opens on the value: the hero's pitch becomes a problem and the app's
+// answer (Method Reader's pattern), then the act (src/components/acts/) tells the story,
+// and only then the hero's screenshot shows the real app. The rest of the app's words
+// and pictures stay as the app wrote them.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import "../../shared/suite.css";
+import "../styles/acts.css";
+import "../styles/app-page.css";
+import SuiteBar from "../components/SuiteBar.astro";
+import SuiteBand from "../components/SuiteBand.astro";
+import ActSection from "../components/islands/ActSection";
+import { SCRIPT_CSS } from "../components/acts/ScriptAct";
+import { BOARD_CSS } from "../components/acts/BoardAct";
+import { BUDGET_CSS } from "../components/acts/BudgetAct";
+
+interface Props {
+  slug: string;
+  act: "script" | "board" | "budget";
+  kicker: string;
+  title: string;
+  text: string;
+  /** The opening: the problem, then what the app does about it. */
+  problem: string;
+  answer: string;
+}
+const { slug, act, kicker, title, text, problem, answer } = Astro.props;
+const page = readFileSync(join(process.cwd(), "apps", slug, "index.html"), "utf8");
+const lang = page.match(/<html[^>]*\blang="([^"]+)"/)?.[1] ?? "en";
+const head = page.match(/<head>([\s\S]*?)<\/head>/)![1];
+const bodyTag = page.match(/<body([^>]*)>/)!;
+const body = page.slice(bodyTag.index! + bodyTag[0].length, page.lastIndexOf("</body>"));
+// The hero keeps its wordmark, status, lede and buttons, with the value as its pitch. The
+// screenshot that followed it (div.shot) moves after the act.
+const hero = body.indexOf('<section class="hero"');
+const heroEnd = body.indexOf("</section>", hero) + "</section>".length;
+const next = body.indexOf("<section", heroEnd);
+if (hero < 0 || next < 0) throw new Error(`${slug}: no hero section to open the page with`);
+const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const pitch = `<p class="pitch value">${esc(problem)} <span class="answer">${esc(answer)}</span></p>`;
+const heroHtml = body.slice(0, heroEnd).replace(/<p class="pitch">[\s\S]*?<\/p>/, pitch);
+if (!heroHtml.includes('class="pitch value"')) throw new Error(`${slug}: the hero has no pitch to replace`);
+const before = heroHtml, shot = body.slice(heroEnd, next), after = body.slice(next);
+// Each act's per-piece classes. tools/merge-astro.mjs adds this block's hash (and the
+// islands' scripts') to the page's Content Security Policy, which allows nothing inline.
+const actCss = { script: SCRIPT_CSS, board: BOARD_CSS, budget: BUDGET_CSS }[act];
+const bodyClass = bodyTag[1].match(/class="([^"]*)"/)?.[1];
+---
+<!doctype html>
+<html lang={lang}>
+<head>
+<Fragment set:html={head} />
+<script is:inline>document.documentElement.classList.add("js")</script>
+<style is:inline set:html={actCss}></style>
+</head>
+<body class={bodyClass}>
+<SuiteBar current={slug} />
+<Fragment set:html={before} />
+<ActSection client:visible={{ rootMargin: "400px" }} act={act} id={`act-${act}`} kicker={kicker} title={title} text={text} />
+<Fragment set:html={shot} />
+<Fragment set:html={after} />
+<SuiteBand current={slug} />
+</body>
+</html>

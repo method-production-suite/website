@@ -1,0 +1,27 @@
+---
+// The four apps in the hero, in the order of a production: each one's step, name, line,
+// status, a direct Mac download (the version-free file on its latest release, so it never
+// goes stale) and its site. data-slug lets hovering a tile lift its page in the stack.
+import Picture from "./Picture.astro";
+import { APPS, accentStyle, mark, url } from "../data/catalog";
+---
+<ol class="app-tiles" aria-label="The four apps, in the order of a production">
+  {APPS.map((a, i) => {
+    const repo = a.repo.replace(/\/$/, "");
+    return (
+      <li class="app-tile" data-slug={a.slug} style={`${accentStyle(a)};--i:${i}`}>
+        <p class="tile-step"><span>{String(i + 1).padStart(2, "0")}</span> {a.does}</p>
+        <a class="tile-name" href={url(a.slug)}>
+          <Picture light={mark(a)} dark={mark(a, true)} width={28} height={28} />
+          <span>{a.name}</span>
+        </a>
+        <p class="tile-line">{a.tagline}</p>
+        <p class="tile-status"><span class="pill">{a.status}</span></p>
+        <p class="tile-actions">
+          {a.download && <a class="btn primary tile-dl" href={`${repo}/releases/latest/download/${a.download}`} aria-label={`Download ${a.name} for Mac`}>Download<span class="dl-mac"> for Mac</span></a>}
+          <a class="tile-more" href={url(a.slug)} aria-label={`More about ${a.name}`}>More <span aria-hidden="true">→</span></a>
+        </p>
+      </li>
+    );
+  })}
+</ol>

@@ -1,0 +1,8 @@
+---
+// Where each kind of message goes, as tools/build.py's contact().
+import { APPS, SUITE, SUPPORT } from "../data/catalog";
+interface Props { current?: string | null }
+const app = APPS.find((a) => a.slug === Astro.props.current);
+const issues = app && (app.issues_public ?? true) ? `${app.repo}/issues` : SUPPORT;
+---
+Found a bug? <a href={issues}>Open an issue</a>. Have a question? <a href={SUITE.discussions}>Ask in Discussions</a>.{SUITE.hello_live && <Fragment> Anything else: <a href={`mailto:${SUITE.hello}`}>{SUITE.hello}</a>.</Fragment>}

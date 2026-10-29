@@ -1,0 +1,22 @@
+---
+// The hero's stack: one page per app, in the suite mark's colors. A moment after the page
+// loads, the stack fans out so each app's page shows (hub-motion.css, CSS only). For
+// reduced motion it simply sits fanned out. Hovering an app's tile lifts its page.
+import { APPS } from "../data/catalog";
+
+// Where each page rests in the stack and where it lands, fanned like a hand of cards from
+// a pivot at the bottom: x and y in percent of the page, r in degrees. Each page lies over
+// the one before it, so every label (top left) stays in view.
+const REST = [{ x: -2, y: 2, r: -3 }, { x: 1, y: 1, r: 2 }, { x: -1, y: 0, r: -1 }, { x: 2, y: -1, r: 2 }];
+const FAN = [{ x: -42, y: 6, r: -15 }, { x: -14, y: 0, r: -5 }, { x: 14, y: 0, r: 5 }, { x: 42, y: 6, r: 15 }];
+const pose = (p: { x: number; y: number; r: number }) => `translate(${p.x}%, ${p.y}%) rotate(${p.r}deg)`;
+const sheets = APPS.map((a, i) => ({ a, i }));
+---
+<div class="stack" aria-hidden="true">
+  {sheets.map(({ a, i }) => (
+    <div class="sheet" data-slug={a.slug}
+         style={`--app-accent:${a.accent[0]};--app-accent-dark:${a.accent[1]};--rest:${pose(REST[i % 4])};--fan:${pose(FAN[i % 4])};--i:${i}`}>
+      <span>{a.does}</span>
+    </div>
+  ))}
+</div>
