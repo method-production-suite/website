@@ -34,13 +34,12 @@ does = "Write"
 tagline = "Screenwriting that formats itself."
 blurb = "Tab and Enter move between scene heading, action, character and dialogue; pages break the way a production expects; Open Screenplay Format is the native file, and Fountain and .fdx open and save."
 status = "Early alpha"
-platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
+platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Storyteller-macOS.dmg"
 source = "method-storyteller"
-# Follows its latest published release tag (Sam, 2026-10-18). Urgent site-only fix on
-# Sam's ask (2026-10-19, #77 removed "build from source"): main until the next tag, then
-# back to tag:<that version>.
-source_ref = "main"
+# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# tag once published.
+source_ref = "tag:v0.6.0"
 accent = ["#AE3D56", "#EE8DA2"]
 
 [[app]]
@@ -57,7 +56,7 @@ download = "Method-Reader-macOS.dmg"
 # A released app's site follows its latest published release tag (Sam, 2026-10-18), so it
 # describes exactly what the download does. Move source_ref to each new tag once published.
 source = "screepub"
-source_ref = "tag:v0.13.0"
+source_ref = "tag:v1.0.0"
 accent = ["#7052BA", "#B49CF0"]
 
 [[app]]
@@ -69,13 +68,15 @@ does = "Schedule"
 tagline = "Film and TV scheduling, from script to stripboard."
 blurb = "Breakdown, stripboard, calendar, day out of days and reports, in open files on your own computer. Hands its shoot days straight to Method Budget."
 status = "Early alpha"
-platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
+platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Schedule-macOS.dmg"
 source = "method-scheduling"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-# Site-only audit fix (Sam, 2026-10-19, #50): main until the next tag, then back to tag:<version>.
-source_ref = "main"
+source_ref = "tag:v0.6.0"
+# The browser demo (methodschedule.com/try/) is built at sync time, like Budget's.
+build = ["cargo", "xtask", "web", "--demo", "--out", "site/try"]
+build_output = "site/try"
 accent = ["#2F5FB3", "#7AA2F0"]
 
 [[app]]
@@ -87,12 +88,12 @@ does = "Budget"
 tagline = "Film and TV budgeting that shows its working."
 blurb = "Topsheet to detail, fringes, globals, versions and compare, and an explanation for every number. Opens the budgets other tools export."
 status = "Alpha, ready for testing"
-platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
+platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Budget-macOS.dmg"
 source = "method-budget"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-source_ref = "tag:v0.5.0"
+source_ref = "tag:v0.7.0"
 # The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs
 # this in an export of the synced commit and copies `build_output` in as try/, the
 # way method-budget's old pages.yml did at deploy time.

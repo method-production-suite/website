@@ -1,8 +1,10 @@
-// The start window (roadmap 3.19; decisions.md, entry 63; design:
-// docs/research/new-project-window.md; src/start.rs): pinned and recent
-// budgets with their net totals, search, open, pin, show in folder and
-// take off the list, and the New Budget form. main.js shows it at launch
-// when nothing else is open, and for File > New… and the toolbar's New.
+// The start window (roadmap 3.19; decisions.md, entries 63, 65, 77 and 91;
+// design: docs/research/new-project-window.md; src/start.rs): pinned and
+// recent budgets with their net totals and thumbnails, search, open, pin,
+// duplicate, show in folder and take off the list; project folders down the
+// left, each with its budgets, what came from them, its schedules and
+// actuals; and the New Budget form. main.js shows it at launch when nothing
+// else is open, and for File > New… and the toolbar's New.
 //
 // Rust holds every path: a row is named by the token of the last listing
 // (start_list), and the budget file New Budget starts from is picked in
@@ -10,6 +12,7 @@
 // the same checks as the setup tabs (src/start.rs, build).
 
 import { el, hasMod, shortcut } from './dom.js';
+import { t } from './i18n.js';
 import { customDialog } from './modal.js';
 import { money } from './format.js';
 import { readPref, writePref } from './prefs.js';
@@ -21,11 +24,51 @@ import {
   fileNameFrom,
   filterEntries,
   packText,
+  peopleText,
+  projectEntries,
+  SORTS,
+  sortEntries,
   specFrom,
   startForKind,
+  thumbRects,
   tvFields,
   whenText,
 } from './startlist.js';
+
+const SVG = 'http://www.w3.org/2000/svg';
+
+/**
+ * A budget's thumbnail: its categories as bars (src/start.rs, bars), drawn
+ * as SVG shapes sized by attributes (the page's CSP allows no inline
+ * styles). Hidden from screen readers: the row says the same in words.
+ */
+function thumbnail(bars) {
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('class', 'st-thumb');
+  svg.setAttribute('viewBox', '0 0 56 24');
+  svg.setAttribute('width', '56');
+  svg.setAttribute('height', '24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const rects = thumbRects(bars, 56, 24);
+  if (!rects.length) {
+    const line = document.createElementNS(SVG, 'rect');
+    line.setAttribute('class', 'st-thumb-none');
+    for (const [k, v] of Object.entries({ x: 0, y: 23, width: 56, height: 1 })) line.setAttribute(k, String(v));
+    svg.append(line);
+    return svg;
+  }
+  for (const r of rects) {
+    const rect = document.createElementNS(SVG, 'rect');
+    rect.setAttribute('class', 'st-thumb-bar');
+    for (const [k, v] of Object.entries({ x: r.x, y: r.y, width: r.w, height: r.h })) rect.setAttribute(k, String(v));
+    const title = document.createElementNS(SVG, 'title');
+    title.textContent = r.text;
+    rect.append(title);
+    svg.append(rect);
+  }
+  return svg;
+}
 
 /** The open start window: { box, close, menu(id) }, or null. */
 let current = null;
@@ -106,13 +149,23 @@ function open(ctx, first, charts) {
   let data = first;
   let query = '';
   let page = 'home';
+  // The place shown on the right: null for the pinned and recent budgets,
+  // else a project, by its folder (tokens change with every listing).
+  let place = null;
+  // The lists' order (startlist.js, SORTS), kept for next time.
+  let sortBy = String(readPref('start.sort', 'recent') || 'recent');
   let busy = false;
   let box = null;
   let close = () => {};
   // New Budget's form, kept while the window is open (Back keeps what was typed).
   let form = null;
 
-  const entries = () => [...(data.pinned || []), ...(data.recent || [])];
+  /** The project shown, or null (the pinned and recent budgets). */
+  const project = () => {
+    const p = place === null ? null : (data.projects || []).find((x) => x.folder === place) || null;
+    if (!p) place = null;
+    return p;
+  };
 
   // -------------------------------------------------------------------------
   // The lists
@@ -121,14 +174,25 @@ function open(ctx, first, charts) {
     class: 'modal-input st-search',
     attrs: {
       type: 'search',
-      placeholder: 'Search by title, file or folder',
-      'aria-label': 'Search budgets',
+      placeholder: t('start.search_by_title_file_or'),
+      'aria-label': t('start.search_budgets'),
       'data-autofocus': true,
       spellcheck: 'false',
       autocomplete: 'off',
     },
   });
-  const lists = el('div', { class: 'st-lists', attrs: { role: 'region', 'aria-label': 'Budgets' } });
+  const lists = el('div', { class: 'st-lists', attrs: { role: 'region', 'aria-label': t('start.budgets') } });
+  const sortSelect = el('select', { class: 'modal-input st-sort', attrs: { 'aria-label': t('start.sort_by') } });
+  for (const [v, label] of SORTS) sortSelect.append(el('option', { text: label, attrs: { value: v } }));
+  if (!SORTS.some(([v]) => v === sortBy)) sortBy = 'recent';
+  sortSelect.value = sortBy;
+  sortSelect.addEventListener('change', () => {
+    sortBy = sortSelect.value;
+    writePref('start.sort', sortBy);
+    drawLists();
+  });
+  /** `list` searched and sorted as the window shows it. */
+  const shown = (list) => sortEntries(filterEntries(list, query), sortBy);
 
   /** Runs `fn` with nothing else running; its error goes to the toast. */
   const once = async (fn) => {
@@ -163,6 +227,7 @@ function open(ctx, first, charts) {
   /** Redraws from a fresh listing, keeping the focus on the same file. */
   const relist = (next, keep) => {
     data = next;
+    drawRail();
     drawLists();
     focusRow(keep);
   };
@@ -175,29 +240,50 @@ function open(ctx, first, charts) {
 
   const reveal = (e) => once(() => ctx.invoke('start_reveal', { token: e.token }));
 
+  const duplicate = (e) =>
+    once(async () => {
+      const r = await ctx.invoke('start_duplicate', { token: e.token });
+      close();
+      if (r && r.view) ctx.apply(r.view, 'start_duplicate');
+      if (r && r.message) ctx.toast(r.message);
+    });
+
+  const canOpen = (e) => !e.problem && e.openable !== false;
+
   const totalText = (e) => {
     if (e.problem || e.net_total === null || e.net_total === undefined) return '';
     return `${money(e.net_total)} ${e.currency || ''}`.trim();
   };
 
+  /** A row's kind in words, when it isn't a plain budget ("sub-budget", "schedule"…). */
+  const kindNote = (e) => (e.kind && e.kind !== 'budget' ? e.kind : '');
+
   const row = (e) => {
-    const where = [e.file, e.folder].filter(Boolean).join('  ');
-    const note = e.problem || (e.open ? 'Open in a tab' : '');
+    const inProject = place !== null;
+    const where = inProject ? e.file : [e.file, e.folder].filter(Boolean).join('  ');
+    const note = e.problem || [kindNote(e), e.shared ? t('start.shared') : '', e.open ? t('start.open_in_a_tab') : ''].filter(Boolean).join(', ');
+    const total = totalText(e);
+    const who = e.shared ? peopleText(e.people) : '';
     const main = el(
       'button',
       {
         class: 'st-open',
-        attrs: { type: 'button', 'aria-label': `${e.title || e.file}, ${where}${note ? `, ${note}` : ''}` },
+        attrs: { type: 'button', 'aria-label': [e.title || e.file, total, where, note, who].filter(Boolean).join(', ') },
         data: { key: `${e.folder}\n${e.file}` },
       },
+      e.openable === false ? el('span', { class: 'st-thumb st-thumb-file', attrs: { 'aria-hidden': 'true' } }) : thumbnail(e.bars),
       el('span', { class: 'st-title', text: e.title || e.file }),
-      el('span', { class: 'st-total', text: totalText(e) }),
+      el('span', { class: 'st-total', text: total }),
       el('span', { class: 'st-when', text: whenText(e.modified) }),
       el('span', { class: 'st-where', text: where }),
       el('span', { class: e.problem ? 'st-note st-problem' : 'st-note', text: note }),
+      who ? el('span', { class: 'st-people', text: who }) : null,
     );
     main.title = where;
-    main.addEventListener('click', () => (e.problem ? null : openEntry(e)));
+    main.addEventListener('click', () => {
+      if (canOpen(e)) openEntry(e);
+      else if (!e.problem) reveal(e);
+    });
     main.addEventListener('keydown', (ev) => onRowKey(ev, e));
     const actions = el('span', { class: 'st-actions' });
     const act = (label, fn) => {
@@ -205,10 +291,12 @@ function open(ctx, first, charts) {
       b.addEventListener('click', () => fn(e));
       actions.append(b);
     };
-    if (!e.problem || e.pinned) act(e.pinned ? 'Unpin' : 'Pin', pin);
-    if (!e.problem) act('Show in Folder', reveal);
-    if (e.recent || e.problem) act('Remove', forget);
-    return el('li', { class: `st-row${e.problem ? ' st-missing' : ''}` }, main, actions);
+    if ((canOpen(e) || e.pinned) && e.openable !== false) act(e.pinned ? t('start.unpin') : t('start.pin'), pin);
+    if (canOpen(e)) act(t('start.duplicate'), duplicate);
+    if (!e.problem) act(t('start.show_in_folder'), reveal);
+    if (!inProject && (e.recent || e.problem)) act(t('start.remove'), forget);
+    const cls = ['st-row', e.problem ? 'st-missing' : '', e.under ? 'st-under' : '', e.openable === false ? 'st-file' : ''].filter(Boolean).join(' ');
+    return el('li', { class: cls }, main, actions);
   };
 
   const section = (title, list) =>
@@ -219,16 +307,124 @@ function open(ctx, first, charts) {
       el('ul', { class: 'st-list' }, ...list.map(row)),
     );
 
+  // -------------------------------------------------------------------------
+  // Projects: folders down the left, each one's files on the right
+
+  const rail = el('nav', { class: 'st-rail', attrs: { 'aria-label': t('start.places') } });
+
+  const placeButtons = () => [...rail.querySelectorAll('.st-place')];
+
+  const choosePlace = (folder, focusIt = true) => {
+    place = folder;
+    drawRail();
+    drawLists();
+    if (focusIt) {
+      const b = placeButtons().find((x) => x.getAttribute('aria-current') === 'true');
+      if (b) b.focus();
+    }
+  };
+
+  const addFolder = () =>
+    once(async () => {
+      const next = await ctx.invoke('start_add_project');
+      if (!next) return; // cancelled
+      data = next;
+      const added = (data.projects || [])[(data.projects || []).length - 1];
+      choosePlace(added ? added.folder : place);
+    });
+
+  const onPlaceKey = (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    const all = placeButtons();
+    const at = all.indexOf(ev.currentTarget);
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      const next = all[Math.max(0, Math.min(all.length - 1, at + (ev.key === 'ArrowDown' ? 1 : -1)))];
+      if (next) next.focus();
+    } else if (ev.key === 'ArrowRight') {
+      ev.preventDefault();
+      focusRow(null);
+    } else if (ev.key.length === 1 && ev.key !== ' ') {
+      search.focus();
+    }
+  };
+
+  const drawRail = () => {
+    const button = (label, folder, detail) => {
+      const b = el(
+        'button',
+        { class: 'st-place', attrs: { type: 'button', 'aria-current': place === folder ? 'true' : 'false', title: detail || label } },
+        el('span', { class: 'st-place-name', text: label }),
+      );
+      b.addEventListener('click', () => choosePlace(folder));
+      b.addEventListener('keydown', onPlaceKey);
+      return b;
+    };
+    const projects = data.projects || [];
+    const add = el('button', { class: 'btn btn-quiet st-add-folder', text: t('start.add_folder'), attrs: { type: 'button' } });
+    add.addEventListener('click', addFolder);
+    const parts = [button(t('start.pinned_and_recent'), null), el('h3', { class: 'st-section-title', text: t('start.projects') }), ...projects.map((p) => button(p.name, p.folder, p.folder))];
+    if (!projects.length) parts.push(el('p', { class: 'st-aside st-rail-empty', text: t('start.a_folder_per_production_with') }));
+    rail.replaceChildren(...parts, add);
+  };
+
+  /** New Budget Here: the form, saving in project `p`'s folder. */
+  const newHere = (p) =>
+    once(async () => {
+      const f = await ctx.invoke('start_project_folder', { token: p.token });
+      showForm({ folder: f });
+    });
+
+  const removeProject = (p) =>
+    once(async () => {
+      data = await ctx.invoke('start_remove_project', { token: p.token });
+      choosePlace(null);
+    });
+
+  const drawProject = (p) => {
+    const btn = (label, fn) => {
+      const b = el('button', { class: 'btn btn-quiet st-act', text: label, attrs: { type: 'button' } });
+      b.addEventListener('click', () => fn(p));
+      return b;
+    };
+    const head = el(
+      'div',
+      { class: 'st-project-head' },
+      el('h3', { class: 'st-project-name', text: p.name }),
+      el('span', { class: 'st-where', text: p.folder }),
+      el(
+        'span',
+        { class: 'st-project-actions' },
+        p.problem ? null : btn(t('start.new_budget_here'), newHere),
+        p.problem ? null : btn(t('start.show_folder'), (x) => reveal(x)),
+        btn(t('start.remove_from_list'), removeProject),
+      ),
+    );
+    const items = sortEntries(projectEntries(p, query), sortBy);
+    const parts = [head];
+    if (p.problem) parts.push(el('p', { class: 'st-empty st-problem', text: t('start.remove_it_from_the_list', { problem: p.problem }) }));
+    else if (items.length) parts.push(el('ul', { class: 'st-list' }, ...items.map(row)));
+    else if (query) parts.push(el('p', { class: 'st-empty', text: t('start.nothing_in_folder_matches', { query: query.trim() }) }));
+    else parts.push(el('p', { class: 'st-empty', text: t('start.no_budgets_in_this_folder') }));
+    if (p.more) parts.push(el('p', { class: 'st-aside', text: t('start.this_folder_holds_more_files') }));
+    lists.replaceChildren(...parts);
+  };
+
   const drawLists = () => {
-    const pinned = filterEntries(data.pinned, query);
-    const recent = filterEntries(data.recent, query);
+    const p = project();
+    if (p) {
+      drawProject(p);
+      return;
+    }
+    const pinned = shown(data.pinned);
+    const recent = shown(data.recent);
     const parts = [];
-    if (pinned.length) parts.push(section('Pinned', pinned));
-    if (recent.length) parts.push(section('Recent', recent));
+    if (pinned.length) parts.push(section(t('start.pinned'), pinned));
+    if (recent.length) parts.push(section(t('start.recent'), recent));
     if (!parts.length) {
       const empty = query
-        ? `No budget matches "${query.trim()}". Open… finds any budget file.`
-        : 'No recent budgets yet. Start one with New Budget, or open a budget file.';
+        ? t('start.no_budget_matches', { query: query.trim() })
+        : t('start.no_recent_budgets');
       parts.push(el('p', { class: 'st-empty', text: empty }));
     }
     lists.replaceChildren(...parts);
@@ -257,14 +453,25 @@ function open(ctx, first, charts) {
     if (ev.key === 'ArrowUp') return go(at - 1);
     if (ev.key === 'Home') return go(0);
     if (ev.key === 'End') return go(all.length - 1);
+    if (ev.key === 'ArrowLeft') {
+      ev.preventDefault();
+      const b = placeButtons().find((x) => x.getAttribute('aria-current') === 'true');
+      if (b) b.focus();
+      return;
+    }
     if (ev.key === 'p' || ev.key === 'P') {
       ev.preventDefault();
-      if (!e.problem || e.pinned) pin(e);
+      if ((canOpen(e) || e.pinned) && e.openable !== false) pin(e);
+      return;
+    }
+    if (ev.key === 'd' || ev.key === 'D') {
+      ev.preventDefault();
+      if (canOpen(e)) duplicate(e);
       return;
     }
     if (ev.key === 'Delete' || ev.key === 'Backspace') {
       ev.preventDefault();
-      if (e.recent || e.problem) forget(e);
+      if (place === null && (e.recent || e.problem)) forget(e);
       return;
     }
     // Typing anywhere in the lists types into the search box.
@@ -282,8 +489,9 @@ function open(ctx, first, charts) {
       if (first) first.focus();
     } else if (ev.key === 'Enter') {
       ev.preventDefault();
-      const shown = [...filterEntries(data.pinned, query), ...filterEntries(data.recent, query)].filter((e) => !e.problem);
-      if (shown.length) openEntry(shown[0]);
+      const p = project();
+      const first = (p ? sortEntries(projectEntries(p, query), sortBy) : [...shown(data.pinned), ...shown(data.recent)]).filter(canOpen);
+      if (first.length) openEntry(first[0]);
     } else if (ev.key === 'Escape' && search.value) {
       // Escape clears the search first, then closes.
       ev.preventDefault();
@@ -297,34 +505,36 @@ function open(ctx, first, charts) {
   const keyHint = (spec) => el('span', { class: 'st-key', text: shortcut(spec) });
 
   const home = () => {
-    const newBtn = el('button', { class: 'btn btn-primary', attrs: { type: 'button' } }, 'New Budget…', keyHint('mod+n'));
-    const openBtn = el('button', { class: 'btn', attrs: { type: 'button' } }, 'Open…', keyHint('mod+o'));
+    const newBtn = el('button', { class: 'btn btn-primary', attrs: { type: 'button' } }, t('start.new_budget_open'), keyHint('mod+n'));
+    const openBtn = el('button', { class: 'btn', attrs: { type: 'button' } }, t('start.open'), keyHint('mod+o'));
     newBtn.addEventListener('click', () => showForm());
     openBtn.addEventListener('click', openFile);
     const atStart = el('input', { attrs: { type: 'checkbox', id: 'st-at-start' } });
     atStart.checked = startAtLaunch();
     atStart.addEventListener('change', () => writePref('startAtLaunch', atStart.checked));
-    const closeBtn = el('button', { class: 'btn', text: 'Close', attrs: { type: 'button' } });
+    const closeBtn = el('button', { class: 'btn', text: t('start.close'), attrs: { type: 'button' } });
     closeBtn.addEventListener('click', () => close());
+    drawRail();
     drawLists();
     return [
       el(
         'div',
         { class: 'st-head' },
-        el('h2', { class: 'modal-title', text: 'Budgets', attrs: { id: 'st-title' } }),
+        el('h2', { class: 'modal-title', text: t('start.budgets'), attrs: { id: 'st-title' } }),
         newBtn,
         openBtn,
         search,
+        sortSelect,
       ),
-      lists,
+      el('div', { class: 'st-body' }, rail, lists),
       el('p', {
         class: 'st-hint',
-        text: 'Up and Down move, Enter opens, P pins, Delete takes a budget off the list (the file stays).',
+        text: t('start.up_and_down_move_enter'),
       }),
       el(
         'div',
         { class: 'st-foot' },
-        el('label', { class: 'rs-check', attrs: { for: 'st-at-start' } }, atStart, el('span', { text: 'Show this window when the app starts and when the last tab closes' })),
+        el('label', { class: 'rs-check', attrs: { for: 'st-at-start' } }, atStart, el('span', { text: t('start.show_this_window_when_the') })),
         closeBtn,
       ),
     ];
@@ -333,8 +543,10 @@ function open(ctx, first, charts) {
   // -------------------------------------------------------------------------
   // New Budget
 
-  const showForm = () => {
+  /** New Budget's form; `opts.folder`: a project's folder to save in (New Budget Here). */
+  const showForm = (opts = {}) => {
     if (!form) form = makeForm();
+    if (opts.folder) form.saveIn(opts.folder, false);
     page = 'form';
     box.setAttribute('aria-labelledby', 'st-new-title');
     box.classList.add('st-form-page');
@@ -371,12 +583,12 @@ function open(ctx, first, charts) {
     };
     const heading = (text, id) => el('h3', { class: 'st-group-title', text, attrs: { id } });
 
-    const title = field('title', 'Title', { span: 4, max: 200, placeholder: 'The production’s name' });
-    const kind = select('kind', 'Production type', KINDS, { span: 2, value: 'feature' });
-    const season = field('season', 'Season', { max: 50 });
-    const episode = field('episode', 'Episode', { max: 50 });
-    const episodes = field('episodes', 'Episodes', { max: 3, placeholder: '10' });
-    const date = (key, label) => field(key, label, { placeholder: 'YYYY-MM-DD', max: 10 });
+    const title = field('title', t('start.field.title'), { span: 4, max: 200, placeholder: t('start.the_production_s_name') });
+    const kind = select('kind', t('start.field.kind'), KINDS, { span: 2, value: 'feature' });
+    const season = field('season', t('start.field.season'), { max: 50 });
+    const episode = field('episode', t('start.field.episode'), { max: 50 });
+    const episodes = field('episodes', t('start.field.episodes'), { max: 3, placeholder: '10' });
+    const date = (key, label) => field(key, label, { placeholder: t('start.yyyy_mm_dd'), max: 10 });
     const num = (key, label) => field(key, label, { max: 12 });
 
     // -----------------------------------------------------------------------
@@ -390,10 +602,10 @@ function open(ctx, first, charts) {
     let chartQuery = '';
 
     const fromChoices = [
-      ['chart', 'A chart of accounts', 'Categories and accounts, no lines'],
-      ['starter', 'Starter budget', 'A small sample with placeholder rates'],
-      ['blank', 'Empty', 'No categories yet'],
-      ['file', 'A budget file', 'Its chart and setup, no lines'],
+      ['chart', t('start.from.chart'), t('start.from.chart_hint')],
+      ['starter', t('start.from.starter'), t('start.from.starter_hint')],
+      ['blank', t('start.from.blank'), t('start.from.blank_hint')],
+      ['file', t('start.from.file'), t('start.from.file_hint')],
     ];
     const fromRadios = {};
     const fromRow = el('div', { class: 'st-from st-span4', attrs: { role: 'radiogroup', 'aria-labelledby': 'st-from-title' } });
@@ -414,11 +626,11 @@ function open(ctx, first, charts) {
 
     const chartSearch = el('input', {
       class: 'modal-input st-chart-search',
-      attrs: { type: 'search', placeholder: 'Find a chart by name', 'aria-label': 'Find a chart', spellcheck: 'false', autocomplete: 'off' },
+      attrs: { type: 'search', placeholder: t('start.find_a_chart_by_name'), 'aria-label': t('start.find_a_chart'), spellcheck: 'false', autocomplete: 'off' },
     });
-    const chartList = el('div', { class: 'st-chart-list', attrs: { role: 'radiogroup', 'aria-label': 'Charts of accounts' } });
+    const chartList = el('div', { class: 'st-chart-list', attrs: { role: 'radiogroup', 'aria-label': t('start.charts_of_accounts') } });
     const chartPane = el('div', { class: 'st-chart-pane st-span4' }, chartSearch, chartList);
-    const pickBtn = el('button', { class: 'btn', text: 'Choose File…', attrs: { type: 'button' } });
+    const pickBtn = el('button', { class: 'btn', text: t('start.choose_file'), attrs: { type: 'button' } });
     const pickedText = el('span', { class: 'st-picked' });
     const filePane = el('div', { class: 'st-file-pane st-span4' }, pickBtn, pickedText);
     const fromNote = el('p', { class: 'st-from-note st-span4', attrs: { 'aria-live': 'polite' } });
@@ -449,11 +661,11 @@ function open(ctx, first, charts) {
         parts.push(el('h4', { class: 'st-chart-group', text: s.group }));
         parts.push(...s.ours.map(row));
         if (s.studio.length) {
-          parts.push(el('p', { class: 'st-chart-sub', text: 'Studio and network charts: numbers, names and levels only' }));
+          parts.push(el('p', { class: 'st-chart-sub', text: t('start.studio_and_network_charts_numbers') }));
           parts.push(...s.studio.map(row));
         }
       }
-      if (!parts.length) parts.push(el('p', { class: 'st-empty', text: `No chart matches "${chartQuery.trim()}".` }));
+      if (!parts.length) parts.push(el('p', { class: 'st-empty', text: t('start.no_chart_matches', { query: chartQuery.trim() }) }));
       chartList.replaceChildren(...parts);
     };
 
@@ -461,13 +673,13 @@ function open(ctx, first, charts) {
       let text = '';
       if (from === 'chart') {
         const c = chartById(chartId);
-        text = c ? `${c.name}: ${accountsText(c.accounts)} in ${c.categories} ${c.categories === 1 ? 'category' : 'categories'}.` : 'Choose a chart.';
-      } else if (from === 'starter') text = 'The starter budget: a few categories with sample lines and placeholder rates.';
-      else if (from === 'blank') text = 'An empty budget: add categories and accounts yourself.';
+        text = c ? t('start.note.chart', { name: c.name, accounts: accountsText(c.accounts), count: c.categories }) : t('start.note.choose_chart');
+      } else if (from === 'starter') text = t('start.note.starter');
+      else if (from === 'blank') text = t('start.note.blank');
       else if (from === 'file') {
         text = picked
-          ? `${picked.file}: ${accountsText(picked.accounts) || 'no accounts'} in ${picked.categories} ${picked.categories === 1 ? 'category' : 'categories'}.`
-          : 'Choose the budget file to start from.';
+          ? t('start.note.chart', { name: picked.file, accounts: accountsText(picked.accounts) || t('start.note.no_accounts'), count: picked.categories })
+          : t('start.choose_file_to_start');
       }
       fromNote.textContent = text;
     };
@@ -559,16 +771,34 @@ function open(ctx, first, charts) {
     // name that follows the title until it is typed by hand.
 
     let folder = null; // { token, folder }
+    let folderGiven = false; // New Budget Here chose it: the default folder doesn't replace it
     const folderText = el('span', { class: 'st-folder-text', attrs: { id: 'st-folder-text' } });
-    const folderBtn = el('button', { class: 'btn', text: 'Choose Folder…', attrs: { type: 'button', 'aria-describedby': 'st-folder-text' } });
+    // A project folder of its own, named like the file, in the folder above
+    // (decision 91). On unless the folder is a project already.
+    const projectBox = el('input', { attrs: { type: 'checkbox', id: 'st-project' } });
+    projectBox.checked = readPref('newBudget.projectFolder', true) !== false;
+    const fileAside = el('span', { class: 'st-span1 st-aside' });
+    const showProject = () => {
+      projectBox.disabled = !folder;
+      fileAside.textContent = projectBox.checked && folder ? t('start.file_in_new_folder') : t('start.file_never_over');
+    };
+    projectBox.addEventListener('change', () => {
+      writePref('newBudget.projectFolder', projectBox.checked);
+      showProject();
+    });
+    const folderBtn = el('button', { class: 'btn', text: t('start.choose_folder'), attrs: { type: 'button', 'aria-describedby': 'st-folder-text' } });
     const showFolder = () => {
-      folderText.textContent = folder ? folder.folder : 'No folder chosen: the budget opens without a file until you save it.';
+      folderText.textContent = folder ? folder.folder : t('start.no_folder_chosen');
       folderText.classList.toggle('st-folder-none', !folder);
+      showProject();
     };
     folderBtn.addEventListener('click', () =>
       once(async () => {
         const f = await ctx.invoke('new_budget_pick_folder', { current: folder ? folder.token : null });
-        if (f) folder = f;
+        if (f) {
+          folder = f;
+          folderGiven = true;
+        }
         showFolder();
         folderBtn.focus();
       }),
@@ -577,12 +807,49 @@ function open(ctx, first, charts) {
     ctx
       .invoke('new_budget_folder')
       .then((f) => {
-        if (f && !folder) folder = f;
+        if (f && !folder && !folderGiven) folder = f;
         showFolder();
       })
       .catch(() => showFolder());
 
-    const fileName = field('file_name', 'File name', { span: 3, max: 200 });
+    // -----------------------------------------------------------------------
+    // Link a Schedule: a schedule days file (Method Schedule's) fills Shoot
+    // days and the shoot dates here, and at Create its shoot days go to
+    // SHOOT_DAYS linked to the schedule, and its prep start and wrap end to
+    // the budget info (src/start.rs, build_with; decision 91).
+
+    let linked = null; // the review of the picked file: { token, file, schedule, shoot_days, start, end }
+    const scheduleText = el('span', { class: 'st-folder-text st-folder-none', attrs: { id: 'st-schedule-text' } });
+    const scheduleBtn = el('button', { class: 'btn', text: t('start.link_a_schedule'), attrs: { type: 'button', 'aria-describedby': 'st-schedule-text' } });
+    const unlinkBtn = el('button', { class: 'btn btn-quiet', text: t('start.unlink'), attrs: { type: 'button' } });
+    const showSchedule = () => {
+      unlinkBtn.hidden = !linked;
+      scheduleText.classList.toggle('st-folder-none', !linked);
+      scheduleText.textContent = linked
+        ? t('start.schedule_linked', { file: linked.file, schedule: linked.schedule || t('start.a_schedule'), count: linked.shoot_days })
+        : t('start.no_schedule_linked');
+    };
+    scheduleBtn.addEventListener('click', () =>
+      once(async () => {
+        const r = await ctx.invoke('schedule_days_pick', {});
+        if (r) {
+          linked = r;
+          inputs.shoot_days.value = String(r.shoot_days);
+          if (r.start) inputs.shoot_start.value = r.start;
+          if (r.end) inputs.shoot_end.value = r.end;
+        }
+        showSchedule();
+        scheduleBtn.focus();
+      }),
+    );
+    unlinkBtn.addEventListener('click', () => {
+      linked = null;
+      showSchedule();
+      scheduleBtn.focus();
+    });
+    showSchedule();
+
+    const fileName = field('file_name', t('start.field.file_name'), { span: 3, max: 200 });
     let fileTouched = false;
     const followTitle = () => {
       if (!fileTouched) inputs.file_name.value = inputs.title.value.trim() ? fileNameFrom(inputs.title.value) : '';
@@ -623,27 +890,27 @@ function open(ctx, first, charts) {
       const lib = setupData.library;
       if (lib) {
         const empty = !lib.problem && !lib.items;
-        const detail = lib.problem || (empty ? 'Nothing in it yet' : `${lib.items} ${lib.items === 1 ? 'item' : 'items'}`);
+        const detail = lib.problem || (empty ? t('start.library_empty') : t('start.items', { count: lib.items }));
         rows.push(
-          tickRow('st-setup-library', libraryTicked, !!lib.problem || empty, `Everything in my setup library (${lib.name})`, detail, (on) => {
+          tickRow('st-setup-library', libraryTicked, !!lib.problem || empty, t('start.whole_library', { name: lib.name }), detail, (on) => {
             libraryTicked = on;
           }),
         );
       }
       (setupData.packs || []).forEach((p, i) => {
-        const t = packText(p);
+        const pk = packText(p);
         const unusable = !p.items;
         rows.push(
-          tickRow(`st-setup-pack-${i}`, packsTicked.has(packKey(p)), unusable, t.name, p.problem && unusable ? p.problem : t.detail, (on) => {
+          tickRow(`st-setup-pack-${i}`, packsTicked.has(packKey(p)), unusable, pk.name, p.problem && unusable ? p.problem : pk.detail, (on) => {
             if (on) packsTicked.add(packKey(p));
             else packsTicked.delete(packKey(p));
           }),
         );
       });
       if (!rows.length) {
-        rows.push(el('p', { class: 'st-aside', text: 'No setup library or packs yet. Make them in the Library tab of the tools panel, then they show here.' }));
+        rows.push(el('p', { class: 'st-aside', text: t('start.no_setup_library_or_packs') }));
       } else {
-        rows.push(el('p', { class: 'st-aside', text: 'What you tick takes the place of the starting point\u2019s items of the same name. The budget settings come from this form.' }));
+        rows.push(el('p', { class: 'st-aside', text: t('start.what_you_tick_takes_the') }));
       }
       setupList.replaceChildren(...rows);
     };
@@ -668,9 +935,9 @@ function open(ctx, first, charts) {
       error.replaceChildren(el('span', { text }), ...(extra ? [' ', extra] : []));
       error.hidden = false;
     };
-    const back = el('button', { class: 'btn', text: 'Back', attrs: { type: 'button' } });
+    const back = el('button', { class: 'btn', text: t('start.back'), attrs: { type: 'button' } });
     back.addEventListener('click', showHome);
-    const create = el('button', { class: 'btn btn-primary', attrs: { type: 'button' } }, 'Create Budget', keyHint('mod+enter'));
+    const create = el('button', { class: 'btn btn-primary', attrs: { type: 'button' } }, t('start.create_budget'), keyHint('mod+enter'));
 
     const startValue = () => (from === 'chart' ? `chart:${chartId}` : from);
 
@@ -678,14 +945,15 @@ function open(ctx, first, charts) {
       once(async () => {
         const values = {};
         for (const [k, input] of Object.entries(inputs)) values[k] = input.value;
-        const spec = specFrom(values, startValue(), picked ? picked.token : null, folder ? folder.token : null, setupTicks());
+        const spec = specFrom(values, startValue(), picked ? picked.token : null, folder ? folder.token : null, setupTicks(), projectBox.checked);
+        if (linked && Number.isSafeInteger(linked.token)) spec.schedule = linked.token;
         if (!spec.title) {
-          showError('Give the budget a title.');
+          showError(t('start.give_a_title'));
           inputs.title.focus();
           return;
         }
         if (from === 'file' && !picked) {
-          showError('Choose the budget file to start from.');
+          showError(t('start.choose_file_to_start'));
           pickBtn.focus();
           return;
         }
@@ -694,14 +962,14 @@ function open(ctx, first, charts) {
           const r = await ctx.invoke('new_budget_create', { spec });
           if (r && r.taken) {
             // A file of that name is in the folder: nothing was made.
-            const use = el('button', { class: 'btn btn-quiet', text: `Use "${r.taken}.mthd"`, attrs: { type: 'button' } });
+            const use = el('button', { class: 'btn btn-quiet', text: t('start.use_mthd', { taken: r.taken }), attrs: { type: 'button' } });
             use.addEventListener('click', () => {
               inputs.file_name.value = r.taken;
               fileTouched = true;
               error.hidden = true;
               submit();
             });
-            showError(r.message || 'A file with that name is already there.', use);
+            showError(r.message || t('start.name_taken'), use);
             use.focus();
             return;
           }
@@ -728,50 +996,52 @@ function open(ctx, first, charts) {
       season,
       episode,
       episodes,
-      heading('Chart of accounts', 'st-from-title'),
+      heading(t('start.heading.chart'), 'st-from-title'),
       fromRow,
       chartPane,
       filePane,
       fromNote,
-      heading('Setup to bring in', 'st-setup-title'),
+      heading(t('start.heading.setup'), 'st-setup-title'),
       setupList,
-      heading('Save in'),
+      heading(t('start.heading.save_in')),
       el('div', { class: 'st-folder st-span4' }, folderText, folderBtn),
+      el('label', { class: 'rs-check st-span4', attrs: { for: 'st-project' } }, projectBox, el('span', { text: t('start.make_a_project_folder_for') })),
       fileName,
-      el('span', { class: 'st-span1 st-aside', text: '.mthd, never over another file' }),
-      heading('Dates'),
-      date('prep_start', 'Prep start'),
-      date('shoot_start', 'Shoot start'),
-      date('shoot_end', 'Shoot end'),
-      date('wrap_end', 'Wrap end'),
-      heading('Schedule length'),
-      num('prep_weeks', 'Prep weeks'),
-      num('shoot_days', 'Shoot days'),
-      num('wrap_weeks', 'Wrap weeks'),
-      el('span', { class: 'st-span1 st-aside', text: 'Kept as globals for formulas.' }),
-      heading('Location and money'),
-      field('country', 'Country'),
-      field('region', 'Region or state'),
-      field('city', 'City'),
-      field('currency', 'Base currency', { placeholder: 'USD', max: 10, value: readPref('newBudget.currency', '') || '' }),
-      heading('Settings'),
+      fileAside,
+      heading(t('start.heading.dates')),
+      date('prep_start', t('start.field.prep_start')),
+      date('shoot_start', t('start.field.shoot_start')),
+      date('shoot_end', t('start.field.shoot_end')),
+      date('wrap_end', t('start.field.wrap_end')),
+      heading(t('start.heading.schedule')),
+      num('prep_weeks', t('start.field.prep_weeks')),
+      num('shoot_days', t('start.field.shoot_days')),
+      num('wrap_weeks', t('start.field.wrap_weeks')),
+      el('span', { class: 'st-span1 st-aside', text: t('start.kept_as_globals_for_formulas') }),
+      el('div', { class: 'st-folder st-span4' }, scheduleText, unlinkBtn, scheduleBtn),
+      heading(t('start.heading.location')),
+      field('country', t('start.field.country')),
+      field('region', t('start.field.region')),
+      field('city', t('start.field.city')),
+      field('currency', t('start.field.currency'), { placeholder: t('start.usd'), max: 10, value: readPref('newBudget.currency', '') || '' }),
+      heading(t('start.heading.settings')),
       select(
         'fringe_posting',
-        'Fringes post',
+        t('start.field.fringe_posting'),
         [
-          ['budget', 'One total for the whole budget'],
-          ['category', 'An account at the end of each category'],
-          ['account', 'A line at the end of each account'],
-          ['production_level', 'A row above each production total'],
+          ['budget', t('start.posting.budget')],
+          ['category', t('start.posting.category')],
+          ['account', t('start.posting.account')],
+          ['production_level', t('start.posting.production_level')],
         ],
         { span: 2, value: 'budget' },
       ),
       select(
         'arithmetic',
-        'Arithmetic',
+        t('start.field.arithmetic'),
         [
-          ['binary', 'Spreadsheet (binary)'],
-          ['exact', 'Exact decimal'],
+          ['binary', t('start.arithmetic.binary')],
+          ['exact', t('start.arithmetic.exact')],
         ],
         { span: 2, value: 'binary' },
       ),
@@ -787,16 +1057,26 @@ function open(ctx, first, charts) {
       }
     });
     const parts = [
-      el('h2', { class: 'modal-title', text: 'New Budget', attrs: { id: 'st-new-title' } }),
+      el('h2', { class: 'modal-title', text: t('start.new_budget'), attrs: { id: 'st-new-title' } }),
       el('p', {
         class: 'modal-message',
-        text: 'Only the title is needed. The budget is saved in the folder below as soon as it is made. The rest goes into the budget info, globals and settings, where it can be changed later.',
+        text: t('start.only_the_title_is_needed'),
       }),
       el('div', { class: 'st-form-scroll' }, grid),
       error,
       el('div', { class: 'modal-actions' }, back, create),
     ];
-    return { parts, title: inputs.title };
+    return {
+      parts,
+      title: inputs.title,
+      /** Saves in folder `f` ({token, folder}), with or without a project folder of its own. */
+      saveIn: (f, ownFolder) => {
+        folder = f;
+        folderGiven = true;
+        projectBox.checked = ownFolder;
+        showFolder();
+      },
+    };
   };
 
   // -------------------------------------------------------------------------
