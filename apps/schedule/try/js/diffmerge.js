@@ -25,12 +25,19 @@ const nextId = (prefix) => `${prefix}-${++uid}`;
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
-/** Grouped changes: a heading and a list for each group. */
-function changeList(groups) {
+/**
+ * Grouped changes: a heading and a list for each group. With `onGo`, a change that says
+ * where it is (`go`, entry 235) is a link that shows it.
+ */
+function changeList(groups, onGo = null) {
   const out = [];
   for (const g of groups) {
     out.push(el('h4', { class: 'dm-group', text: g.group }));
-    out.push(el('ul', { class: 'dm-list' }, ...g.changes.map((c) => el('li', { class: `dm-change k-${c.kind}`, text: c.text }))));
+    const item = (c) =>
+      onGo && c.go
+        ? el('li', { class: `dm-change k-${c.kind}` }, el('button', { class: 'cf-link dm-go', text: c.text, attrs: { type: 'button', title: 'Show it' }, on: { click: () => onGo(c.go) } }))
+        : el('li', { class: `dm-change k-${c.kind}`, text: c.text });
+    out.push(el('ul', { class: 'dm-list' }, ...g.changes.map(item)));
   }
   return out;
 }
@@ -39,7 +46,7 @@ function changeList(groups) {
  * File > What Changed (`against` "file"), What Changed Since Saved ("saved"), and a backup
  * from Revert to Backup's list ("backup", by its name in the backups folder).
  */
-export async function whatChanged(against, say, backup = null) {
+export async function whatChanged(against, say, backup = null, go = null) {
   let dto;
   try {
     dto = await invoke('what_changed', { against, backup });
@@ -56,7 +63,8 @@ export async function whatChanged(against, say, backup = null) {
       el('h2', { class: 'modal-title', text: 'What Changed', attrs: { id: 'wc-title' } }),
       el('p', { class: 'modal-message', text: `From ${dto.from} to ${dto.to}.` }),
       el('p', { class: 'dm-count', text: dto.count ? plural(dto.count, 'change', 'changes') : 'No changes.' }),
-      el('div', { class: 'dm-body' }, ...changeList(dto.groups)),
+      dto.count && go ? el('p', { class: 'modal-message', text: 'Click a change to see it.' }) : null,
+      el('div', { class: 'dm-body' }, ...changeList(dto.groups, go ? (where) => close(null) || go(where) : null)),
       el('div', { class: 'modal-actions' }, done),
     );
   });
@@ -74,16 +82,100 @@ function conflictNode(c, onPick) {
     });
     return el('label', { class: 'dm-side', attrs: { for: id } }, box, label);
   };
-  const row = (label, value, cls) => el('div', { class: `dm-value ${cls}` }, el('span', { class: 'dm-label', text: label }), el('span', { text: value }));
+  // Yours, theirs and the base side by side (entry 235).
+  const col = (label, value, cls) => el('div', { class: `dm-value ${cls}` }, el('span', { class: 'dm-label', text: label }), el('span', { text: value }));
   return el(
     'li',
     { class: 'dm-conflict' },
     el('div', { class: 'dm-what', text: c.what }),
-    row('Yours', c.ours, 'v-ours'),
-    row('Theirs', c.theirs, 'v-theirs'),
-    c.base !== null && c.base !== undefined ? row('Was', c.base, 'v-base') : null,
+    el(
+      'div',
+      { class: 'dm-cols' },
+      col('Yours', c.ours, 'v-ours'),
+      col('Theirs', c.theirs, 'v-theirs'),
+      c.base !== null && c.base !== undefined ? col('Was', c.base, 'v-base') : null,
+    ),
     el('div', { class: 'dm-sides', attrs: { role: 'radiogroup', 'aria-label': `Keep for ${c.what}` } }, radio('ours', 'Keep yours'), radio('theirs', 'Keep theirs')),
   );
+}
+
+/**
+ * File > Merge Conflicts to Review (entry 238): every conflict a merge settled one way, kept
+ * with the file until marked done. A conflict on a sheet, element or category still in the
+ * schedule is a link that shows it. `run(promise)` applies a command's view; `go(where)`
+ * shows a place, as Find does.
+ */
+export async function reviewConflicts(say, run, go) {
+  let list;
+  try {
+    list = await invoke('conflicts_data');
+  } catch (e) {
+    say(e, true);
+    return;
+  }
+  await customDialog((close) => {
+    const body = el('ul', { class: 'dm-conflicts' });
+    const count = el('p', { class: 'dm-count' });
+    const error = errorLine();
+    const allDone = el('button', { class: 'btn', text: 'All Done', attrs: { type: 'button' } });
+    const draw = () => {
+      count.textContent = list.length ? `${plural(list.length, 'conflict', 'conflicts')} to review.` : 'No conflicts to review.';
+      allDone.disabled = !list.length;
+      body.replaceChildren(...list.map(item));
+    };
+    const shout = (t) => {
+      error.textContent = t;
+      error.hidden = !t;
+    };
+    const settle = async (keys) => {
+      shout('');
+      try {
+        await run(invoke('settle_conflicts', { keys }));
+      } catch (e) {
+        shout(String(e));
+        return;
+      }
+      list = keys ? list.filter((c) => !keys.includes(c.key)) : [];
+      draw();
+    };
+    const col = (label, value, cls) => el('div', { class: `dm-value ${cls}` }, el('span', { class: 'dm-label', text: label }), el('span', { text: value }));
+    function item(c) {
+      const what = c.go
+        ? el('button', { class: 'cf-link dm-go', text: c.what, attrs: { type: 'button', title: 'Show it' }, on: { click: () => close(null) || go(c.go) } })
+        : el('span', { text: c.what });
+      const kept = `Kept ${c.taken === 'theirs' ? 'theirs' : 'yours'}${c.date ? `, merged ${c.date}` : ''}.`;
+      return el(
+        'li',
+        { class: 'dm-conflict', data: { key: c.key } },
+        el('div', { class: 'dm-what' }, what),
+        el(
+          'div',
+          { class: 'dm-cols' },
+          col('Yours', c.ours, 'v-ours'),
+          col('Theirs', c.theirs, 'v-theirs'),
+          c.base !== null && c.base !== undefined ? col('Was', c.base, 'v-base') : null,
+        ),
+        el(
+          'div',
+          { class: 'dm-sides' },
+          el('span', { class: 'dm-kept', text: kept }),
+          el('button', { class: 'btn', text: 'Done', attrs: { type: 'button', title: 'Take it off the list' }, on: { click: () => settle([c.key]) } }),
+        ),
+      );
+    }
+    allDone.addEventListener('click', () => settle(null));
+    draw();
+    return el(
+      'div',
+      { class: 'modal modal-wider', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'rc-title' } },
+      el('h2', { class: 'modal-title', text: 'Merge Conflicts to Review', attrs: { id: 'rc-title' } }),
+      el('p', { class: 'modal-message', text: 'Each conflict a merge settled one way stays here, with the file, until you mark it done. Click one to see it; change it there if the other value was right.' }),
+      count,
+      el('div', { class: 'dm-body' }, body),
+      error,
+      el('div', { class: 'modal-actions' }, allDone, el('button', { class: 'btn btn-primary', text: 'Close', attrs: { type: 'button', 'data-autofocus': true }, on: { click: () => close(null) } })),
+    );
+  });
 }
 
 /** File > Merge Changes From: pick the file, preview, apply. `show(view)` draws the result. */

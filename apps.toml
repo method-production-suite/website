@@ -73,7 +73,7 @@ download = "Method-Schedule-macOS.dmg"
 source = "method-scheduling"
 # Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
 # tag once published.
-source_ref = "tag:v0.6.0"
+source_ref = "tag:v0.7.0"
 # The browser demo (methodschedule.com/try/) is built at sync time, like Budget's.
 build = ["cargo", "xtask", "web", "--demo", "--out", "site/try"]
 build_output = "site/try"

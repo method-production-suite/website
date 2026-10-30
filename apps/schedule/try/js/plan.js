@@ -328,11 +328,30 @@ export function planCommands(ctx) {
       return box(
         'Script Drafts',
         'pl-drafts',
-        el('p', { class: 'modal-message', text: 'Each revision merged into this schedule, newest first, with its color and date and the scenes it changed, added and omitted.' }),
+        el('p', { class: 'modal-message', text: 'Each revision merged into this schedule, newest first, with its color and date and the scenes it changed, added and omitted. The Breakdown tab shows each sheet’s newest draft.' }),
         el('div', { class: 'pl-body' }, ...rows),
-        el('div', { class: 'modal-actions' }, closeButton(close)),
+        el('div', { class: 'modal-actions' }, button('Print…', () => printDrafts(list)), closeButton(close)),
       );
     });
+  }
+
+  /** The script drafts, printed (entry 233): a row per draft and kind of change, newest first. */
+  async function printDrafts(list) {
+    const head = el('tr', {}, th('Draft'), th('Date'), th('Change'), th('Scenes'));
+    const rows = [...list].reverse().flatMap((d) => {
+      const kinds = [
+        ['Changed', d.changed],
+        ['New', d.added],
+        ['Omitted', d.omitted],
+      ].filter(([, names]) => names.length);
+      return kinds.map(([kind, names], i) => row(el('tr', {}, td(i ? '' : d.color, 'fb'), td(i ? '' : d.date), td(kind), td(names.join('; ')))));
+    });
+    const flow = { name: 'Script Drafts', cls: '', cols: ['dr-c-draft', 'dr-c-date', 'dr-c-kind', 'dr-c-scenes'], head, rows, intro: el('h2', { class: 'bp-title', text: 'Script Drafts' }) };
+    try {
+      await printPages((root) => layout(root, [flow], { title: 'Script Drafts', place: 'Script revisions' }), { title: 'Script Drafts', subject: 'Script drafts' });
+    } catch (e) {
+      ctx.say(e, true);
+    }
   }
 
   async function rest() {
@@ -509,8 +528,9 @@ export function planCommands(ctx) {
       box(
         `Suggest Strip Order: ${dto.sub_board_name}`,
         'pl-sug',
-        el('p', { class: 'modal-message', text: 'Scheduled scenes grouped by location, then set, then shared cast. Day breaks, banners and pinned strips stay where they are, and dates a scene’s element is red-flagged on are avoided where possible. Nothing changes until Apply; Undo takes it back.' }),
-        el('p', { class: 'pl-head', text: `${dto.moved} scenes would move, ${dto.pinned} stay put (pinned, omitted or spanning days), ${dto.groups} location and set groups.` }),
+        el('p', { class: 'modal-message', text: 'Three orders are tried: by location then set, by location then day or night then set, and by shared cast. The one that costs least is suggested (an actor’s day costs 4, a location change 3, a day and night switch 1, a red flag clash 20). Day breaks, banners and pinned strips stay where they are. Nothing changes until Apply; Undo takes it back.' }),
+        el('p', { class: 'pl-head', text: dto.moved ? `By ${dto.rule}: ${dto.moved} scenes would move, ${dto.pinned} stay put (pinned, omitted or spanning days).` : 'No order tried costs less than the one on the board, so nothing would move.' }),
+        el('p', { class: 'modal-message', text: `Costs tried: ${(dto.tried || []).map((t) => `${t.rule} ${t.cost}`).join(' · ')}.` }),
         table(
           ['', 'Now', 'Suggested'],
           dto.rows.map((r) => el('tr', { class: r.after < r.before ? 'pl-better' : r.after > r.before ? 'pl-warn' : '' }, el('td', { text: r.label }), el('td', { class: 'n', text: String(r.before) }), el('td', { class: 'n', text: String(r.after) }))),
