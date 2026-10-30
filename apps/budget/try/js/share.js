@@ -23,6 +23,14 @@
 //   may change; the owner and admins set it there. A chip in the toolbar
 //   says when this person may change less than everything. Rust refuses
 //   an edit beyond the role with a sentence the page shows as a toast.
+// - Muted cells and access requests (design 9.7): a department editor's
+//   categories and accounts outside their scope are muted with a lock
+//   (shareLocks(), used by main.js on the rows it draws); typing in one
+//   says so and offers to ask for access (showLocked()). A request goes
+//   into this computer's heartbeat file in the folder, nothing is sent
+//   anywhere; whoever may give that role sees it in the status panel and
+//   as a toolbar badge, with Allow, Allow those categories only and
+//   Decline.
 //
 // Everything is drawn with el() and textContent; names and labels come
 // from other people's files and are never read as HTML. No inline styles
@@ -32,6 +40,7 @@ import { el, $ } from './dom.js';
 import { customDialog, confirmDialog, isModalOpen } from './modal.js';
 import { readPref, writePref } from './prefs.js';
 import { setRules } from './sheet.js';
+import { t } from './i18n.js';
 
 /** The person colors Rust names (src/shared.rs COLORS); CSS has one class per name. */
 export const PERSON_COLORS = ['teal', 'blue', 'purple', 'orange', 'rose', 'green', 'amber', 'slate'];
@@ -40,7 +49,8 @@ function colorClass(color) {
   return PERSON_COLORS.includes(color) ? `pc-${color}` : 'pc-slate';
 }
 
-// { view(), doc(), invoke, apply(view, opts), toast, refresh() -> Promise,
+// { view(), doc(), invoke, apply(view, opts), toast(message, action), refresh() -> Promise,
+//   render() (draws the grid again: the locks changed),
 //   grid(), level(), place() -> { category, account }, focus(), showTab(tab),
 //   rowKeyFor(place) -> { key, col } | null, jumpTo(entry) }
 let ctx = null;
@@ -55,6 +65,7 @@ const st = {
   flashTimers: [],
   reportedDoc: null,
   revSeen: null, // the view rev the status was last asked for
+  locksSeen: new Map(), // doc -> the locked categories and accounts last drawn, as JSON
 };
 
 /** How long a changed cell keeps the editor's color (design 9.4). */
@@ -92,7 +103,11 @@ function current() {
 function statusArrived(p) {
   if (typeof p.doc !== 'number' || !p.status) return;
   st.status.set(p.doc, { status: p.status, at: Date.now() });
+  const locks = JSON.stringify([p.status.locked_categories || [], p.status.locked_accounts || []]);
+  const locksChanged = st.locksSeen.has(p.doc) ? st.locksSeen.get(p.doc) !== locks : locks !== '[[],[]]';
+  st.locksSeen.set(p.doc, locks);
   if (ctx && p.doc === ctx.doc() && ctx.view()) {
+    if (locksChanged && typeof ctx.render === 'function') ctx.render();
     renderBar(ctx.view());
     decorateShare(ctx.view());
     if (st.panel) drawPanel();
@@ -119,7 +134,7 @@ export function renderBar(view) {
   const s = current();
   if (!s) {
     // The first status for this budget is on its way (or asked for here).
-    setStatusText('Shared through a folder', 'quiet');
+    setStatusText(t('share.shared_through_a_folder'), 'quiet');
     $('share-people').replaceChildren();
     fetchStatus();
     return;
@@ -132,57 +147,76 @@ export function renderBar(view) {
   if (s.error) {
     text = s.error;
     tone = 'bad';
+  } else if (s.replaced) {
+    text = t('share.status.replaced');
+    tone = 'bad';
+  } else if (s.key_warning) {
+    text = t('share.status.key_warning');
+    tone = 'bad';
+  } else if (s.owner_key_warning) {
+    text = t('share.status.owner_key_warning');
+    tone = 'bad';
   } else if (s.unshared > 0) {
-    text = s.unshared === 1 ? 'Sharing 1 change…' : `Sharing ${s.unshared} changes…`;
+    text = t('share.status.sharing', { count: s.unshared });
     tone = 'busy';
   } else if (s.waiting > 0) {
-    text = s.waiting === 1 ? 'Waiting for 1 change that hasn’t arrived' : `Waiting for ${s.waiting} changes that haven’t arrived`;
+    text = t('share.status.waiting', { count: s.waiting });
     tone = 'warn';
   } else if (synced !== null) {
-    text = `Synced through the folder · ${ago(synced)}`;
+    text = t('share.status.synced', { ago: ago(synced) });
   } else {
-    text = 'Shared through a folder';
+    text = t('share.shared_through_a_folder');
   }
-  setStatusText(text, tone, s.review_count);
+  setStatusText(text, tone, s.review_count, (s.requests || []).length);
   renderPeople(s);
 }
 
-function setStatusText(text, tone, review = 0) {
+function setStatusText(text, tone, review = 0, requests = 0) {
   const b = $('share-status');
-  const t = $('share-status-text');
-  if (!b || !t) return;
-  t.textContent = text;
+  const label = $('share-status-text');
+  if (!b || !label) return;
+  label.textContent = text;
   b.dataset.tone = tone;
-  b.title = `${text}. Click for who is in this budget and where the changes go.`;
+  b.title = t('share.status_tip', { text });
   let badge = b.querySelector('.share-review-count');
   if (review > 0) {
     if (!badge) {
       badge = el('span', { class: 'share-review-count' });
       b.append(badge);
     }
-    badge.textContent = review === 1 ? '1 to review' : `${review} to review`;
+    badge.textContent = t('share.to_review', { count: review });
   } else if (badge) {
     badge.remove();
+  }
+  let asks = b.querySelector('.share-request-count');
+  if (requests > 0) {
+    if (!asks) {
+      asks = el('span', { class: 'share-request-count' });
+      b.append(asks);
+    }
+    asks.textContent = t('share.requests.badge', { count: requests });
+  } else if (asks) {
+    asks.remove();
   }
 }
 
 /** "12 s ago", "3 min ago", "2 h ago". */
 export function ago(secs) {
-  if (secs < 60) return `${Math.max(0, Math.round(secs))} s ago`;
-  if (secs < 3600) return `${Math.round(secs / 60)} min ago`;
-  if (secs < 86400) return `${Math.round(secs / 3600)} h ago`;
-  return `${Math.round(secs / 86400)} d ago`;
+  if (secs < 60) return t('share.ago.secs', { count: Math.max(0, Math.round(secs)) });
+  if (secs < 3600) return t('share.ago.mins', { count: Math.round(secs / 60) });
+  if (secs < 86400) return t('share.ago.hours', { count: Math.round(secs / 3600) });
+  return t('share.ago.days', { count: Math.round(secs / 86400) });
 }
 
 function whereText(p) {
-  if (p.account) return `in ${p.account}`;
-  if (p.category) return `in ${p.category}`;
-  return 'on the topsheet';
+  if (p.account) return t('share.where.in', { name: p.account });
+  if (p.category) return t('share.where.in', { name: p.category });
+  return t('share.where.topsheet');
 }
 
 function personTitle(p) {
-  const when = p.me ? 'you' : typeof p.seen_secs === 'number' ? (p.away ? `away, last seen ${ago(p.seen_secs)}` : ago(p.seen_secs)) : 'not seen yet';
-  return `${p.name} · ${whereText(p)} · ${when}`;
+  const when = p.me ? t('share.when.you') : typeof p.seen_secs === 'number' ? (p.away ? t('share.when.away_last_seen', { ago: ago(p.seen_secs) }) : ago(p.seen_secs)) : t('share.when.not_seen');
+  return t('share.person_title', { name: p.name, where: whereText(p), when });
 }
 
 /** An avatar: initials in the person's color. */
@@ -203,9 +237,9 @@ function renderPeople(s) {
   const shown = [...here, ...away].slice(0, 4);
   const nodes = shown.map((p) => avatar(p));
   if (s.people.length > shown.length) {
-    nodes.push(el('span', { class: 'share-avatar share-more', text: `+${s.people.length - shown.length}`, title: `${s.people.length} people have opened this budget` }));
+    nodes.push(el('span', { class: 'share-avatar share-more', text: `+${s.people.length - shown.length}`, title: t('share.people_opened', { count: s.people.length }) }));
   }
-  if (!s.people.length) nodes.push(el('span', { class: 'share-alone', text: 'Only you so far', title: 'Nobody else has opened this budget from the shared folder yet' }));
+  if (!s.people.length) nodes.push(el('span', { class: 'share-alone', text: t('share.only_you'), title: t('share.only_you_tip') }));
   const chip = roleChip(s.me);
   if (chip) nodes.unshift(chip);
   host.replaceChildren(...nodes);
@@ -214,15 +248,15 @@ function renderPeople(s) {
 /** Roles that change everything need no chip; the others say what this person may change. */
 const FULL_ROLES = ['owner', 'co_owner', 'admin', 'editor'];
 
-const CHIP_TEXT = { department: 'Some categories', actuals: 'Actuals', comment: 'Notes only', read_only: 'Read only' };
+const CHIP_TEXT = () => ({ department: t('share.chip.department'), actuals: t('share.chip.actuals'), comment: t('share.chip.comment'), read_only: t('share.chip.read_only') });
 
 function roleChip(me) {
   if (!me || !me.role || FULL_ROLES.includes(me.role)) return null;
   return el('span', {
     class: `share-role-chip ${me.role === 'read_only' ? 'is-read-only' : ''}`,
-    text: CHIP_TEXT[me.role] || 'Limited',
-    title: `What you may change here: ${me.role_text}`,
-    attrs: { 'aria-label': `What you may change here: ${me.role_text}` },
+    text: CHIP_TEXT()[me.role] || t('share.chip.limited'),
+    title: t('share.chip_tip', { role: me.role_text }),
+    attrs: { 'aria-label': t('share.chip_tip', { role: me.role_text }) },
   });
 }
 
@@ -248,7 +282,7 @@ function toggleStatusPanel() {
 function openStatusPanel() {
   const anchor = $('share-status');
   if (!anchor || !ctx || !ctx.view() || !ctx.view().shared) return;
-  const panel = el('div', { class: 'share-panel', attrs: { role: 'dialog', 'aria-label': 'Sharing status' } });
+  const panel = el('div', { class: 'share-panel', attrs: { role: 'dialog', 'aria-label': t('share.panel.label') } });
   document.body.append(panel);
   st.panel = panel;
   drawPanel();
@@ -293,44 +327,253 @@ function drawPanel() {
   const s = current();
   if (!panel) return;
   if (!s) {
-    panel.replaceChildren(el('p', { class: 'share-muted', text: 'Looking at the shared folder…' }));
+    panel.replaceChildren(el('p', { class: 'share-muted', text: t('share.panel.looking') }));
     return;
   }
   const entry = st.status.get(ctx.doc());
   const extra = Math.floor((Date.now() - entry.at) / 1000);
   const rows = [];
-  rows.push(el('h3', { class: 'share-panel-title', text: 'Shared through a folder' }));
-  rows.push(line('Folder', s.folder));
-  rows.push(line('File', s.file));
-  rows.push(line('Keeps the file', s.keeper ? 'This computer' : (s.people.find((p) => p.keeper) || {}).name || 'Another computer'));
-  if (s.file_written) rows.push(line('File last written', localTime(s.file_written)));
+  rows.push(el('h3', { class: 'share-panel-title', text: t('share.shared_through_a_folder') }));
+  rows.push(line(t('share.folder'), s.folder));
+  rows.push(line(t('share.file'), s.file));
+  rows.push(line(t('share.panel.keeps_file'), s.keeper ? t('share.panel.this_computer') : (s.people.find((p) => p.keeper) || {}).name || t('share.panel.another_computer')));
+  if (s.file_written) rows.push(line(t('share.panel.file_written'), localTime(s.file_written)));
   if (s.error) rows.push(el('p', { class: 'share-problem', text: s.error, attrs: { role: 'alert' } }));
+  if (s.key_warning) rows.push(el('p', { class: 'share-problem', text: s.key_warning, attrs: { role: 'alert' } }));
+  const keyRows = ownerKeyRows(s);
+  if (keyRows) rows.push(...keyRows);
   if (s.notice) rows.push(el('p', { class: 'share-notice', text: s.notice, attrs: { role: 'status' } }));
-  rows.push(line('Your changes not yet shared', String(s.unshared), s.unshared ? 'is-busy' : ''));
-  if (s.waiting) rows.push(line('Changes waiting for ones that haven’t arrived', String(s.waiting), 'is-warn'));
-  if (typeof s.synced_secs === 'number') rows.push(line('Folder last read', ago(s.synced_secs + extra)));
-  rows.push(line('Changes in all', String(s.changes)));
+  rows.push(line(t('share.panel.unshared'), String(s.unshared), s.unshared ? 'is-busy' : ''));
+  if (s.waiting) rows.push(line(t('share.panel.waiting'), String(s.waiting), 'is-warn'));
+  if (typeof s.synced_secs === 'number') rows.push(line(t('share.panel.folder_read'), ago(s.synced_secs + extra)));
+  rows.push(line(t('share.panel.changes'), String(s.changes)));
   const people = el('div', { class: 'share-people-list' });
-  people.append(personRow(s.me));
-  for (const p of s.people) people.append(personRow(p));
-  rows.push(el('h4', { class: 'share-panel-sub', text: 'People' }), people);
+  people.append(personRow(s.me, s));
+  for (const p of s.people) people.append(personRow(p, s));
+  rows.push(el('h4', { class: 'share-panel-sub', text: t('share.people') }), people);
+  const asked = requestRows(s);
+  if (asked) rows.push(...asked);
   const refused = refusedList(s);
   if (refused) rows.push(...refused);
   const actions = el('div', { class: 'share-panel-actions' });
   if (s.review_count > 0) {
-    actions.append(el('button', { class: 'btn btn-primary', text: s.review_count === 1 ? 'Review 1 item' : `Review ${s.review_count} items`, attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); ctx.showTab('review'); } } }));
+    actions.append(el('button', { class: 'btn btn-primary', text: t('share.panel.review', { count: s.review_count }), attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); ctx.showTab('review'); } } }));
   }
-  actions.append(el('button', { class: 'btn', text: 'Activity', attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); ctx.showTab('activity'); } } }));
-  actions.append(el('button', { class: 'btn', text: 'Share settings…', attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); openShareDialog(); } } }));
+  actions.append(el('button', { class: 'btn', text: t('share.panel.activity'), attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); ctx.showTab('activity'); } } }));
+  actions.append(el('button', { class: 'btn', text: t('share.panel.settings'), attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); openShareDialog(); } } }));
   rows.push(actions);
   panel.replaceChildren(...rows);
 }
+
+/**
+ * A key in the owner's name (docs/research/owner-key.md): Start Again on the
+ * owner's computer, Reopen once the owner started the budget again, and
+ * Trust the New Key when the owner's key isn't the one this computer saw.
+ * Each asks first.
+ */
+function ownerKeyRows(s) {
+  const out = [];
+  const confirm = el('div', { class: 'share-first-role', attrs: { role: 'group' } });
+  confirm.hidden = true;
+  const error = el('p', { class: 'share-problem', attrs: { role: 'alert' } });
+  error.hidden = true;
+  const ask = (button, label, message, goText, run) => {
+    button.addEventListener('click', () => {
+      error.hidden = true;
+      const go = el('button', { class: 'btn btn-primary', text: goText, attrs: { type: 'button' } });
+      const keep = el('button', { class: 'btn', text: t('share.cancel'), attrs: { type: 'button' } });
+      keep.addEventListener('click', () => { confirm.hidden = true; button.focus(); });
+      go.addEventListener('click', async () => {
+        go.disabled = true;
+        try {
+          await run();
+          confirm.hidden = true;
+        } catch (e) {
+          error.textContent = String(e);
+          error.hidden = false;
+        }
+        go.disabled = false;
+      });
+      confirm.setAttribute('aria-label', label);
+      confirm.replaceChildren(el('p', { class: 'modal-message', text: message }), el('div', { class: 'modal-actions' }, keep, go));
+      confirm.hidden = false;
+      go.focus();
+    });
+  };
+  const reopen = async (trust) => {
+    const v = await ctx.invoke('share_reopen', { doc: ctx.doc(), trust });
+    if (v) ctx.apply(v, { cmd: 'share_reopen' });
+    fetchStatus();
+  };
+  if (s.replaced) {
+    out.push(el('p', { class: 'share-problem', text: s.replaced, attrs: { role: 'alert' } }));
+    const lost = s.not_in_new || [];
+    if (lost.length) {
+      out.push(el('h4', { class: 'share-panel-sub', text: t('share.not_in_new', { count: lost.length }) }));
+      out.push(el('p', { class: 'share-muted', text: t('share.not_in_new_note') }));
+      out.push(el('ul', { class: 'share-refused' }, ...lost.map((label) => el('li', { text: label }))));
+    }
+    const b = el('button', { class: 'btn btn-primary', text: t('share.reopen'), attrs: { type: 'button' } });
+    b.addEventListener('click', async () => {
+      b.disabled = true;
+      try {
+        await reopen(false);
+      } catch (e) {
+        error.textContent = String(e);
+        error.hidden = false;
+      }
+      b.disabled = false;
+    });
+    out.push(el('div', { class: 'share-panel-actions' }, b));
+  }
+  if (s.can_start_again) {
+    const b = el('button', { class: 'btn btn-primary', text: t('share.start_again_button'), attrs: { type: 'button' } });
+    ask(b, t('share.start_again_label'), START_AGAIN_NOTE(), t('share.start_again'), async () => {
+      const status = await ctx.invoke('share_start_again', { doc: ctx.doc() });
+      if (status) statusArrived({ doc: ctx.doc(), status });
+      ctx.toast(t('share.started_again'));
+    });
+    out.push(el('div', { class: 'share-panel-actions' }, b));
+  }
+  if (s.owner_key_warning) {
+    out.push(el('p', { class: 'share-problem', text: s.owner_key_warning, attrs: { role: 'alert' } }));
+    const b = el('button', { class: 'btn', text: t('share.trust_button'), attrs: { type: 'button' } });
+    ask(b, t('share.trust_label'), TRUST_NOTE(), t('share.trust'), () => reopen(true));
+    out.push(el('div', { class: 'share-panel-actions' }, b));
+  }
+  if (!out.length) return null;
+  out.push(confirm, error);
+  return out;
+}
+
+const START_AGAIN_NOTE = () => t('share.start_again_note');
+
+// ---------------------------------------------------------------------------
+// Muted cells and access requests (design 9.7; docs/APP.md, "Asking for access")
+
+/**
+ * What this person may not change, for the rows main.js draws: the
+ * categories and accounts outside a department editor's scope, or null
+ * when nothing is locked (every other role; a read-only person keeps the
+ * read-only state). { categories: Set, accounts: Set, tip }
+ */
+export function shareLocks() {
+  const s = current();
+  if (!s || !ctx || !ctx.view() || !ctx.view().shared) return null;
+  const cats = s.locked_categories || [];
+  const accounts = s.locked_accounts || [];
+  if (!cats.length && !accounts.length) return null;
+  return { categories: new Set(cats), accounts: new Set(accounts), tip: t('share.locked.tip') };
+}
+
+/** Typing in a locked cell: says why, and offers to ask for access to it. */
+export function showLocked(locked) {
+  if (!ctx || !locked) return;
+  const s = current();
+  const what = [locked.code, locked.name].filter(Boolean).join(' ');
+  const message = t('share.locked.message', { what });
+  if (!s || !s.can_ask) {
+    ctx.toast(message);
+    return;
+  }
+  const mine = s.my_request;
+  if (mine && (mine.codes || []).includes(locked.code)) {
+    ctx.toast(`${message} ${t('share.locked.asked', { name: s.ask_name })}`);
+    return;
+  }
+  ctx.toast(message, { label: t('share.ask_for_access', { name: s.ask_name }), run: () => askForAccess([locked.code], '') });
+}
+
+/** Writes this person's request into their heartbeat file (Rust checks it). */
+async function askForAccess(codes, note) {
+  const doc = ctx.doc();
+  try {
+    const status = await ctx.invoke('share_request_access', { doc, role: 'department', codes, note });
+    if (status) statusArrived({ doc, status });
+    ctx.toast(t('share.requests.sent', { name: status ? status.ask_name : '' }));
+  } catch (e) {
+    ctx.toast(String(e));
+  }
+}
+
+/**
+ * The status panel's part about access: requests this person could allow,
+ * with Allow, Allow those only and Decline; or this person's own request,
+ * with Withdraw; or a way to ask.
+ */
+function requestRows(s) {
+  const out = [];
+  const error = el('p', { class: 'share-problem', attrs: { role: 'alert' } });
+  error.hidden = true;
+  const doc = ctx.doc();
+  const run = async (button, cmd, args, done) => {
+    button.disabled = true;
+    error.hidden = true;
+    try {
+      const status = await ctx.invoke(cmd, { doc, ...args });
+      if (status) statusArrived({ doc, status });
+      if (done) ctx.toast(done);
+    } catch (e) {
+      error.textContent = String(e);
+      error.hidden = false;
+      button.disabled = false;
+    }
+  };
+  const list = s.requests || [];
+  if (list.length) {
+    out.push(el('h4', { class: 'share-panel-sub', text: t('share.requests.title', { count: list.length }) }));
+    for (const r of list) {
+      const what = r.codes_text ? t('share.requests.asks_about', { name: r.name, codes: r.codes_text }) : t('share.requests.asks', { name: r.name });
+      const allow = el('button', { class: 'btn btn-primary', text: t('share.requests.allow'), title: t('share.requests.allow_tip', { name: r.name, role: r.role_text }), attrs: { type: 'button' } });
+      allow.addEventListener('click', () => run(allow, 'share_allow_request', { actor: r.actor, at: r.at, only: false }, t('share.role_saved', { name: r.name })));
+      const only = r.only ? el('button', { class: 'btn', text: t('share.requests.allow_only', { codes: r.codes_text }), attrs: { type: 'button' } }) : null;
+      if (only) only.addEventListener('click', () => run(only, 'share_allow_request', { actor: r.actor, at: r.at, only: true }, t('share.role_saved', { name: r.name })));
+      const decline = el('button', { class: 'btn', text: t('share.requests.decline'), title: t('share.requests.decline_tip'), attrs: { type: 'button' } });
+      decline.addEventListener('click', () => run(decline, 'share_decline_request', { actor: r.actor, at: r.at }, null));
+      out.push(el(
+        'div',
+        { class: 'share-request', attrs: { role: 'group', 'aria-label': what } },
+        el('div', {}, el('span', { class: `share-avatar ${colorClass(r.color)}`, text: initialsOf(r.name), attrs: { 'aria-hidden': 'true' } }), el('span', { class: 'share-person-name', text: what })),
+        el('div', { class: 'share-muted', text: t('share.requests.gives', { role: r.role_text, time: localTime(r.at) }) }),
+        r.note ? el('div', { class: 'share-request-note', text: r.note }) : null,
+        el('div', { class: 'share-panel-actions' }, allow, only, decline),
+      ));
+    }
+  }
+  if (s.my_request) {
+    const r = s.my_request;
+    const withdraw = el('button', { class: 'btn', text: t('share.requests.withdraw'), attrs: { type: 'button' } });
+    withdraw.addEventListener('click', () => run(withdraw, 'share_withdraw_request', {}, t('share.requests.withdrawn')));
+    out.push(
+      el('h4', { class: 'share-panel-sub', text: t('share.requests.yours') }),
+      el('p', { class: 'share-muted', text: r.codes_text ? t('share.requests.yours_text_about', { name: s.ask_name, time: localTime(r.at), codes: r.codes_text }) : t('share.requests.yours_text', { name: s.ask_name, time: localTime(r.at) }) }),
+      el('div', { class: 'share-panel-actions' }, withdraw),
+    );
+  } else if (s.can_ask) {
+    const place = (ctx.place && ctx.place()) || {};
+    const code = place.account || place.category || null;
+    const note = el('input', { class: 'share-request-input', attrs: { type: 'text', maxlength: '200', placeholder: t('share.requests.note_placeholder'), 'aria-label': t('share.requests.note_label') } });
+    const ask = el('button', { class: 'btn', text: t('share.ask_for_access', { name: s.ask_name }), attrs: { type: 'button' } });
+    ask.addEventListener('click', () => run(ask, 'share_request_access', { role: 'editor', codes: code ? [code] : [], note: note.value }, t('share.requests.sent', { name: s.ask_name })));
+    out.push(
+      el('h4', { class: 'share-panel-sub', text: t('share.requests.ask_title') }),
+      el('p', { class: 'share-muted', text: t('share.requests.ask_note', { name: s.ask_name }) }),
+      note,
+      el('div', { class: 'share-panel-actions' }, ask),
+    );
+  }
+  if (!out.length) return null;
+  out.push(error);
+  return out;
+}
+
+const TRUST_NOTE = () => t('share.trust_note');
 
 /** Changes left out on this computer: who, when, what and why (decisions.md, entry 78). */
 function refusedList(s) {
   const list = s.refused_changes || [];
   if (!list.length) return null;
-  const title = s.refused === 1 ? '1 change left out' : `${s.refused} changes left out`;
+  const title = t('share.left_out', { count: s.refused });
   const items = el('ul', { class: 'share-refused' });
   for (const r of [...list].reverse()) {
     items.append(el(
@@ -345,16 +588,24 @@ function refusedList(s) {
   return [el('h4', { class: 'share-panel-sub', text: title }), items];
 }
 
-function personRow(p) {
-  const when = p.me ? 'you' : typeof p.seen_secs === 'number' ? (p.away ? `away · last seen ${ago(p.seen_secs)}` : ago(p.seen_secs)) : 'not seen yet';
+/** Whether a person's changes are signed, in words (decisions.md, entry 89). */
+function signText(p, s) {
+  if (!s || !s.signed) return '';
+  return p.signs ? t('share.signs') : t('share.no_key_yet');
+}
+
+function personRow(p, s) {
+  const when = p.me ? t('share.when.you') : typeof p.seen_secs === 'number' ? (p.away ? t('share.when.away_last_seen_dot', { ago: ago(p.seen_secs) }) : ago(p.seen_secs)) : t('share.when.not_seen');
+  const signed = signText(p, s);
   return el(
     'div',
     { class: `share-person ${p.away ? 'is-away' : ''}` },
     avatar(p),
     el('span', { class: 'share-person-name', text: p.name, title: p.name }),
-    el('span', { class: 'share-person-where', text: p.keeper ? `${whereText(p)} · keeps the file` : whereText(p) }),
+    el('span', { class: 'share-person-where', text: p.keeper ? t('share.where_keeps_file', { where: whereText(p) }) : whereText(p) }),
     el('span', { class: 'share-person-when', text: when }),
     p.role_text ? el('span', { class: 'share-person-role', text: p.role_text, title: p.role_text }) : null,
+    signed ? el('span', { class: 'share-person-role share-person-signed', text: signed, title: signed }) : null,
   );
 }
 
@@ -410,11 +661,11 @@ function flashPlaces(rc) {
     target.classList.add('share-flash', cls);
     target.title = `${rc.name}: ${rc.label}`;
     if (!reduce) {
-      const t = setTimeout(() => target.classList.remove('share-flash', cls), FLASH_MS);
-      st.flashTimers.push(t);
+      const timer = setTimeout(() => target.classList.remove('share-flash', cls), FLASH_MS);
+      st.flashTimers.push(timer);
     } else {
-      const t = setTimeout(() => target.classList.remove('share-flash', cls), 400);
-      st.flashTimers.push(t);
+      const timer = setTimeout(() => target.classList.remove('share-flash', cls), 400);
+      st.flashTimers.push(timer);
     }
     // A dot that stays until the row is looked at.
     tr.classList.add('share-changed', cls);
@@ -461,7 +712,7 @@ export function decorateShare(view) {
       class: 'share-conflict-badge',
       text: '!',
       title: c.sentence,
-      attrs: { type: 'button', 'aria-label': `Changed by two people: ${c.sentence}` },
+      attrs: { type: 'button', 'aria-label': t('share.conflict_label', { sentence: c.sentence }) },
       on: {
         click: (e) => {
           e.stopPropagation();
@@ -501,8 +752,8 @@ function onPopoverKey(e) {
 function openConflict(td, c) {
   closePopover();
   const place = c.place || {};
-  const box = el('div', { class: 'share-popover', attrs: { role: 'dialog', 'aria-label': 'Changed by two people' } });
-  box.append(el('div', { class: 'share-popover-title', text: 'Changed by two people' }));
+  const box = el('div', { class: 'share-popover', attrs: { role: 'dialog', 'aria-label': t('share.conflict_title') } });
+  box.append(el('div', { class: 'share-popover-title', text: t('share.conflict_title') }));
   const list = el('div', { class: 'share-values' });
   for (const v of c.values || []) {
     list.append(
@@ -510,9 +761,9 @@ function openConflict(td, c) {
         'div',
         { class: `share-value ${v.kept ? 'is-kept' : ''}` },
         el('span', { class: `share-avatar share-avatar-sm ${colorClass(v.color)}`, text: initialsOf(v.name) }),
-        el('span', { class: 'share-value-who', text: v.me ? 'You' : v.name }),
-        el('span', { class: 'share-value-text', text: v.value || '(blank)', title: v.value }),
-        el('span', { class: 'share-value-when', text: `${localTime(v.time)}${v.kept ? ' · kept' : ''}` }),
+        el('span', { class: 'share-value-who', text: v.me ? t('share.you') : v.name }),
+        el('span', { class: 'share-value-text', text: v.value || t('share.blank'), title: v.value }),
+        el('span', { class: 'share-value-when', text: v.kept ? t('share.time_kept', { time: localTime(v.time) }) : localTime(v.time) }),
       ),
     );
   }
@@ -522,13 +773,13 @@ function openConflict(td, c) {
     actions.append(
       el('button', {
         class: v.kept ? 'btn btn-primary' : 'btn',
-        text: v.kept ? `Keep ${short(v.value)}` : `Use ${short(v.value)}`,
+        text: v.kept ? t('share.keep_value', { value: short(v.value) }) : t('share.use_value', { value: short(v.value) }),
         attrs: { type: 'button' },
         on: { click: () => useValue(place, v.index) },
       }),
     );
   }
-  actions.append(el('button', { class: 'btn btn-quiet', text: 'History…', attrs: { type: 'button' }, on: { click: () => { closePopover(); whoChangedThis(place); } } }));
+  actions.append(el('button', { class: 'btn btn-quiet', text: t('share.history'), attrs: { type: 'button' }, on: { click: () => { closePopover(); whoChangedThis(place); } } }));
   box.append(actions);
   document.body.append(box);
   st.popover = box;
@@ -546,7 +797,7 @@ function openConflict(td, c) {
 }
 
 function short(v) {
-  const s = String(v === undefined || v === null || v === '' ? '(blank)' : v);
+  const s = String(v === undefined || v === null || v === '' ? t('share.blank') : v);
   return s.length > 24 ? `${s.slice(0, 23)}…` : s;
 }
 
@@ -584,27 +835,27 @@ export async function whoChangedThis(place) {
     ctx.toast(e);
     return;
   }
-  const title = place.text ? `${fieldName(place.field)} on ${place.text}` : fieldName(place.field);
+  const title = place.text ? t('share.field_on', { field: fieldName(place.field), place: place.text }) : fieldName(place.field);
   customDialog(
     (close) => {
       const list = el('div', { class: 'share-values share-values-dialog' });
-      if (!history.length) list.append(el('p', { class: 'share-muted', text: 'Nobody has changed this since the budget was shared.' }));
+      if (!history.length) list.append(el('p', { class: 'share-muted', text: t('share.blame.none') }));
       for (const v of [...history].reverse()) {
         const row = el(
           'div',
           { class: `share-value ${v.kept ? 'is-kept' : ''}` },
-          el('span', { class: 'share-value-text', text: v.value || '(blank)', title: v.value }),
+          el('span', { class: 'share-value-text', text: v.value || t('share.blank'), title: v.value }),
           el('span', { class: `share-avatar share-avatar-sm ${colorClass(v.color)}`, text: initialsOf(v.name) }),
-          el('span', { class: 'share-value-who', text: v.me ? 'You' : v.name }),
+          el('span', { class: 'share-value-who', text: v.me ? t('share.you') : v.name }),
           el('span', { class: 'share-value-when', text: localTime(v.time) }),
           el('span', { class: 'share-value-label', text: v.label, title: v.label }),
         );
-        if (v.kept) row.append(el('span', { class: 'share-value-kept', text: 'now' }));
+        if (v.kept) row.append(el('span', { class: 'share-value-kept', text: t('share.blame.now') }));
         else {
           row.append(
             el('button', {
               class: 'btn btn-quiet',
-              text: 'Put back',
+              text: t('share.blame.put_back'),
               attrs: { type: 'button' },
               on: {
                 click: () => {
@@ -617,12 +868,12 @@ export async function whoChangedThis(place) {
         }
         list.append(row);
       }
-      const done = el('button', { class: 'btn btn-primary', text: 'Close', attrs: { type: 'button', 'data-autofocus': true }, on: { click: () => close() } });
+      const done = el('button', { class: 'btn btn-primary', text: t('share.close'), attrs: { type: 'button', 'data-autofocus': true }, on: { click: () => close() } });
       return el(
         'div',
         { class: 'modal modal-wide share-dialog', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-blame-title' } },
-        el('h2', { class: 'modal-title', text: `Who changed ${title}`, attrs: { id: 'share-blame-title' } }),
-        el('p', { class: 'modal-message', text: 'Every value this cell has had since the budget was shared, newest first. Putting one back is a change like any other.' }),
+        el('h2', { class: 'modal-title', text: t('share.blame.title', { what: title }), attrs: { id: 'share-blame-title' } }),
+        el('p', { class: 'modal-message', text: t('share.blame.message') }),
         list,
         el('div', { class: 'modal-actions' }, done),
       );
@@ -632,7 +883,7 @@ export async function whoChangedThis(place) {
 }
 
 function fieldName(field) {
-  const names = { amount: 'amount', x: 'X', rate: 'rate', x4: '4X', unit: 'unit', unit2: 'X unit', unit3: 'rate unit', unit4: '4X unit', description: 'description', currency: 'currency', fringes: 'fringes', groups: 'groups', set: 'set', location: 'location', name: 'name', code: 'number' };
+  const names = { amount: t('share.field.amount'), x: t('share.field.x'), rate: t('share.field.rate'), x4: t('share.field.x4'), unit: t('share.field.unit'), unit2: t('share.field.unit2'), unit3: t('share.field.unit3'), unit4: t('share.field.unit4'), description: t('share.field.description'), currency: t('share.field.currency'), fringes: t('share.field.fringes'), groups: t('share.field.groups'), set: t('share.field.set'), location: t('share.field.location'), name: t('share.field.name'), code: t('share.field.code') };
   return names[field] || field;
 }
 
@@ -649,20 +900,20 @@ export async function openShareDialog() {
     return;
   }
   const view = ctx.view();
-  const title = (view.budget && view.budget.title) || 'Untitled budget';
+  const title = (view.budget && view.budget.title) || t('share.untitled');
   if (view.shared) sharedDialog(title, setup);
   else startDialog(title, setup);
 }
 
 function colorPicker(chosen, onPick) {
-  const host = el('div', { class: 'share-colors', attrs: { role: 'radiogroup', 'aria-label': 'Your color' } });
+  const host = el('div', { class: 'share-colors', attrs: { role: 'radiogroup', 'aria-label': t('share.your_color') } });
   let current = chosen;
   const buttons = [];
   for (const c of PERSON_COLORS) {
     const b = el('button', {
       class: `share-color ${colorClass(c)}`,
-      title: c,
-      attrs: { type: 'button', role: 'radio', 'aria-label': c, 'aria-checked': String(c === current) },
+      title: colorName(c),
+      attrs: { type: 'button', role: 'radio', 'aria-label': colorName(c), 'aria-checked': String(c === current) },
       on: {
         click: () => {
           current = c;
@@ -678,26 +929,32 @@ function colorPicker(chosen, onPick) {
   return host;
 }
 
+/** A person color's name, in words. */
+function colorName(c) {
+  const names = { teal: t('share.color.teal'), blue: t('share.color.blue'), purple: t('share.color.purple'), orange: t('share.color.orange'), rose: t('share.color.rose'), green: t('share.color.green'), amber: t('share.color.amber'), slate: t('share.color.slate') };
+  return names[c] || c;
+}
+
 function startDialog(title, setup) {
   customDialog(
     (close) => {
       const me = { name: setup.name || '', color: setup.color || 'teal' };
       const error = el('p', { class: 'modal-error', attrs: { role: 'alert' } });
       error.hidden = true;
-      const name = el('input', { class: 'modal-input', attrs: { type: 'text', id: 'share-name', maxlength: '60', placeholder: 'Your name, as others see it' } });
+      const name = el('input', { class: 'modal-input', attrs: { type: 'text', id: 'share-name', maxlength: '60', placeholder: t('share.name_placeholder') } });
       name.value = me.name;
       const colors = colorPicker(me.color, (c) => { me.color = c; });
       // Where: the budget's own folder, or one chosen in Rust's dialog.
       const where = { picked: setup.picked || null, move: true };
       const whereText = el('span', { class: 'share-where-text' });
-      const choose = el('button', { class: 'btn', text: 'Choose another folder…', attrs: { type: 'button' } });
+      const choose = el('button', { class: 'btn', text: t('share.choose_folder'), attrs: { type: 'button' } });
       const moveCopy = el('div', { class: 'share-movecopy' });
       const drawWhere = () => {
         whereText.textContent = where.picked ? where.picked : setup.folder || '';
         moveCopy.hidden = !where.picked || where.picked === setup.folder;
         moveCopy.replaceChildren(
-          radio('share-mc', 'Move the budget there', where.move, () => { where.move = true; }),
-          radio('share-mc', 'Copy it there (this file stays as it is, not shared)', !where.move, () => { where.move = false; }),
+          radio('share-mc', t('share.move_there'), where.move, () => { where.move = true; }),
+          radio('share-mc', t('share.copy_there'), !where.move, () => { where.move = false; }),
         );
       };
       choose.addEventListener('click', async () => {
@@ -711,18 +968,17 @@ function startDialog(title, setup) {
         }
       });
       drawWhere();
-      const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
-      const ok = el('button', { class: 'btn btn-primary', text: 'Start Sharing', attrs: { type: 'button' } });
+      const cancel = el('button', { class: 'btn', text: t('share.cancel'), attrs: { type: 'button' } });
+      const ok = el('button', { class: 'btn btn-primary', text: t('share.start_sharing'), attrs: { type: 'button' } });
       cancel.addEventListener('click', () => close());
       ok.addEventListener('click', async () => {
         error.hidden = true;
         const usePicked = Boolean(where.picked && where.picked !== setup.folder);
         if (usePicked) {
-          const what = where.move ? `Move ${setup.file} to ${where.picked}?` : `Copy ${setup.file} to ${where.picked}?`;
           const yes = await confirmDialog({
-            title: where.move ? 'Move the budget' : 'Copy the budget',
-            message: `${what} The budget will be shared from there.${where.move ? ' The file is taken out of its current folder.' : ' Changes made here from now on go to the copy in the shared folder.'}`,
-            confirmText: where.move ? 'Move and Share' : 'Copy and Share',
+            title: where.move ? t('share.move_title') : t('share.copy_title'),
+            message: where.move ? t('share.move_message', { file: setup.file, folder: where.picked }) : t('share.copy_message', { file: setup.file, folder: where.picked }),
+            confirmText: where.move ? t('share.move_and_share') : t('share.copy_and_share'),
           });
           if (!yes) return;
         }
@@ -750,18 +1006,18 @@ function startDialog(title, setup) {
       return el(
         'div',
         { class: 'modal modal-wide share-dialog', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-title' } },
-        el('h2', { class: 'modal-title', text: `Share “${title}”`, attrs: { id: 'share-title' } }),
-        el('p', { class: 'modal-message', text: 'How do people get each other’s changes?' }),
+        el('h2', { class: 'modal-title', text: t('share.dialog_title', { title }), attrs: { id: 'share-title' } }),
+        el('p', { class: 'modal-message', text: t('share.how') }),
         el(
           'div',
           { class: 'share-mode' },
-          radio('share-mode', 'Through a shared folder', true, () => {}),
-          el('p', { class: 'share-mode-text', text: 'A folder you already share through a sync service. Works offline; changes arrive in a few seconds. Everyone who opens the budget from that folder works in the same budget.' }),
-          el('div', { class: 'share-where' }, el('span', { class: 'share-line-label', text: 'Folder' }), whereText, choose),
+          radio('share-mode', t('share.mode.folder'), true, () => {}),
+          el('p', { class: 'share-mode-text', text: t('share.mode.folder_text') }),
+          el('div', { class: 'share-where' }, el('span', { class: 'share-line-label', text: t('share.folder') }), whereText, choose),
           moveCopy,
         ),
-        el('div', { class: 'share-mode is-later' }, radio('share-mode', 'Live link only', false, () => {}, true), el('p', { class: 'share-mode-text', text: 'Changes arrive instantly while you’re both online, with no shared folder. Coming later.' })),
-        el('div', { class: 'share-me' }, el('label', { class: 'modal-field', attrs: { for: 'share-name' } }, el('span', { text: 'Your name' }), name), el('div', { class: 'modal-field' }, el('span', { text: 'Your color' }), colors)),
+        el('div', { class: 'share-mode is-later' }, radio('share-mode', t('share.mode.live'), false, () => {}, true), el('p', { class: 'share-mode-text', text: t('share.mode.live_text') })),
+        el('div', { class: 'share-me' }, el('label', { class: 'modal-field', attrs: { for: 'share-name' } }, el('span', { text: t('share.your_name') }), name), el('div', { class: 'modal-field' }, el('span', { text: t('share.your_color') }), colors)),
         blocked,
         error,
         el('div', { class: 'modal-actions' }, cancel, ok),
@@ -790,39 +1046,41 @@ function sharedDialog(title, setup) {
       name.value = me.name;
       const colors = colorPicker(me.color, (c) => { me.color = c; });
       const people = el('div', { class: 'share-people-list share-people-dialog' });
-      if (s.me) people.append(personRow({ ...s.me, name: `${s.me.name} (you)` }));
+      if (s.me) people.append(personRow({ ...s.me, name: t('share.name_you', { name: s.me.name }) }, s));
       for (const p of s.people) {
-        people.append(personRow(p));
+        people.append(personRow(p, s));
         const picker = s.can_set_roles ? rolePicker(p, s, setup, error) : null;
         if (picker) people.append(picker);
       }
-      if (!s.people.length) people.append(el('p', { class: 'share-muted', text: 'Nobody else has opened this budget from the shared folder yet. When they do, they join by opening it; their name and color show here.' }));
-      const save = el('button', { class: 'btn', text: 'Save Name and Color', attrs: { type: 'button' } });
+      if (!s.people.length) people.append(el('p', { class: 'share-muted', text: t('share.nobody_yet') }));
+      const save = el('button', { class: 'btn', text: t('share.save_me'), attrs: { type: 'button' } });
       save.addEventListener('click', async () => {
         error.hidden = true;
         try {
           await ctx.invoke('share_set_me', { name: name.value, color: me.color });
-          ctx.toast('Saved. Other people see the new name and color within a minute.');
+          ctx.toast(t('share.saved_me'));
           fetchStatus();
         } catch (e) {
           error.textContent = String(e);
           error.hidden = false;
         }
       });
-      const done = el('button', { class: 'btn btn-primary', text: 'Done', attrs: { type: 'button', 'data-autofocus': true } });
+      const done = el('button', { class: 'btn btn-primary', text: t('share.done'), attrs: { type: 'button', 'data-autofocus': true } });
       done.addEventListener('click', () => close());
       return el(
         'div',
         { class: 'modal modal-wide share-dialog', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-title' } },
-        el('h2', { class: 'modal-title', text: `Share “${title}”`, attrs: { id: 'share-title' } }),
-        el('p', { class: 'modal-message', text: 'This budget is shared through a folder. Everyone who opens it from there works in the same budget; changes arrive in a few seconds while they are online, or the next time they open it.' }),
-        line('Folder', s.folder || setup.folder || ''),
-        line('File', s.file || setup.file || ''),
-        el('h4', { class: 'share-panel-sub', text: 'People' }),
+        el('h2', { class: 'modal-title', text: t('share.dialog_title', { title }), attrs: { id: 'share-title' } }),
+        el('p', { class: 'modal-message', text: t('share.shared_message') }),
+        line(t('share.folder'), s.folder || setup.folder || ''),
+        line(t('share.file'), s.file || setup.file || ''),
+        el('h4', { class: 'share-panel-sub', text: t('share.people') }),
         people,
         el('p', { class: 'share-muted', text: rolesNote(s) }),
-        s.can_set_roles ? el('p', { class: 'share-muted', text: UNSIGNED_NOTE }) : null,
-        el('div', { class: 'share-me' }, el('label', { class: 'modal-field', attrs: { for: 'share-name' } }, el('span', { text: 'Your name' }), name), el('div', { class: 'modal-field' }, el('span', { text: 'Your color' }), colors), save),
+        inviteSection(s, setup, error),
+        s.key_warning ? el('p', { class: 'share-problem', text: s.key_warning, attrs: { role: 'alert' } }) : null,
+        s.signed_text ? el('p', { class: 'share-muted', text: s.signed_text }) : null,
+        el('div', { class: 'share-me' }, el('label', { class: 'modal-field', attrs: { for: 'share-name' } }, el('span', { text: t('share.your_name') }), name), el('div', { class: 'modal-field' }, el('span', { text: t('share.your_color') }), colors), save),
         error,
         el('div', { class: 'modal-actions' }, done),
       );
@@ -831,35 +1089,32 @@ function sharedDialog(title, setup) {
   );
 }
 
-/** Roles are checked by the app, not yet signed (decisions.md, entry 78). */
-const UNSIGNED_NOTE = 'Roles stop people changing what they shouldn’t by accident. They don’t stop someone who edits the shared folder’s files directly; signed changes come later.';
+/** An app older than this one can't read a change file that holds a role or a signature. */
+const OLDER_APPS_NOTE = () => t('share.older_apps_note');
 
-/** An app older than this one can't read a change file that holds a role. */
-const OLDER_APPS_NOTE = 'Once roles are set, everyone sharing this budget needs this version of Method Budget or later. An older version won’t join it: it says the shared changes are newer than it reads and opens the file on its own, and what is changed there isn’t shared.';
+/** What Remove does (decisions.md, entry 89). */
+function removeNote(name) {
+  return t('share.remove_note', { name });
+}
 
 /** The owner is one computer: an admin (or co-owner) is the way back if it is lost. */
-const ADMIN_NOTE = 'Only you, co-owners and admins can set roles, so if this computer is lost, they are the only way to change them. Name someone you trust as an admin now; you can make them a co-owner later, who can also make admins.';
+const ADMIN_NOTE = () => t('share.admin_note');
 
 /** A scope only goes with Edits some categories (Rust refuses it too). */
-const SCOPE_NOTE = 'Only Edits some categories names categories. Untick them, or pick Edits some categories.';
+const SCOPE_NOTE = () => t('share.scope_note');
 
 function rolesNote(s) {
-  const invite = 'To invite someone, give them access to the folder; opening the budget there joins them.';
-  if (!s.roles_started) {
-    return s.can_set_roles
-      ? `${invite} Everyone who opens it edits everything until you set what someone may change. From then on, people without a role read only.`
-      : `${invite} Everyone who opens it edits everything until the owner sets what people may change.`;
-  }
-  return `${invite} People without a role read only until ${s.can_set_roles ? 'you give them one' : 'the owner or an admin gives them one'}.`;
+  if (!s.roles_started) return s.can_set_roles ? t('share.roles.unset_can') : t('share.roles.unset_cannot');
+  return s.can_set_roles ? t('share.roles.set_can') : t('share.roles.set_cannot');
 }
 
 /** The roles a person can be given, in the words the picker shows. */
-const ROLE_CHOICES = [
-  ['editor', 'Edits everything'],
-  ['department', 'Edits some categories'],
-  ['actuals', 'Actuals and notes'],
-  ['comment', 'Notes only'],
-  ['read_only', 'Read only'],
+const ROLE_CHOICES = () => [
+  ['editor', t('share.role.editor')],
+  ['department', t('share.role.department')],
+  ['actuals', t('share.role.actuals')],
+  ['comment', t('share.role.comment')],
+  ['read_only', t('share.role.read_only')],
 ];
 
 /**
@@ -875,19 +1130,19 @@ function rolePicker(p, s, setup, error) {
   if (p.role === 'co_owner' && !owner) return null;
   if (p.role === 'admin' && !owner && mine !== 'co_owner') return null;
   const choices = [
-    ...(owner ? [['co_owner', 'Co-owner: sets roles, admins included']] : []),
-    ...(owner || mine === 'co_owner' ? [['admin', 'Edits everything and sets roles']] : []),
-    ...ROLE_CHOICES,
+    ...(owner ? [['co_owner', t('share.role.co_owner')]] : []),
+    ...(owner || mine === 'co_owner' ? [['admin', t('share.role.admin')]] : []),
+    ...ROLE_CHOICES(),
   ];
   const id = `share-role-${p.actor.slice(0, 12)}`;
-  const select = el('select', { class: 'modal-input share-role-select', attrs: { id, 'aria-label': `What ${p.name} may change` } });
+  const select = el('select', { class: 'modal-input share-role-select', attrs: { id, 'aria-label': t('share.role_label', { name: p.name }) } });
   for (const [key, label] of choices) {
     const o = el('option', { text: label, attrs: { value: key } });
     if (key === p.role) o.selected = true;
     select.append(o);
   }
   const picked = new Set(p.scope || []);
-  const cats = el('div', { class: 'share-role-cats', attrs: { role: 'group', 'aria-label': `Categories ${p.name} edits` } });
+  const cats = el('div', { class: 'share-role-cats', attrs: { role: 'group', 'aria-label': t('share.role_cats_label', { name: p.name }) } });
   for (const c of setup.categories || []) {
     const box = el('input', { attrs: { type: 'checkbox' } });
     box.checked = picked.has(c.code);
@@ -902,10 +1157,10 @@ function rolePicker(p, s, setup, error) {
   const drawCats = () => { cats.hidden = select.value !== 'department' && picked.size === 0; };
   select.addEventListener('change', drawCats);
   drawCats();
-  const set = el('button', { class: 'btn', text: 'Set', attrs: { type: 'button' } });
+  const set = el('button', { class: 'btn', text: t('share.set'), attrs: { type: 'button' } });
   // The first role: the question, in place (a second dialog would hide this
   // one), with a choice of admin to name at the same time.
-  const first = el('div', { class: 'share-first-role', attrs: { role: 'group', 'aria-label': 'Before the first role' } });
+  const first = el('div', { class: 'share-first-role', attrs: { role: 'group', 'aria-label': t('share.first_role_label') } });
   first.hidden = true;
   const apply = async (adminActor) => {
     set.disabled = true;
@@ -920,7 +1175,7 @@ function rolePicker(p, s, setup, error) {
         status = await ctx.invoke('share_set_role', { doc: ctx.doc(), actor: adminActor, role: 'admin', scope: [] });
       }
       if (status) statusArrived({ doc: ctx.doc(), status });
-      ctx.toast(`Saved. ${p.name} sees it once it reaches them through the folder.`);
+      ctx.toast(t('share.role_saved', { name: p.name }));
       Object.assign(s, status || {});
       first.hidden = true;
     } catch (e) {
@@ -934,11 +1189,11 @@ function rolePicker(p, s, setup, error) {
     const names = others.map((x) => x.name);
     const adminId = `share-first-admin-${p.actor.slice(0, 12)}`;
     const admin = el('select', { class: 'modal-input share-role-select', attrs: { id: adminId } });
-    admin.append(el('option', { text: 'Not now', attrs: { value: '' } }));
+    admin.append(el('option', { text: t('share.not_now'), attrs: { value: '' } }));
     const candidates = select.value === 'admin' || select.value === 'co_owner' ? others : [p, ...others];
-    for (const x of candidates) admin.append(el('option', { text: `Make ${x.name} an admin`, attrs: { value: x.actor } }));
-    const go = el('button', { class: 'btn btn-primary', text: 'Set Role', attrs: { type: 'button' } });
-    const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
+    for (const x of candidates) admin.append(el('option', { text: t('share.make_admin', { name: x.name }), attrs: { value: x.actor } }));
+    const go = el('button', { class: 'btn btn-primary', text: t('share.set_role'), attrs: { type: 'button' } });
+    const cancel = el('button', { class: 'btn', text: t('share.cancel'), attrs: { type: 'button' } });
     go.addEventListener('click', () => {
       const chosen = admin.value;
       // Naming the person being set as the admin makes them one instead.
@@ -947,10 +1202,10 @@ function rolePicker(p, s, setup, error) {
     });
     cancel.addEventListener('click', () => { first.hidden = true; set.focus(); });
     first.replaceChildren(
-      el('p', { class: 'modal-message', text: `From now on, people without a role can only read this budget.${names.length ? ` ${names.join(', ')} will read only until you give them a role too.` : ''}` }),
-      el('p', { class: 'modal-message', text: OLDER_APPS_NOTE }),
-      el('p', { class: 'modal-message', text: ADMIN_NOTE }),
-      el('label', { class: 'modal-field', attrs: { for: adminId } }, el('span', { text: 'An admin' }), admin),
+      el('p', { class: 'modal-message', text: names.length ? t('share.first_role.note_names', { names: names.join(', ') }) : t('share.first_role.note') }),
+      el('p', { class: 'modal-message', text: OLDER_APPS_NOTE() }),
+      el('p', { class: 'modal-message', text: ADMIN_NOTE() }),
+      el('label', { class: 'modal-field', attrs: { for: adminId } }, el('span', { text: t('share.an_admin') }), admin),
       el('div', { class: 'modal-actions' }, cancel, go),
     );
     first.hidden = false;
@@ -959,7 +1214,7 @@ function rolePicker(p, s, setup, error) {
   set.addEventListener('click', () => {
     error.hidden = true;
     if (select.value !== 'department' && picked.size > 0) {
-      error.textContent = SCOPE_NOTE;
+      error.textContent = SCOPE_NOTE();
       error.hidden = false;
       return;
     }
@@ -969,7 +1224,295 @@ function rolePicker(p, s, setup, error) {
     }
     apply(null);
   });
-  return el('div', { class: 'share-role-row' }, el('label', { class: 'share-line-label', text: 'May change', attrs: { for: id } }), select, set, cats, first);
+  // Remove: read only, with a cutoff at what has reached this computer.
+  const remove = p.removed ? null : el('button', { class: 'btn btn-quiet', text: t('share.remove_button'), attrs: { type: 'button', 'aria-label': t('share.remove_label', { name: p.name }) } });
+  const confirmRemove = el('div', { class: 'share-first-role', attrs: { role: 'group', 'aria-label': t('share.remove_label', { name: p.name }) } });
+  confirmRemove.hidden = true;
+  if (remove) {
+    remove.addEventListener('click', () => {
+      error.hidden = true;
+      const go = el('button', { class: 'btn btn-primary', text: t('share.remove'), attrs: { type: 'button' } });
+      const keep = el('button', { class: 'btn', text: t('share.cancel'), attrs: { type: 'button' } });
+      keep.addEventListener('click', () => { confirmRemove.hidden = true; remove.focus(); });
+      go.addEventListener('click', async () => {
+        go.disabled = true;
+        try {
+          const status = await ctx.invoke('share_remove_person', { doc: ctx.doc(), actor: p.actor });
+          if (status) statusArrived({ doc: ctx.doc(), status });
+          ctx.toast(t('share.removed', { name: p.name }));
+          Object.assign(s, status || {});
+          confirmRemove.hidden = true;
+        } catch (e) {
+          error.textContent = String(e);
+          error.hidden = false;
+        }
+        go.disabled = false;
+      });
+      confirmRemove.replaceChildren(el('p', { class: 'modal-message', text: removeNote(p.name) }), el('div', { class: 'modal-actions' }, keep, go));
+      confirmRemove.hidden = false;
+      go.focus();
+    });
+  }
+  return el('div', { class: 'share-role-row' }, el('label', { class: 'share-line-label', text: t('share.may_change'), attrs: { for: id } }), select, set, remove, cats, first, confirmRemove);
+}
+
+// ---------------------------------------------------------------------------
+// Invites (decisions.md, entry 97): Invite someone in the Share dialog, and
+// File > Join from Link…
+
+/** How long an invite lasts, in days, as the dialog offers it (src/shared.rs INVITE_DAYS). */
+const INVITE_DAYS = () => [
+  [1, t('share.invite.days_1')],
+  [7, t('share.invite.days_7')],
+  [30, t('share.invite.days_30')],
+];
+
+/** A date as the local calendar shows it. */
+function dateText(iso) {
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return String(iso || '');
+  return d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+/** Puts `text` on the clipboard; true when it got there. */
+async function copyText(text, input) {
+  const clip = navigator.clipboard;
+  if (clip && typeof clip.writeText === 'function') {
+    try {
+      await clip.writeText(text);
+      return true;
+    } catch {
+      // refused: the selection below
+    }
+  }
+  if (!input) return false;
+  input.focus();
+  input.select();
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Invite someone: a role (with categories for Edits some categories), how
+ * long the link lasts, and Create invite link, which shows the link once.
+ * Below it, the invites waiting to be used, with Cancel, and the used ones
+ * with who joined. Only for whoever may give roles.
+ */
+function inviteSection(s, setup, error) {
+  if (!s.can_invite) return null;
+  const mine = s.me ? s.me.role : '';
+  const choices = [
+    ...(mine === 'owner' ? [['co_owner', t('share.role.co_owner')]] : []),
+    ...(mine === 'owner' || mine === 'co_owner' ? [['admin', t('share.role.admin')]] : []),
+    ...ROLE_CHOICES(),
+  ];
+  const role = el('select', { class: 'modal-input share-role-select', attrs: { id: 'share-invite-role' } });
+  for (const [key, label] of choices) {
+    const o = el('option', { text: label, attrs: { value: key } });
+    if (key === 'editor') o.selected = true;
+    role.append(o);
+  }
+  const days = el('select', { class: 'modal-input share-role-select', attrs: { id: 'share-invite-days' } });
+  for (const [n, label] of INVITE_DAYS()) {
+    const o = el('option', { text: label, attrs: { value: String(n) } });
+    if (n === 7) o.selected = true;
+    days.append(o);
+  }
+  const picked = new Set();
+  const cats = el('div', { class: 'share-role-cats', attrs: { role: 'group', 'aria-label': t('share.invite.cats_label') } });
+  for (const c of setup.categories || []) {
+    const box = el('input', { attrs: { type: 'checkbox' } });
+    box.addEventListener('change', () => {
+      if (box.checked) picked.add(c.code);
+      else picked.delete(c.code);
+    });
+    cats.append(el('label', { class: 'share-radio' }, box, el('span', { text: `${c.code} ${c.name}` })));
+  }
+  const drawCats = () => { cats.hidden = role.value !== 'department'; };
+  role.addEventListener('change', drawCats);
+  drawCats();
+  const create = el('button', { class: 'btn', text: t('share.invite.create'), attrs: { type: 'button' } });
+  // The link, shown once: nothing keeps it after this dialog.
+  const made = el('div', { class: 'share-invite-made', attrs: { role: 'status' } });
+  made.hidden = true;
+  const list = el('div', { class: 'share-invite-list' });
+  const drawList = () => {
+    const rows = [];
+    for (const inv of s.invites || []) {
+      if (inv.state === 'used') {
+        rows.push(el('p', { class: 'share-muted', text: t('share.invite.used', { name: inv.joined || '', role: inv.role_text }) }));
+        continue;
+      }
+      const cancel = inv.can_cancel ? el('button', { class: 'btn btn-quiet', text: t('share.invite.cancel'), attrs: { type: 'button', 'aria-label': t('share.invite.cancel_label', { role: inv.role_text }) } }) : null;
+      if (cancel) {
+        cancel.addEventListener('click', async () => {
+          error.hidden = true;
+          cancel.disabled = true;
+          try {
+            const status = await ctx.invoke('share_cancel_invite', { doc: ctx.doc(), invite: inv.id });
+            if (status) statusArrived({ doc: ctx.doc(), status });
+            Object.assign(s, status || {});
+            ctx.toast(t('share.invite.cancelled'));
+            drawList();
+          } catch (e) {
+            error.textContent = String(e);
+            error.hidden = false;
+            cancel.disabled = false;
+          }
+        });
+      }
+      rows.push(
+        el(
+          'div',
+          { class: 'share-invite-row' },
+          el('span', { text: t('share.invite.pending', { role: inv.role_text, name: inv.by, date: dateText(inv.expires) }) }),
+          cancel,
+        ),
+      );
+    }
+    list.replaceChildren(...rows);
+    list.hidden = rows.length === 0;
+  };
+  drawList();
+  create.addEventListener('click', async () => {
+    error.hidden = true;
+    create.disabled = true;
+    try {
+      const inv = await ctx.invoke('share_create_invite', {
+        doc: ctx.doc(),
+        role: role.value,
+        scope: role.value === 'department' ? [...picked] : [],
+        days: Number(days.value),
+      });
+      const box = el('input', { class: 'modal-input share-invite-link', attrs: { type: 'text', readonly: 'readonly', 'aria-label': t('share.invite.link_label') } });
+      box.value = inv.link;
+      const copy = el('button', { class: 'btn btn-primary', text: t('share.invite.copy'), attrs: { type: 'button' } });
+      copy.addEventListener('click', async () => {
+        const ok = await copyText(inv.link, box);
+        ctx.toast(ok ? t('share.invite.copied') : t('share.invite.copy_failed'));
+      });
+      made.replaceChildren(
+        el('div', { class: 'share-invite-linkrow' }, box, copy),
+        el('p', { class: 'modal-message', text: t('share.invite.link_note', { role: inv.role_text, date: dateText(inv.expires) }) }),
+        el('p', { class: 'share-muted', text: t('share.invite.folder_note') }),
+      );
+      made.hidden = false;
+      box.focus();
+      box.select();
+      fetchStatus().then(() => {
+        Object.assign(s, current() || {});
+        drawList();
+      });
+    } catch (e) {
+      error.textContent = String(e);
+      error.hidden = false;
+    }
+    create.disabled = false;
+  });
+  return el(
+    'div',
+    { class: 'share-invite' },
+    el('h4', { class: 'share-panel-sub', text: t('share.invite.title') }),
+    el(
+      'div',
+      { class: 'share-role-row' },
+      el('label', { class: 'share-line-label', text: t('share.invite.can'), attrs: { for: 'share-invite-role' } }),
+      role,
+      el('label', { class: 'share-line-label', text: t('share.invite.expires'), attrs: { for: 'share-invite-days' } }),
+      days,
+      create,
+      cats,
+    ),
+    made,
+    list,
+  );
+}
+
+/**
+ * File > Join from Link…: paste the link, then pick the budget's file in
+ * this computer's copy of the shared folder (Rust's own dialog), with the
+ * name and color other people will see.
+ */
+export function openJoinDialog() {
+  if (!ctx || isModalOpen()) return;
+  customDialog(
+    (close) => {
+      const error = el('p', { class: 'modal-error', attrs: { role: 'alert' } });
+      error.hidden = true;
+      const fail = (e) => {
+        error.textContent = String(e);
+        error.hidden = false;
+      };
+      const link = el('textarea', { class: 'modal-input share-join-link', attrs: { id: 'share-join-link', rows: '3', spellcheck: 'false', placeholder: t('share.join.placeholder') } });
+      const me = { name: '', color: 'teal' };
+      const name = el('input', { class: 'modal-input', attrs: { type: 'text', id: 'share-join-name', maxlength: '60', placeholder: t('share.name_placeholder') } });
+      const second = el('div', { class: 'share-join-next' });
+      second.hidden = true;
+      const cancel = el('button', { class: 'btn', text: t('share.cancel'), attrs: { type: 'button' } });
+      const go = el('button', { class: 'btn btn-primary', text: t('share.join.continue'), attrs: { type: 'button' } });
+      let checked = null;
+      cancel.addEventListener('click', () => close());
+      const join = async () => {
+        go.disabled = true;
+        try {
+          const out = await ctx.invoke('share_join_from_link', { link: link.value, me: { name: name.value, color: me.color } });
+          if (!out) {
+            go.disabled = false;
+            return;
+          }
+          if (out.view) ctx.apply(out.view, { cmd: 'share_join' });
+          fetchStatus();
+          if (out.error) {
+            fail(out.error);
+            go.textContent = t('share.join.try_again');
+          } else {
+            close();
+            ctx.toast(t('share.join.joined', { role: out.role_text || '' }));
+          }
+        } catch (e) {
+          fail(e);
+        }
+        go.disabled = false;
+      };
+      go.addEventListener('click', async () => {
+        error.hidden = true;
+        if (checked) {
+          join();
+          return;
+        }
+        try {
+          checked = await ctx.invoke('share_join_check', { link: link.value });
+        } catch (e) {
+          fail(e);
+          return;
+        }
+        name.value = checked.name || '';
+        me.color = checked.color || 'teal';
+        link.readOnly = true;
+        second.replaceChildren(
+          el('p', { class: 'modal-message', text: t('share.join.pick_note', { file: checked.file }) }),
+          el('div', { class: 'share-me' }, el('label', { class: 'modal-field', attrs: { for: 'share-join-name' } }, el('span', { text: t('share.your_name') }), name), el('div', { class: 'modal-field' }, el('span', { text: t('share.your_color') }), colorPicker(me.color, (c) => { me.color = c; }))),
+        );
+        second.hidden = false;
+        go.textContent = t('share.join.choose');
+        name.focus();
+      });
+      return el(
+        'div',
+        { class: 'modal modal-wide share-dialog', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-join-title' } },
+        el('h2', { class: 'modal-title', text: t('share.join.title'), attrs: { id: 'share-join-title' } }),
+        el('p', { class: 'modal-message', text: t('share.join.message') }),
+        el('label', { class: 'modal-field', attrs: { for: 'share-join-link' } }, el('span', { text: t('share.join.link') }), link),
+        second,
+        error,
+        el('div', { class: 'modal-actions' }, cancel, go),
+      );
+    },
+    { onClose: () => ctx.focus() },
+  );
 }
 
 /** Once per budget: what sharing means for saving (design 9.2). */
@@ -982,13 +1525,13 @@ export function firstRunNotice() {
   if (isModalOpen()) return;
   customDialog(
     (close) => {
-      const ok = el('button', { class: 'btn btn-primary', text: 'Got it', attrs: { type: 'button', 'data-autofocus': true }, on: { click: () => close() } });
+      const ok = el('button', { class: 'btn btn-primary', text: t('share.got_it'), attrs: { type: 'button', 'data-autofocus': true }, on: { click: () => close() } });
       return el(
         'div',
         { class: 'modal share-dialog', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-notice-title' } },
-        el('h2', { class: 'modal-title', text: 'This budget is shared through a folder', attrs: { id: 'share-notice-title' } }),
-        el('p', { class: 'modal-message', text: 'Your changes are kept on this computer and shared through the folder. Others see them in a few seconds when they’re online, or the next time they open the budget. You can keep working offline.' }),
-        el('p', { class: 'modal-message', text: 'There’s nothing to save: everything you type is kept. Undo takes back your own changes only.' }),
+        el('h2', { class: 'modal-title', text: t('share.notice.title'), attrs: { id: 'share-notice-title' } }),
+        el('p', { class: 'modal-message', text: t('share.notice.kept') }),
+        el('p', { class: 'modal-message', text: t('share.notice.nothing_to_save') }),
         el('div', { class: 'modal-actions' }, ok),
       );
     },

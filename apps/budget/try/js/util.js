@@ -2,6 +2,8 @@
 // data that may be missing or of the wrong type, a count with its noun, and
 // a rejection as text.
 
+import { t } from './i18n.js';
+
 /** `v` when it is a plain object, else an empty one. */
 export function obj(v) {
   return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
@@ -10,11 +12,6 @@ export function obj(v) {
 /** `v` as text: '' for undefined and null. */
 export function str(v) {
   return v === undefined || v === null ? '' : String(v);
-}
-
-/** "1 line", "3 lines". */
-export function plural(n, one, many) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 /** A rejection as text: the message string commands reject with (api.js), or an Error's message. */
@@ -35,8 +32,14 @@ export function sourceText(view, kind, name) {
   const s = all && all[kind] && Object.prototype.hasOwnProperty.call(all[kind], name) ? all[kind][name] : null;
   if (!s || typeof s !== 'object') return '';
   const parts = [];
-  if (str(s.pack)) parts.push(`From ${s.pack}${str(s.pack_version) ? ` (${s.pack_version})` : ''}${str(s.effective) ? `, effective ${s.effective}` : ''}`);
-  else if (str(s.effective)) parts.push(`Effective ${s.effective}`);
+  const pack = str(s.pack);
+  const version = str(s.pack_version);
+  const date = str(s.effective);
+  if (pack && version && date) parts.push(t('util.source_pack_version_effective', { pack, version, date }));
+  else if (pack && version) parts.push(t('util.source_pack_version', { pack, version }));
+  else if (pack && date) parts.push(t('util.source_pack_effective', { pack, date }));
+  else if (pack) parts.push(t('util.source_pack', { pack }));
+  else if (date) parts.push(t('util.source_effective', { date }));
   if (str(s.notes)) parts.push(str(s.notes));
   for (const u of Array.isArray(s.urls) ? s.urls : []) if (str(u)) parts.push(str(u));
   return parts.join('. ');
@@ -44,9 +47,9 @@ export function sourceText(view, kind, name) {
 
 /** The ways a flat fringe can count a line, as [value, label] (decisions.md, entry 54). */
 export const FLAT_BASES = [
-  ['amount', 'Amount only (standard)'],
-  ['amount_counts', 'Amount, plus counts in X and 4X'],
-  ['quantity', 'Full quantity'],
+  ['amount', t('util.flat_basis.amount')],
+  ['amount_counts', t('util.flat_basis.amount_counts')],
+  ['quantity', t('util.flat_basis.quantity')],
 ];
 
 /** Whether `unit` is an hour among the budget's `units`: one hour long, or named Hour (any case). */
@@ -59,15 +62,14 @@ export function isHourUnit(units, unit) {
 }
 
 /**
- * How flat fringe `def` counts beyond its unit, as words to add after it:
- * ", plus counts in X and 4X", ", full quantity", ", up to 12 hours a day"
- * (for a fringe charged per hour only). '' for the standard count.
+ * How flat fringe `def` counts beyond its unit: `basis` ('amount', the
+ * standard count; 'amount_counts', plus counts in X and 4X; 'quantity', the
+ * full quantity) and `hours`, its most hours a day ('' when none, or when it
+ * isn't charged per hour). apply.js and report.js each word the whole phrase.
  */
-export function flatCountWords(def, units) {
+export function flatCount(def, units) {
   const d = obj(def);
-  let out = '';
-  if (d.basis === 'amount_counts') out += ', plus counts in X and 4X';
-  else if (d.basis === 'quantity') out += ', full quantity';
-  if (str(d.max_hours_per_day) !== '' && isHourUnit(units, d.unit)) out += `, up to ${d.max_hours_per_day} hours a day`;
-  return out;
+  const basis = d.basis === 'amount_counts' || d.basis === 'quantity' ? d.basis : 'amount';
+  const hours = str(d.max_hours_per_day) !== '' && isHourUnit(units, d.unit) ? str(d.max_hours_per_day) : '';
+  return { basis, hours };
 }
