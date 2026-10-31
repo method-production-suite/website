@@ -9,7 +9,7 @@ domain = "methodproduction.com"
 org = "https://github.com/method-production-suite"
 discussions = "https://github.com/method-production-suite/.github/discussions"
 hello = "hello@methodproduction.com"
-# Shows hello@ on the site. True since 2026-10-16, when Sam's test mail to it arrived; set
+# Shows hello@ on the site. True since 2026-10-16, when the owner's test mail to it arrived; set
 # false to hide it (the site then points at GitHub's release notifications instead).
 hello_live = true
 mission = "The tools of the trade shouldn't be rented."
@@ -37,7 +37,7 @@ status = "Early alpha"
 platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Storyteller-macOS.dmg"
 source = "method-storyteller"
-# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# Follows its latest published release tag (the owner, 2026-10-18). Move source_ref to each new
 # tag once published.
 source_ref = "tag:v0.6.0"
 accent = ["#AE3D56", "#EE8DA2"]
@@ -53,7 +53,7 @@ blurb = "Turn a script PDF into an e-book that reflows on a Kindle or any e-read
 status = "Beta, looking for testers"
 platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Reader-macOS.dmg"
-# A released app's site follows its latest published release tag (Sam, 2026-10-18), so it
+# A released app's site follows its latest published release tag (the owner, 2026-10-18), so it
 # describes exactly what the download does. Move source_ref to each new tag once published.
 source = "screepub"
 source_ref = "tag:v1.1.0"
@@ -71,7 +71,7 @@ status = "Early alpha"
 platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Schedule-macOS.dmg"
 source = "method-scheduling"
-# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# Follows its latest published release tag (the owner, 2026-10-18). Move source_ref to each new
 # tag once published.
 source_ref = "tag:v0.7.0"
 # The browser demo (methodschedule.com/try/) is built at sync time, like Budget's.
@@ -91,7 +91,7 @@ status = "Alpha, ready for testing"
 platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Budget-macOS.dmg"
 source = "method-budget"
-# Follows its latest published release tag (Sam, 2026-10-18). Move source_ref to each new
+# Follows its latest published release tag (the owner, 2026-10-18). Move source_ref to each new
 # tag once published.
 source_ref = "tag:v0.8.0"
 # The browser demo (methodbudget.com/try/) is built, not committed: tools/sync.py runs
