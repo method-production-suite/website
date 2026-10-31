@@ -56,7 +56,7 @@ download = "Method-Reader-macOS.dmg"
 # A released app's site follows its latest published release tag (Sam, 2026-10-18), so it
 # describes exactly what the download does. Move source_ref to each new tag once published.
 source = "screepub"
-source_ref = "tag:v1.0.0"
+source_ref = "tag:v1.1.0"
 accent = ["#7052BA", "#B49CF0"]
 
 [[app]]
