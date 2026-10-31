@@ -51,7 +51,7 @@ does = "Read"
 tagline = "Screenplay PDFs into e-books and editable scripts."
 blurb = "Turn a script PDF into an e-book that reflows on a Kindle or any e-reader with the script's shape intact, and send it straight to the device. Or get the script back to edit, as Fountain or .fdx. Formerly Screepub."
 status = "Beta, looking for testers"
-platforms = "Mac (Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
+platforms = "Mac (Intel and Apple silicon): signed. Windows and Linux: built, not yet tested by a person."
 download = "Method-Reader-macOS.dmg"
 # A released app's site follows its latest published release tag (Sam, 2026-10-18), so it
 # describes exactly what the download does. Move source_ref to each new tag once published.
