@@ -144,7 +144,7 @@ def band(current: str | None = None) -> str:
         f'<a href="{SUITE["discussions"]}">Discussions</a></p>'
         f'<p class="ms-launcher">Or get every app at once with <a href="{page_url("launcher")}">Method Launcher</a>.</p>'
         f'<p class="ms-contact">{contact(current)}</p>'
-        f'<p class="ms-fine">Free and open source, every app MIT or Apache-2.0. '
+        f'<p class="ms-fine">Free and open source, MIT or Apache-2.0 (Method Reader\'s Kindle writer is GPL v3). '
         f'<a href="{SUITE["org"]}">All of it on GitHub</a>.</p></div></aside>')
 
 
@@ -269,7 +269,7 @@ def hub() -> str:
     <div class="cards three">
       <div class="card"><h3>Your computer, your files</h3><p>Every app runs on your own machine and works offline. Nothing about your production is uploaded anywhere.</p></div>
       <div class="card"><h3>Open formats</h3><p>Scripts are Open Screenplay Format or Fountain, budgets and schedules are documented text files you can read, diff and keep in version control.</p></div>
-      <div class="card"><h3>Free and open source</h3><p>MIT or Apache-2.0, on GitHub, with every decision written down in each repo.</p></div>
+      <div class="card"><h3>Free and open source</h3><p>The suite's code is MIT or Apache-2.0 (Method Reader's Kindle writer is GPL v3), on GitHub, with every decision written down in each repo.</p></div>
     </div>
   </div></section>
 </main>

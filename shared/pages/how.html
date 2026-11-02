@@ -19,14 +19,14 @@
   <h2>Tests</h2>
   <p>Every change passes the full test suite on a developer's machine before it lands, and
     the complete build and test run again every week and for every release. Test functions
-    in each app, counted on 16 October 2026:</p>
+    in each app, in its latest release, counted on 2 November 2026:</p>
   <table class="counts">
     <thead><tr><th scope="col">App</th><th scope="col">Tests</th><th scope="col">Also</th></tr></thead>
     <tbody>
-      <tr><td><a href="{url:storyteller}">Method Storyteller</a></td><td>43</td><td>Strict lint rules; early days.</td></tr>
-      <tr><td><a href="{url:reader}">Method Reader</a></td><td>3,573</td><td>Every conversion checked against a frozen set of expected answers.</td></tr>
-      <tr><td><a href="{url:schedule}">Method Schedule</a></td><td>622</td><td>Timing budgets: an edit and redraw must stay under 5 ms on a big board.</td></tr>
-      <tr><td><a href="{url:budget}">Method Budget</a></td><td>1,255</td><td>Seeded property tests, and nightly fuzzing of every file format it reads.</td></tr>
+      <tr><td><a href="{url:storyteller}">Method Storyteller</a></td><td>287</td><td>Every page break checked against golden files and a set of produced scripts.</td></tr>
+      <tr><td><a href="{url:reader}">Method Reader</a></td><td>3,977</td><td>Every conversion checked against a frozen set of expected answers.</td></tr>
+      <tr><td><a href="{url:schedule}">Method Schedule</a></td><td>700</td><td>Timing budgets: an edit and redraw must stay under 5 ms on a big board.</td></tr>
+      <tr><td><a href="{url:budget}">Method Budget</a></td><td>1,659</td><td>Seeded property tests, and nightly fuzzing of every file format it reads.</td></tr>
     </tbody>
   </table>
 
@@ -44,9 +44,10 @@
     <li>Every dependency must be at least 14 days old before it's used, and every licence
       and security advisory is checked on every change.</li>
     <li>Build steps are pinned to exact versions. Released Mac apps are signed and notarized
-      by Apple. Windows installers aren't signed yet, so Windows shows an unknown-publisher
-      warning; Linux packages aren't signed, which is usual there.</li>
-    <li>MIT OR Apache-2.0, every line on <a href="{org}">GitHub</a>.</li>
+      by Apple. Windows installers aren't signed, so Windows shows an unknown-publisher
+      warning the first time: choose More info, then Run anyway. Linux packages aren't signed
+      either, which is usual there.</li>
+    <li>The suite's code is MIT OR Apache-2.0, on <a href="{org}">GitHub</a>. Method Reader's Kindle writer is GPL v3, so its released programs are too.</li>
   </ul>
 
   <p class="cta"><a class="btn primary" href="{page:help}">Help build it</a>
