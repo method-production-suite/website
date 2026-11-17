@@ -859,6 +859,16 @@ export function backupLine(b) {
   return `${b.label}, ${from}`;
 }
 
+/** The footer line for conflict copies beside the file (copies.js), newest first. */
+export function copiesLabel(found) {
+  if (!found.length) return '';
+  const newest = found[0];
+  const when = newest.changed_at ? `, changed ${newest.changed_at}` : '';
+  return found.length === 1
+    ? `Conflict copy beside this file: ${newest.name}${when}`
+    : `${found.length} conflict copies beside this file, the newest ${newest.name}${when}`;
+}
+
 // ---- The breakdown designer's grid (breakdown.js, decisions.md, entries 101 and 186)
 
 /** The rows a sheet's shown fields fall in when no lengths are set: six, five, the rest. */
@@ -947,6 +957,20 @@ const CS_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Fr
 const CS_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** "Tuesday, Oct 20, 2026" from `YYYY-MM-DD`; null for no date. */
+/**
+ * The swatch class for a draft's color (entry 247): `Double Blue` and `Blue 4` are blue;
+ * a color named by hand has its own plain mark.
+ */
+export function draftColorClass(color) {
+  const known = ['white', 'blue', 'pink', 'yellow', 'green', 'goldenrod', 'buff', 'salmon', 'cherry'];
+  const word = String(color || '')
+    .toLowerCase()
+    .replace(/^(double|triple)\s+/, '')
+    .replace(/\s+\d+$/, '')
+    .trim();
+  return known.includes(word) ? `dc-${word}` : 'dc-other';
+}
+
 export function callSheetDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
   if (!m) return null;
@@ -964,6 +988,13 @@ export function lengthText(min) {
 export function spanText(start, end) {
   if (start && end) return `${start}–${end}`;
   return start || end || '';
+}
+
+/** A crew call's place against the company's call (entry 242): "1:30 before", "With the call". */
+export function crewFromCall(minutes) {
+  const n = Math.round(Number(minutes) || 0);
+  if (!n) return 'With the call';
+  return `${lengthText(Math.abs(n))} ${n < 0 ? 'before' : 'after'}`;
 }
 
 /** Sunrise and sunset as the sheet says them. */

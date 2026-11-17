@@ -21,7 +21,7 @@
 import { el } from './dom.js';
 import { dateInput, dayDate, showDate } from './dates.js';
 import { setRules, dynamicStyles } from './dynstyle.js';
-import { DEFAULT_LAYOUT, boardTracks, cellClass, cellText, gridRules, labelOf, stripCell, stripGrid } from './strips.js';
+import { DEFAULT_LAYOUT, boardTracks, cellClass, cellText, draftMark, gridRules, labelOf, stripCell, stripGrid } from './strips.js';
 import { colorClass, paintStrips } from './colors.js';
 import { customDialog } from './modal.js';
 import { STRIP_MARK, bannerFontClass, bannerHex, bannerHexRules, dayLead } from './logic.js';
@@ -294,7 +294,7 @@ function stripRow(strip, selected, pos, size) {
     ...gridNow.cells.map((g) => {
       const lead = g === first;
       const part = lead && strip.parts > 1 ? el('span', { class: 'part', text: ` ${strip.part}/${strip.parts}`, title: `Part ${strip.part} of ${strip.parts}: the scene spans days` }) : null;
-      return stripCell('span', g, cellText(g, strip.cells), { extra: ` sc-${g.k}${lead ? ' lead' : ''}`, before: lead ? [clash.length ? conflictMark(clash) : null, flags.length ? redFlagMark(flags, flagType) : null] : null, after: part });
+      return stripCell('span', g, cellText(g, strip.cells), { extra: ` sc-${g.k}${lead ? ' lead' : ''}`, before: lead ? [strip.draft ? draftMark(strip) : null, clash.length ? conflictMark(clash) : null, flags.length ? redFlagMark(flags, flagType) : null] : null, after: part });
     }),
   );
   if (strip.omitted) row.title = `Scene ${strip.scene || '(no number)'}, omitted: the last script revision no longer has it`;

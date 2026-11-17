@@ -9,6 +9,8 @@
 // - Locations: latitude, longitude, UTC offset and daylight saving rule beside each sheet
 //   location.
 // - Turnarounds and Rest: a minimum per category and the rests shorter than it.
+// - Crew Calls: each department's call, before or after the company's call (entry 242).
+//   Day Timeline sets a department's call for one day only (entry 243).
 // - Schedule Locks: lock, see each actor's drift, delete.
 // - Pin Strips, Unpin Strips: the selected scenes stay put in a suggested order.
 // - Suggest Strip Order: before and after counts, Apply as one undo step.
@@ -189,12 +191,44 @@ export function planCommands(ctx) {
           }
           return el('tr', {}, el('td', { text: p.name }), el('td', {}, own[0]), el('td', {}, own[1]));
         });
+        // Each department's call this day only, empty for every day's (entry 243); the
+        // last row adds a department called this day alone.
+        const setCrew = async (department, value) => {
+          if (!(await edit(invoke('set_day_crew_call', { day: d.day, department, value }), error))) return false;
+          await reload();
+          return true;
+        };
+        const crew = (d.crew || []).map((c) => {
+          const input = textInput(c.this_day);
+          input.placeholder = c.every_day;
+          input.setAttribute('aria-label', `${c.department}'s call this day against the company call`);
+          input.title = 'A time from the company call for this day, or off to leave the department out of it. Empty follows every day’s.';
+          let sent = c.this_day;
+          const set = () => {
+            if (input.value.trim() === sent) return;
+            sent = input.value.trim();
+            setCrew(c.department, input.value);
+          };
+          input.addEventListener('keydown', (e) => e.key === 'Enter' && set());
+          input.addEventListener('change', set);
+          return el('tr', {}, el('td', { text: c.department }), el('td', {}, input), el('td', { class: 'n', text: c.call }));
+        });
+        const newName = textInput('', 'pl-name');
+        newName.setAttribute('aria-label', 'Department called this day');
+        newName.placeholder = 'Department';
+        const newOffset = textInput('');
+        newOffset.setAttribute('aria-label', 'Its call this day against the company call');
+        newOffset.placeholder = '0';
+        const add = () => newName.value.trim() && setCrew(newName.value, newOffset.value || '0');
+        [newName, newOffset].forEach((i) => i.addEventListener('keydown', (e) => e.key === 'Enter' && add()));
+        crew.push(el('tr', {}, el('td', {}, newName), el('td', {}, newOffset), el('td', {}, button('Add', add, 'btn btn-mini'))));
         body.replaceChildren(
           el('p', { class: 'pl-head', text: head }),
           table(['Start', 'End', 'Strip', 'Note'], rows),
           d.warnings.length ? el('ul', { class: 'pl-lines pl-warnings' }, ...d.warnings.map((w) => el('li', { text: w }))) : '',
           past,
           people.length ? table(['Called', 'Own call', 'Own wrap'], people) : '',
+          table(['Crew', 'This day', 'Call'], crew),
         );
       }
       pick.addEventListener('change', () => {
@@ -265,12 +299,16 @@ export function planCommands(ctx) {
           el('option', { text: 'Chile (mainland)', attrs: { value: 'chile' } }),
         );
         dst.value = l.daylight_saving;
+        // Dates with an offset of their own, typed from the year's announcement (entry 244).
+        const own = textInput(l.offsets || '', 'pl-address');
+        own.placeholder = '2027-02-07 to 2027-03-14 +00:00';
+        own.setAttribute('aria-label', `Dates with another UTC offset at ${l.name}`);
         lat.setAttribute('aria-label', `Latitude of ${l.name}`);
         lon.setAttribute('aria-label', `Longitude of ${l.name}`);
         off.setAttribute('aria-label', `UTC offset of ${l.name}`);
         const set = async () => {
           // A refusal keeps what was typed, so the mistake can be fixed in place.
-          if (!(await edit(invoke('set_location', { name: l.name, latitude: lat.value, longitude: lon.value, utc_offset: off.value, daylight_saving: dst.value }), error))) return;
+          if (!(await edit(invoke('set_location', { name: l.name, latitude: lat.value, longitude: lon.value, utc_offset: off.value, daylight_saving: dst.value, offsets: own.value }), error))) return;
           try {
             const back = (await invoke('locations_data')).find((x) => x.name === l.name);
             // As the engine reads them, once a click in progress is done (entry 170).
@@ -280,21 +318,74 @@ export function planCommands(ctx) {
                 lon.value = back.longitude;
                 off.value = back.utc_offset;
                 dst.value = back.daylight_saving;
+                own.value = back.offsets;
               });
             }
           } catch {
             // The row keeps what was typed.
           }
         };
-        for (const i of [lat, lon, off]) i.addEventListener('keydown', (e) => e.key === 'Enter' && set());
+        for (const i of [lat, lon, off, own]) i.addEventListener('keydown', (e) => e.key === 'Enter' && set());
         // A rule picked for a place already on the map is set at once.
         dst.addEventListener('change', () => lat.value.trim() && lon.value.trim() && set());
-        return el('tr', {}, el('td', { text: l.name }), el('td', { class: 'n', text: String(l.sheets) }), el('td', {}, lat), el('td', {}, lon), el('td', {}, off), el('td', {}, dst), el('td', {}, button('Set', set, 'btn btn-mini')));
-      });
+        // How to get there (entry 245): a row of its own under the location, opened by its button.
+        const address = textInput(l.address || '', 'pl-address');
+        address.setAttribute('aria-label', `Address of ${l.name}`);
+        const directions = el('textarea', { class: 'pl-directions', attrs: { rows: '3', 'aria-label': `Directions to ${l.name}` } });
+        directions.value = l.directions || '';
+        const mapName = el('span', { class: 'pl-map-name' });
+        let map = l.map || '';
+        const drawMap = () => {
+          mapName.textContent = map || 'No map picture';
+          removeMap.hidden = !map;
+        };
+        const reread = async () => {
+          const back = (await invoke('locations_data')).find((x) => x.name === l.name);
+          map = back ? back.map : '';
+          later(drawMap);
+        };
+        const removeMap = button(
+          'Remove',
+          async () => {
+            if (await edit(invoke('remove_location_map', { name: l.name }), error)) await reread();
+          },
+          'btn btn-mini',
+        );
+        const addMap = button(
+          'Choose Picture…',
+          async () => {
+            if (await edit(invoke('add_location_map', { name: l.name }), error)) await reread();
+          },
+          'btn btn-mini',
+        );
+        const setGuide = () => edit(invoke('set_location_guide', { name: l.name, address: address.value, directions: directions.value }), error);
+        address.addEventListener('keydown', (e) => e.key === 'Enter' && setGuide());
+        // The row under the location holds what most don't need, so the table stays narrow.
+        const setDetails = async () => {
+          if (await setGuide()) await set();
+        };
+        const guideRow = el(
+          'tr',
+          { class: 'pl-guide' },
+          el(
+            'td',
+            { attrs: { colspan: '7' } },
+            el('label', { class: 'pl-guide-line' }, el('span', { text: 'Other offsets' }), own),
+            el('label', { class: 'pl-guide-line' }, el('span', { text: 'Address' }), address),
+            el('label', { class: 'pl-guide-line' }, el('span', { text: 'Directions' }), directions),
+            el('div', { class: 'pl-guide-line' }, el('span', { text: 'Map' }), mapName, addMap, removeMap, button('Set', setDetails, 'btn btn-mini')),
+          ),
+        );
+        guideRow.hidden = true;
+        drawMap();
+        const held = l.offsets || l.address || l.directions || l.map;
+        const open = button(held ? 'Details (set)' : 'Details', () => (guideRow.hidden = !guideRow.hidden), 'btn btn-mini');
+        return [el('tr', {}, el('td', { text: l.name }), el('td', { class: 'n', text: String(l.sheets) }), el('td', {}, lat), el('td', {}, lon), el('td', {}, off), el('td', {}, dst), el('td', { class: 'pl-row-actions' }, button('Set', set, 'btn btn-mini'), open)), guideRow];
+      }).flat();
       return box(
         'Locations',
         'pl-loc',
-        el('p', { class: 'modal-message', text: 'Degrees as 34.0522 and -118.2437 (or 118.2437W); the UTC offset as -7 or +5:30 (empty: from the longitude): the standard one with a daylight saving rule, which adds an hour in summer, else the one on the shoot dates. Clear both degrees to take a location off the map.' }),
+        el('p', { class: 'modal-message', text: 'Degrees as 34.0522 and -118.2437 (or 118.2437W); the UTC offset as -7 or +5:30 (empty: from the longitude): the standard one with a daylight saving rule, which adds an hour in summer, else the one on the shoot dates. Where the clocks follow a lunar calendar or a decree, type the year’s dates with their offset under Details, Other offsets, as 2027-02-07 to 2027-03-14 +00:00, several split by semicolons; they win over the rule. Clear both degrees to take a location off the map. Details also holds an address, directions and a map picture you choose for the call sheet; nothing is fetched from the internet.' }),
         error,
         table(['Location', 'Sheets', 'Latitude', 'Longitude', 'UTC offset', 'Daylight saving', ''], rows),
         el('div', { class: 'modal-actions' }, closeButton(close)),
@@ -303,6 +394,22 @@ export function planCommands(ctx) {
   }
 
   /** The script drafts merged so far, newest first (entry 233): a list, nothing to edit. */
+  /** A draft's heading, and the field that renames its color (entry 247). */
+  function renameLines(d, error) {
+    const words = () => [d.color, d.date ? showDate(d.date) : ''].filter(Boolean).join(' · ');
+    const head = el('p', { class: 'pl-head', text: words() });
+    const name = textInput(d.color, 'pl-name');
+    name.setAttribute('aria-label', `New color for the ${d.color} draft`);
+    const rename = async () => {
+      const typed = name.value.trim();
+      if (typed === d.color || !(await edit(invoke('rename_draft', { color: d.color, name: typed }), error))) return;
+      d.color = typed;
+      head.textContent = words();
+    };
+    name.addEventListener('keydown', (e) => e.key === 'Enter' && rename());
+    return [head, el('p', { class: 'pl-rename' }, name, button('Rename', rename, 'btn btn-mini'))];
+  }
+
   async function drafts() {
     let list;
     try {
@@ -317,11 +424,12 @@ export function planCommands(ctx) {
     }
     await customDialog((close) => {
       const scenes = (label, names) => (names.length ? el('li', { text: `${label}: ${names.join('; ')}` }) : '');
+      const error = errorLine('pl-error');
       const rows = [...list].reverse().map((d) =>
         el(
           'div',
           { class: 'pl-draft' },
-          el('p', { class: 'pl-head', text: [d.color, d.date ? showDate(d.date) : ''].filter(Boolean).join(' · ') }),
+          ...renameLines(d, error),
           el('ul', { class: 'pl-lines' }, scenes('Changed', d.changed), scenes('New', d.added), scenes('Omitted', d.omitted)),
         ),
       );
@@ -329,6 +437,7 @@ export function planCommands(ctx) {
         'Script Drafts',
         'pl-drafts',
         el('p', { class: 'modal-message', text: 'Each revision merged into this schedule, newest first, with its color and date and the scenes it changed, added and omitted. The Breakdown tab shows each sheet’s newest draft.' }),
+        error,
         el('div', { class: 'pl-body' }, ...rows),
         el('div', { class: 'modal-actions' }, button('Print…', () => printDrafts(list)), closeButton(close)),
       );
@@ -392,6 +501,67 @@ export function planCommands(ctx) {
         el('p', { class: 'modal-message', text: 'The shortest rest from one day’s wrap to the next day’s call, as 12 or 10:30 (empty: none). Checked across the board from each day’s call time and wrap. Warnings only.' }),
         error,
         el('div', { class: 'pl-split' }, table(['Category', 'Minimum', ''], rows), report),
+        el('div', { class: 'modal-actions' }, closeButton(close)),
+      );
+    });
+  }
+
+  async function crew() {
+    let list;
+    try {
+      list = await invoke('crew_data');
+    } catch (e) {
+      ctx.say(e, true);
+      return;
+    }
+    await customDialog((close) => {
+      const error = errorLine('pl-error');
+      const body = el('tbody');
+      const set = async (department, value) => {
+        if (!(await edit(invoke('set_crew_call', { department, value }), error))) return false;
+        list = await invoke('crew_data');
+        draw();
+        return true;
+      };
+      const newName = textInput('', 'pl-name');
+      newName.setAttribute('aria-label', 'New department');
+      newName.placeholder = 'Department';
+      const newOffset = textInput('');
+      newOffset.setAttribute('aria-label', 'Its call against the company call');
+      newOffset.placeholder = '-1:00';
+      const add = async () => {
+        if (await set(newName.value, newOffset.value || '0')) {
+          newName.value = '';
+          newOffset.value = '';
+          newName.focus();
+        }
+      };
+      [newName, newOffset].forEach((i) => i.addEventListener('keydown', (e) => e.key === 'Enter' && add()));
+      function draw() {
+        const rows = list.map((c) => {
+          const input = textInput(c.offset);
+          input.setAttribute('aria-label', `Call for ${c.department} against the company call`);
+          const save = () => set(c.department, input.value || '0');
+          input.addEventListener('keydown', (e) => e.key === 'Enter' && save());
+          return el(
+            'tr',
+            {},
+            el('td', { text: c.department }),
+            el('td', {}, input),
+            el('td', { class: 'muted', text: c.words }),
+            el('td', {}, button('Set', save, 'btn btn-mini'), ' ', button('Remove', () => set(c.department, ''), 'btn btn-mini')),
+          );
+        });
+        rows.push(el('tr', {}, el('td', {}, newName), el('td', {}, newOffset), el('td'), el('td', {}, button('Add', add, 'btn btn-mini'))));
+        body.replaceChildren(...rows);
+      }
+      draw();
+      return box(
+        'Crew Calls',
+        'pl-crew',
+        el('p', { class: 'modal-message', text: 'Each department’s call against the company’s call on every shoot day: -1:30 is an hour and a half before it, 0 with it, +0:15 a quarter of an hour after. The call sheet lists them with the day’s times; a call for one day only is set under Day Timeline.' }),
+        error,
+        el('table', { class: 'pl-table' }, el('thead', {}, el('tr', {}, ...['Department', 'From the call', '', ''].map((h) => el('th', { text: h })))), body),
         el('div', { class: 'modal-actions' }, closeButton(close)),
       );
     });
@@ -528,17 +698,56 @@ export function planCommands(ctx) {
       box(
         `Suggest Strip Order: ${dto.sub_board_name}`,
         'pl-sug',
-        el('p', { class: 'modal-message', text: 'Three orders are tried: by location then set, by location then day or night then set, and by shared cast. The one that costs least is suggested (an actor’s day costs 4, a location change 3, a day and night switch 1, a red flag clash 20). Day breaks, banners and pinned strips stay where they are. Nothing changes until Apply; Undo takes it back.' }),
+        el('p', { class: 'modal-message', text: `Three orders are tried: by location then set, by location then day or night then set, and by shared cast; then scenes are swapped while that costs less. The cheapest is suggested (${(dto.weights || []).map((w) => `${w.label.toLowerCase()} costs ${w.value}`).join(', ')}). Day breaks, banners and pinned strips stay where they are. Nothing changes until Apply; Undo takes it back.` }),
         el('p', { class: 'pl-head', text: dto.moved ? `By ${dto.rule}: ${dto.moved} scenes would move, ${dto.pinned} stay put (pinned, omitted or spanning days).` : 'No order tried costs less than the one on the board, so nothing would move.' }),
         el('p', { class: 'modal-message', text: `Costs tried: ${(dto.tried || []).map((t) => `${t.rule} ${t.cost}`).join(' · ')}.` }),
         table(
           ['', 'Now', 'Suggested'],
           dto.rows.map((r) => el('tr', { class: r.after < r.before ? 'pl-better' : r.after > r.before ? 'pl-warn' : '' }, el('td', { text: r.label }), el('td', { class: 'n', text: String(r.before) }), el('td', { class: 'n', text: String(r.after) }))),
         ),
-        el('div', { class: 'modal-actions' }, button('Cancel', () => close(null)), el('button', { class: 'btn btn-primary', text: 'Apply Order', attrs: { type: 'button', 'data-autofocus': true, disabled: dto.moved === 0 }, on: { click: () => close(true) } })),
+        el('div', { class: 'modal-actions' }, button('Weights…', () => close('weights')), button('Cancel', () => close(null)), el('button', { class: 'btn btn-primary', text: 'Apply Order', attrs: { type: 'button', 'data-autofocus': true, disabled: dto.moved === 0 }, on: { click: () => close(true) } })),
       ),
     );
+    if (go === 'weights') {
+      await orderWeights(dto.weights);
+      return suggestOrder();
+    }
     if (go) ctx.apply(invoke('apply_suggested_order', { sub_board: sub, order: dto.order }));
+  }
+
+  /** What each count costs when comparing orders (entry 246), kept with the schedule. */
+  async function orderWeights(weights) {
+    await customDialog((close) => {
+      const error = errorLine('pl-error');
+      const inputs = weights.map((w) => {
+        const i = textInput(String(w.value));
+        i.setAttribute('aria-label', w.label);
+        return i;
+      });
+      const save = async (values) => {
+        if (await edit(invoke('set_order_weights', { values }), error)) close(null);
+      };
+      const typed = () => {
+        const values = inputs.map((i) => (/^\d+$/.test(i.value.trim()) ? Number(i.value.trim()) : NaN));
+        if (values.some(Number.isNaN)) {
+          error.textContent = 'Each weight is a whole number.';
+          error.hidden = false;
+          return;
+        }
+        save(values);
+      };
+      return box(
+        'Strip Order Weights',
+        'pl-wt',
+        el('p', { class: 'modal-message', text: 'What each count costs when orders are compared. Higher means the suggestion works harder to avoid it; 0 ignores it. Kept with this schedule.' }),
+        error,
+        table(
+          ['', 'Cost', 'Standard'],
+          weights.map((w, n) => el('tr', {}, el('td', { text: w.label }), el('td', {}, inputs[n]), el('td', { class: 'n', text: String(w.standard) }))),
+        ),
+        el('div', { class: 'modal-actions' }, button('Use Standard', () => save([])), button('Cancel', () => close(null)), el('button', { class: 'btn btn-primary', text: 'Set', attrs: { type: 'button', 'data-autofocus': true }, on: { click: typed } })),
+      );
+    });
   }
 
   /** The sub-board's shoot day count and the day to offer first (the selected strip's), or null. */
@@ -576,7 +785,7 @@ export function planCommands(ctx) {
       box(
         'Print Call Sheet',
         'pl-pcs',
-        el('p', { class: 'modal-message', text: 'The day, its call and wrap, sunrise and sunset, the scenes with their times, the cast with their calls and when they are on set, the other elements, the notes and the next two days in brief.' }),
+        el('p', { class: 'modal-message', text: 'The day, its call and wrap, sunrise and sunset, the scenes with their times, each location with its directions and map, the cast with their calls and when they are on set, the crew calls, the other elements, the notes and the next two days in brief.' }),
         el('div', { class: 'pl-bar' }, field('Day', pick)),
         el(
           'div',
@@ -590,6 +799,23 @@ export function planCommands(ctx) {
     if (!how) return;
     try {
       const data = await invoke('call_sheet_data', { sub_board: sub, day: Number(pick.value) });
+      // The map pictures, read and decoded before the page is laid out (entry 245).
+      await Promise.all(
+        (data.places || [])
+          .filter((p) => p.map)
+          .map(async (p) => {
+            try {
+              const url = await invoke('location_map', { name: p.name });
+              if (!url) return;
+              const image = new Image();
+              image.src = url;
+              await image.decode();
+              p.map_url = url;
+            } catch {
+              // The sheet says the map wasn't found, and still prints.
+            }
+          }),
+      );
       const r = await printPages((root) => layout(root, callSheetFlows(data), callSheetOpts(data)), { pdf: how === 'pdf', title: callSheetJob(data), subject: 'Call sheet' });
       if (r && r.file) ctx.say(`Saved ${r.file}.`);
     } catch (e) {
@@ -629,6 +855,7 @@ export function planCommands(ctx) {
     'plan.call_sheet': () => callSheet(),
     'plan.locations': () => locations(),
     'plan.rest': () => rest(),
+    'plan.crew': () => crew(),
     'plan.locks': () => locks(),
     'plan.pin': () => pin(true),
     'plan.unpin': () => pin(false),
