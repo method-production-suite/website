@@ -58,6 +58,7 @@ let ctx = null;
 const st = {
   status: new Map(), // doc -> { status, at: Date.now() when received }
   panel: null, // the status panel, while open
+  following: null, // { actor, name, doc, at }, while following someone (Follow)
   popover: null, // a conflict popover, while open
   placeSent: '', // the last place reported to Rust, as JSON
   placeTimer: null,
@@ -70,6 +71,10 @@ const st = {
 
 /** How long a changed cell keeps the editor's color (design 9.4). */
 const FLASH_MS = 1600;
+// How long the cursor rests on a cell before the others are told.
+const CELL_WAIT_MS = 120;
+// What stops Follow: anything this person does.
+const FOLLOW_STOPS = ['keydown', 'mousedown', 'wheel', 'touchstart'];
 
 export function initShare(context) {
   ctx = context;
@@ -110,7 +115,11 @@ function statusArrived(p) {
     if (locksChanged && typeof ctx.render === 'function') ctx.render();
     renderBar(ctx.view());
     decorateShare(ctx.view());
-    if (st.panel) drawPanel();
+    followOn(p.status);
+    // Someone moving their cursor doesn't redraw the panel under this person.
+    const panelText = JSON.stringify({ ...p.status, people: p.status.people.map((q) => ({ ...q, cell: !!q.cell })), me: null });
+    if (st.panel && panelText !== st.panelText) drawPanel();
+    st.panelText = panelText;
   }
 }
 
@@ -347,6 +356,7 @@ function drawPanel() {
   if (s.waiting) rows.push(line(t('share.panel.waiting'), String(s.waiting), 'is-warn'));
   if (typeof s.synced_secs === 'number') rows.push(line(t('share.panel.folder_read'), ago(s.synced_secs + extra)));
   rows.push(line(t('share.panel.changes'), String(s.changes)));
+  if (LIVE_CHANGES_SHOWN) rows.push(liveRow(s));
   const people = el('div', { class: 'share-people-list' });
   people.append(personRow(s.me, s));
   for (const p of s.people) people.append(personRow(p, s));
@@ -363,6 +373,91 @@ function drawPanel() {
   actions.append(el('button', { class: 'btn', text: t('share.panel.settings'), attrs: { type: 'button' }, on: { click: () => { closeStatusPanel(); openShareDialog(); } } }));
   rows.push(actions);
   panel.replaceChildren(...rows);
+}
+
+/**
+ * Whether the status panel shows the Live changes row. Held back for 0.9.0 by
+ * the owner (2026-11-18) until the two-computer test; set to true to bring the
+ * row back. Without the row nothing can turn live changes on.
+ */
+const LIVE_CHANGES_SHOWN = false;
+
+/** Live changes: whether they are on here, with the switch. */
+function liveRow(s) {
+  const state = !s.live_on ? t('share.live.off') : t('share.live.on', { count: s.live_connected });
+  const button = el('button', {
+    class: 'btn',
+    text: s.live_on ? t('share.live.turn_off') : t('share.live.turn_on_ellipsis'),
+    attrs: { type: 'button' },
+    on: { click: () => (s.live_on ? stopLive() : openLiveDialog()) },
+  });
+  return el('div', { class: 'share-live-row' }, line(t('share.live.label'), state), button);
+}
+
+async function stopLive() {
+  try {
+    await ctx.invoke('share_live_stop', { doc: ctx.doc() });
+  } catch (e) {
+    ctx.toast(e);
+  }
+  fetchStatus();
+}
+
+/**
+ * What live changes send, before anything does (decisions.md, entry 98): each
+ * person turns them on for themselves, here. Nothing touches the network until
+ * Turn On is pressed. The relay last chosen is offered again.
+ */
+export function openLiveDialog() {
+  if (!ctx || isModalOpen()) return;
+  customDialog((close) => {
+    const saved = readPref('share.live.relay', 'public');
+    const known = saved === 'public' || saved === 'none';
+    let choice = known ? saved : 'own';
+    const own = el('input', {
+      class: 'modal-input',
+      attrs: { type: 'url', id: 'share-live-relay', placeholder: t('share.live.relay_placeholder'), 'aria-label': t('share.live.relay_own_address') },
+    });
+    own.value = known ? '' : saved;
+    const error = el('p', { class: 'modal-error', attrs: { role: 'alert' } });
+    error.hidden = true;
+    const cancel = el('button', { class: 'btn', text: t('share.cancel'), attrs: { type: 'button' } });
+    const go = el('button', { class: 'btn btn-primary', text: t('share.live.turn_on'), attrs: { type: 'button' } });
+    cancel.addEventListener('click', () => close());
+    go.addEventListener('click', async () => {
+      const relay = choice === 'own' ? own.value.trim() : choice;
+      go.disabled = true;
+      try {
+        await ctx.invoke('share_live_start', { doc: ctx.doc(), relay });
+        writePref('share.live.relay', relay);
+        close();
+        fetchStatus();
+      } catch (e) {
+        error.textContent = String(e);
+        error.hidden = false;
+        go.disabled = false;
+      }
+    });
+    const send = el('ul', { class: 'share-live-sends' });
+    for (const text of [t('share.live.sends_addresses'), t('share.live.sends_relay'), t('share.live.sends_dialing'), t('share.live.sends_cell'), t('share.live.sends_nothing_else')]) {
+      send.append(el('li', { text }));
+    }
+    return el(
+      'div',
+      { class: 'modal share-live-dialog', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-live-title' } },
+      el('h2', { class: 'modal-title', text: t('share.live.title'), attrs: { id: 'share-live-title' } }),
+      el('p', { text: t('share.live.intro') }),
+      el('h3', { class: 'share-panel-sub', text: t('share.live.sends_title') }),
+      send,
+      el('h3', { class: 'share-panel-sub', text: t('share.live.relay_title') }),
+      radio('share-live-relay-choice', t('share.live.relay_public'), choice === 'public', () => { choice = 'public'; }),
+      radio('share-live-relay-choice', t('share.live.relay_own'), choice === 'own', () => { choice = 'own'; }),
+      own,
+      radio('share-live-relay-choice', t('share.live.relay_none'), choice === 'none', () => { choice = 'none'; }),
+      error,
+      el('div', { class: 'modal-actions' }, cancel, go),
+    );
+  });
 }
 
 /**
@@ -606,7 +701,92 @@ function personRow(p, s) {
     el('span', { class: 'share-person-when', text: when }),
     p.role_text ? el('span', { class: 'share-person-role', text: p.role_text, title: p.role_text }) : null,
     signed ? el('span', { class: 'share-person-role share-person-signed', text: signed, title: signed }) : null,
+    !p.me && p.cell ? personActions(p) : null,
   );
+}
+
+function personActions(p) {
+  const go = el('button', {
+    class: 'btn',
+    text: t('share.go_there'),
+    attrs: { type: 'button' },
+    on: {
+      click: () => {
+        stopFollowing(false);
+        toggleStatusPanel();
+        goToCell(p.cell);
+      },
+    },
+  });
+  const follow = el('button', {
+    class: 'btn',
+    text: t('share.follow'),
+    attrs: { type: 'button' },
+    on: {
+      click: () => {
+        toggleStatusPanel();
+        startFollowing(p);
+      },
+    },
+  });
+  return el('span', { class: 'share-person-actions' }, go, follow);
+}
+
+// ---------------------------------------------------------------------------
+// Go there and Follow (design 9.3): my view moves only because I asked, and any
+// key, click or scroll of mine stops it.
+
+function goToCell(cell) {
+  if (!ctx || !cell) return;
+  if (cell.kind === 'row') {
+    ctx.jumpTo({ row_id: cell.key, account: cell.parent, field: cell.field });
+  } else if (cell.kind === 'account') {
+    ctx.jumpTo({ row_id: null, account: cell.key, field: cell.field });
+  } else if (cell.kind === 'category') {
+    ctx.jumpTo({ kind: 'category', category: cell.key });
+  }
+}
+
+function startFollowing(p) {
+  stopFollowing(false);
+  st.following = { actor: p.actor, name: p.name, doc: ctx.doc(), at: JSON.stringify(p.cell) };
+  for (const kind of FOLLOW_STOPS) window.addEventListener(kind, onFollowStop, true);
+  goToCell(p.cell);
+  ctx.toast(t('share.following', { name: p.name }));
+}
+
+function onFollowStop() {
+  stopFollowing(true);
+}
+
+function stopFollowing(say) {
+  const was = st.following;
+  if (!was) return;
+  st.following = null;
+  for (const kind of FOLLOW_STOPS) window.removeEventListener(kind, onFollowStop, true);
+  if (say && ctx) ctx.toast(t('share.stopped_following', { name: was.name }));
+}
+
+/** A new status while following: go where they went. A link that ended stops it. */
+function followOn(status) {
+  const f = st.following;
+  if (!f) return;
+  if (ctx.doc() !== f.doc || !status.live_on) {
+    stopFollowing(true);
+    return;
+  }
+  const p = status.people.find((q) => q.actor === f.actor);
+  // Gone, or their link ended (they quit, turned it off or dropped).
+  if (!p || !p.linked) {
+    stopFollowing(true);
+    return;
+  }
+  // No cell: on something the grid can't name, or gone. Stay until they say more.
+  if (!p.cell) return;
+  const at = JSON.stringify(p.cell);
+  if (at === f.at || isModalOpen()) return;
+  f.at = at;
+  goToCell(p.cell);
 }
 
 /** An ISO 8601 UTC time as the local clock shows it. */
@@ -632,6 +812,20 @@ export function reportPlace(view) {
   st.placeTimer = setTimeout(() => {
     ctx.invoke('share_place', { doc: ctx.doc(), category: place.category || null, account: place.account || null }).catch(() => {});
   }, 300);
+}
+
+/** The cell this person is on, kept here and sent on only over a live link. */
+export function reportCell(place) {
+  if (!ctx || !ctx.view() || !ctx.view().shared) return;
+  const cell = place ? { kind: place.kind, key: String(place.key), parent: place.parent || null, field: place.field || null } : null;
+  const doc = ctx.doc();
+  const text = JSON.stringify([doc, cell]);
+  if (text === st.cellSent) return;
+  st.cellSent = text;
+  clearTimeout(st.cellTimer);
+  st.cellTimer = setTimeout(() => {
+    ctx.invoke('share_cell', { doc, cell }).catch(() => {});
+  }, CELL_WAIT_MS);
 }
 
 // ---------------------------------------------------------------------------
@@ -687,7 +881,8 @@ export function decorateShare(view) {
   const s = current();
   const grid = ctx.grid();
   if (!s || !grid) return;
-  for (const n of grid.table.querySelectorAll('.share-here, .share-conflict-badge')) n.remove();
+  for (const n of grid.table.querySelectorAll('.share-here, .share-conflict-badge, .share-cell')) n.remove();
+  for (const td of grid.table.querySelectorAll('.share-cell-at')) td.classList.remove('share-cell-at');
   for (const td of grid.table.querySelectorAll('.share-conflict')) td.classList.remove('share-conflict');
   // People in categories and accounts (folder mode: account level only).
   const level = ctx.level();
@@ -700,6 +895,17 @@ export function decorateShare(view) {
     const td = grid.cellFor(at.key, 'name');
     if (!td || td.classList.contains('editing')) continue;
     td.append(el('span', { class: `share-here ${colorClass(p.color)}`, text: p.initials, title: personTitle(p), attrs: { 'aria-label': personTitle(p) } }));
+  }
+  // The cell each person on a live link is on. Not in a cell being typed in:
+  // nothing of theirs ever goes inside what I'm typing.
+  for (const p of s.people) {
+    const at = p.cell ? ctx.rowKeyFor(p.cell) : null;
+    if (!at || !at.col) continue;
+    const td = grid.cellFor(at.key, at.col);
+    if (!td || td.classList.contains('editing')) continue;
+    const label = t('share.cell_here', { name: p.name });
+    td.classList.add('share-cell-at');
+    td.append(el('span', { class: `share-cell ${colorClass(p.color)}`, title: label, attrs: { 'aria-label': label } }, el('span', { class: 'share-cell-tag', text: p.initials })));
   }
   // Values changed by two people.
   for (const c of Array.isArray(s.conflicts) ? s.conflicts : []) {

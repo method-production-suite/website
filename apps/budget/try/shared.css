@@ -9,13 +9,18 @@
   --pc-teal: #0e7468;
   --pc-blue: #2a63c9;
   --pc-purple: #7246c4;
-  --pc-orange: #c96a12;
+  --pc-orange: #b35c0e;
   --pc-rose: #c42f63;
   --pc-green: #35862f;
-  --pc-amber: #a67c00;
+  --pc-amber: #8f6a00;
   --pc-slate: #5b6b7c;
-  --share-ok: #3a9d3a;
+  /* Initials on a person's color: 4.5:1 or better on all eight. */
+  --pc-on: #fff;
+  /* The status dots and the conflict ring: 3:1 or better on the surface.
+     --share-warn itself is a badge's fill, under dark text. */
+  --share-ok: #2f8a2f;
   --share-warn: #d29a12;
+  --share-warn-mark: #a67c00;
   --share-bad: var(--danger);
   /* A department editor's cells outside their scope: muted, still 4.5:1 or
      better on the grid's surface (the lock says it too). */
@@ -32,7 +37,9 @@
     --pc-green: #7fcf72;
     --pc-amber: #e3b341;
     --pc-slate: #a4b1be;
+    --pc-on: #12181f;
     --share-ok: #6fcf6f;
+    --share-warn-mark: #d29a12;
     --share-locked-text: #868f99;
   }
 }
@@ -73,7 +80,7 @@
   border: 2px solid var(--surface);
   border-radius: 50%;
   background: var(--pc, var(--pc-slate));
-  color: #fff;
+  color: var(--pc-on);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -159,7 +166,7 @@
 }
 
 .share-status[data-tone="warn"] .share-dot {
-  background: var(--share-warn);
+  background: var(--share-warn-mark);
 }
 
 .share-status[data-tone="bad"] .share-dot {
@@ -282,6 +289,11 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.share-person-actions {
+  display: inline-flex;
+  gap: 4px;
 }
 
 .share-person {
@@ -554,7 +566,7 @@
   padding: 0 4px;
   border-radius: 8px;
   background: var(--pc, var(--pc-slate));
-  color: #fff;
+  color: var(--pc-on);
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
@@ -600,9 +612,45 @@
   background: var(--pc, var(--accent));
 }
 
+/* Someone else's cell on a live link: an outline in their color, and their
+   initials, so color isn't the only cue. It takes no clicks. */
+.grid td.share-cell-at {
+  position: relative;
+}
+
+.share-cell {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--pc, var(--pc-slate));
+  pointer-events: none;
+}
+
+.share-cell-tag {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  padding: 0 3px;
+  background: var(--pc, var(--pc-slate));
+  color: var(--pc-on);
+  font-size: 9px;
+  line-height: 12px;
+}
+
+@media (forced-colors: active) {
+  .share-cell {
+    border-color: CanvasText;
+  }
+
+  .share-cell-tag {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+}
+
 .grid td.share-conflict {
   position: relative;
-  box-shadow: inset 0 0 0 1px var(--share-warn);
+  box-shadow: inset 0 0 0 1px var(--share-warn-mark);
 }
 
 .share-conflict-badge {
@@ -853,4 +901,30 @@
 
 .share-join-next {
   margin-top: 8px;
+}
+
+/* Live changes: the status panel's row, and what the notice lists. */
+.share-live-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.share-live-row .share-line {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.share-live-row .share-line-value {
+  white-space: normal;
+}
+
+.share-live-sends {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+}
+
+.share-live-sends li {
+  margin-bottom: 4px;
 }
