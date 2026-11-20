@@ -9,6 +9,20 @@
     guess about how it was made. The apps themselves contain no generative AI: nothing
     writes your script or invents your numbers.</p>
 
+  <h2>How the work is checked</h2>
+  <p>Each app has its own coding agent working in its own repository. A separate reviewing
+    agent reads every change that lands, every day, and reviews release workflows,
+    signing and settings before they land. No change reaches the main branch until the full
+    test suite has passed on a real machine, and every pull request runs licence,
+    security-advisory and dependency-age checks. The complete build runs every week and for
+    every release.</p>
+  <p>A person decides what ships. Every release, and every change to a repository's
+    settings, waits for the producer who runs the project to say yes. The agents write
+    code; they don't publish it.</p>
+  <p>Agents make mistakes the way people do, so the rules don't depend on trusting them: the
+    tests, the clean-room rules below and the review all apply to every change, whoever
+    wrote it.</p>
+
   <h2>Clean room</h2>
   <p>Every app is independent work. Nobody on the project decompiles, disassembles or
     debugs another vendor's software, or copies its code, help text, icons, templates or
@@ -18,15 +32,16 @@
 
   <h2>Tests</h2>
   <p>Every change passes the full test suite on a developer's machine before it lands, and
-    the complete build and test run again every week and for every release. Test functions
-    in each app, in its latest release, counted on 2 November 2026:</p>
+    the complete build and test run again every week and for every release. Tests in
+    each app, in its latest release, counted on 20 November 2026:</p>
   <table class="counts">
     <thead><tr><th scope="col">App</th><th scope="col">Tests</th><th scope="col">Also</th></tr></thead>
     <tbody>
-      <tr><td><a href="{url:storyteller}">Method Storyteller</a></td><td>287</td><td>Every page break checked against golden files and a set of produced scripts.</td></tr>
-      <tr><td><a href="{url:reader}">Method Reader</a></td><td>3,977</td><td>Every conversion checked against a frozen set of expected answers.</td></tr>
-      <tr><td><a href="{url:schedule}">Method Schedule</a></td><td>700</td><td>Timing budgets: an edit and redraw must stay under 5 ms on a big board.</td></tr>
-      <tr><td><a href="{url:budget}">Method Budget</a></td><td>1,659</td><td>Seeded property tests, and nightly fuzzing of every file format it reads.</td></tr>
+      <tr><td><a href="{url:storyteller}">Method Storyteller</a></td><td>336</td><td>Every page break checked against golden files and a set of produced scripts.</td></tr>
+      <tr><td><a href="{url:reader}">Method Reader</a></td><td>4,206</td><td>Every conversion checked against a frozen set of expected answers.</td></tr>
+      <tr><td><a href="{url:schedule}">Method Schedule</a></td><td>716</td><td>Timing budgets: an edit and redraw must stay under 5 ms on a big board.</td></tr>
+      <tr><td><a href="{url:budget}">Method Budget</a></td><td>1,711</td><td>Seeded property tests, and nightly fuzzing of every file format it reads.</td></tr>
+      <tr><td><a href="/launcher/">Method Launcher</a></td><td>112</td><td>Every download checked against signed checksums before anything installs.</td></tr>
     </tbody>
   </table>
 
