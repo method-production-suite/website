@@ -423,6 +423,10 @@ const find = createFind($('findpanel'), {
     const sb = state.view && state.view.board.sub_boards.find((x) => x.id === state.subBoard);
     return sb ? { id: sb.id, name: sb.name } : null;
   },
+  board: () => {
+    const b = state.view && state.view.board;
+    return b ? { id: b.id, name: b.name, many: (state.view.boards || []).length > 1 } : null;
+  },
   closed: () => {
     if (state.tab === 'board') $('board').focus({ preventScroll: true });
   },
@@ -855,6 +859,7 @@ const dood = createDood($('dood'), {
     refreshDood();
   },
   setRule: (element, field, on) => command(invoke('set_element_field', { element, field, value: on ? 'true' : 'false' })),
+  setGap: (element, days) => command(invoke('set_element_field', { element, field: 'min_drop_gap', value: days })),
   setCodes: (codes) => command(invoke('set_dood_codes', { codes })),
 });
 

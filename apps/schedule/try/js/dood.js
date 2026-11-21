@@ -13,7 +13,8 @@
 // Hold, Start or Finish heading sorts by it (again: the other way); Sort… sorts by
 // up to four keys. The sort lasts until the tab or sub-board changes and is never saved
 // (behavior note 27). Each row's H and D boxes are the element's hold and drop switches
-// (one undo step each). Without holds shows the grid
+// (one undo step each), and its G box the element's minimum drop gap in days (Enter or
+// leaving the box sets it; Escape puts it back). Without holds shows the grid
 // as if no element held; Vertical turns it on its side (a row per date, a column per
 // element); Codes… changes the code letters the schedule keeps.
 //
@@ -22,9 +23,14 @@
 // engine's sentences: the totals, every gap and what became of it, and every date. A
 // click on a date there scrolls the grid to its column and marks it. Click a row's ID or
 // name to select it; Up and Down move the selection while the grid has focus.
+//
+// Right-click a cell (either way up) to explain that one day: Explain This Day opens the
+// element's panel with the date marked and its line in view; Explain This Count opens it
+// as the totals' buttons do.
 
 import { el } from './dom.js';
 import { setRules, dynamicStyles } from './dynstyle.js';
+import { openMenu } from './ctxmenu.js';
 import { customDialog, errorLine } from './modal.js';
 import { dayDate, showDate } from './dates.js';
 import { verticalGrid, weekendDays } from './logic.js';
@@ -151,7 +157,7 @@ function codesDialog(codes, submit) {
  * `actions.pickHeader(key)` a header field (set, location, I/E and the rest) as one;
  * `actions.explain(element)` resolves with explain_count's panel; `actions.say(text,
  * isError)` shows a message; `actions.sort(keys)` and `actions.noHolds(on)` change the
- * session's view; `actions.setRule(element, field, on)` and `actions.setCodes(map)` change
+ * session's view; `actions.setRule(element, field, on)`, `actions.setGap(element, days)` and `actions.setCodes(map)` change
  * the schedule (each resolves, or rejects with a sentence). Returns { render(dto),
  * explainSelected() }.
  */
@@ -278,6 +284,7 @@ export function createDood(host, actions) {
     for (const [label, , cls] of SUMMARY) cells.push(SORT_BY[label] ? el('th', { class: `g-sum ${cls} g-sort`, text: label, title: `Sort by ${label.toLowerCase()}`, attrs: { scope: 'col' }, data: { sort: label } }) : el('th', { class: `g-sum ${cls}`, text: label, title: 'Work plus hold', attrs: { scope: 'col' } }));
     cells.push(el('th', { class: 'g-sum s-holds', text: 'H', title: 'Holds: the element\'s hold switch', attrs: { scope: 'col' } }));
     cells.push(el('th', { class: 'g-sum s-drops', text: 'D', title: 'Drops: the element\'s drop switch (needs holds)', attrs: { scope: 'col' } }));
+    cells.push(el('th', { class: 'g-sum s-gap', text: 'G', title: 'Gap: the element\'s minimum drop gap in days (a gap shorter than this is held, not dropped)', attrs: { scope: 'col' } }));
     cells[0].classList.add('g-sort');
     cells[0].dataset.sort = 'ID';
     cells[1].classList.add('g-sort');
@@ -322,6 +329,7 @@ export function createDood(host, actions) {
           // The whole code too: a narrow cell may cut a long one (FTPW) with an ellipsis.
           title: why ? `${showDate(dto.dates[i].date)}: ${code ? `${code}, ` : ''}${why}` : code ? `${showDate(dto.dates[i].date)}: ${code}` : null,
           attrs: why ? { 'aria-label': `${code ? `${code}, ` : ''}${why}` } : {},
+          data: { date: dto.dates[i].date },
         }),
       );
     });
@@ -341,10 +349,18 @@ export function createDood(host, actions) {
       const box = el('input', { class: 'g-rule', attrs: { type: 'checkbox', checked: r[field] === true, 'aria-label': `${r.name} ${what}` }, title: `${r.name}: ${what} ${r[field] ? 'on' : 'off'}`, data: { rule: field, element: r.element } });
       tr.append(el('td', { class: `g-sum ${cls}` }, box));
     }
+    const gap = String(r.min_drop_gap ?? '');
+    const box = el('input', { class: 'g-gap', attrs: { type: 'text', inputmode: 'numeric', maxlength: '3', value: gap, 'aria-label': `${r.name} minimum drop gap in days` }, title: `${r.name}: minimum drop gap ${gap} ${gap === '1' ? 'day' : 'days'}`, data: { element: r.element, was: gap } });
+    tr.append(el('td', { class: 'g-sum s-gap' }, box));
     return tr;
   }
 
   tbody.addEventListener('change', (e) => {
+    const gap = e.target.closest('input.g-gap');
+    if (gap) {
+      setGap(gap);
+      return;
+    }
     const box = e.target.closest('input.g-rule');
     if (!box) return;
     const on = box.checked;
@@ -354,7 +370,37 @@ export function createDood(host, actions) {
     });
   });
 
-  const width = () => 2 + dto.dates.length + SUMMARY.length + 2;
+  /** Sets the row's gap from its box, once: Enter and then leaving the box send one edit. */
+  function setGap(gap) {
+    const value = gap.value.trim();
+    const was = gap.dataset.was;
+    if (value === was) return;
+    gap.dataset.was = value;
+    actions.setGap(Number(gap.dataset.element), value).catch((err) => {
+      gap.dataset.was = was;
+      gap.value = was;
+      actions.say(err, true);
+    });
+  }
+
+  // The gap box: Enter or leaving it sets it, Escape puts it back.
+  tbody.addEventListener('keydown', (e) => {
+    const gap = e.target.closest && e.target.closest('input.g-gap');
+    if (!gap) return;
+    if (e.key === 'Enter') {
+      setGap(gap);
+      gap.blur();
+      scroller.focus({ preventScroll: true });
+    } else if (e.key === 'Escape') {
+      gap.value = gap.dataset.was;
+      gap.blur();
+      scroller.focus({ preventScroll: true });
+    } else return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  const width = () => 2 + dto.dates.length + SUMMARY.length + 3;
 
   /** The grid on its side: a row per date, a column per element, the counts at the foot. */
   function drawVertical() {
@@ -368,7 +414,7 @@ export function createDood(host, actions) {
         { class: `vr ${KIND[d.kind] || ''}${weekendClass(d)}` },
         el('th', { class: 'v-date', text: `${d.weekday.slice(0, 2)} ${showDate(d.date)}`, attrs: { scope: 'row' } }),
         el('td', { class: 'v-sd', text: d.day }),
-        ...d.cells.map((c, j) => el('td', { class: `g-cell ${codeClass(c, letters)}`, text: c, title: c ? `${dto.rows[j].name}, ${showDate(d.date)}: ${c}` : null })),
+        ...d.cells.map((c, j) => el('td', { class: `g-cell ${codeClass(c, letters)}`, text: c, title: c ? `${dto.rows[j].name}, ${showDate(d.date)}: ${c}` : null, data: { element: dto.rows[j].element, date: d.date } })),
       ),
     );
     for (const s of v.sums) {
@@ -482,6 +528,8 @@ export function createDood(host, actions) {
 
   scroller.addEventListener('keydown', (e) => {
     if (!dto || !dto.rows.length || e.metaKey || e.ctrlKey || e.altKey) return;
+    // Typing in a row's gap box moves no selection.
+    if (e.target.closest && e.target.closest('input.g-gap')) return;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       const i = rowIndex(selected);
       const next = i < 0 ? (e.key === 'ArrowDown' ? 0 : dto.rows.length - 1) : Math.min(Math.max(i + (e.key === 'ArrowDown' ? 1 : -1), 0), dto.rows.length - 1);
@@ -493,6 +541,44 @@ export function createDood(host, actions) {
     }
   });
 
+  // A cell's menu: explain that day, or the row's count. Header field rows are values
+  // worked out from the sheets, so both are off for them.
+  table.addEventListener('contextmenu', (e) => {
+    const td = e.target.closest && e.target.closest('td.g-cell');
+    if (!td || !td.dataset.date || !dto) return;
+    const tr = td.closest('tr');
+    const element = Number(td.dataset.element || (tr && tr.dataset.element));
+    const r = dto.rows.find((x) => x.element === element);
+    if (!r) return;
+    e.preventDefault();
+    const iso = td.dataset.date;
+    const off = Boolean(dto.header);
+    openMenu(
+      e.clientX,
+      e.clientY,
+      [
+        { label: `Explain ${showDate(iso)}`, disabled: off, run: () => explainDay(element, iso) },
+        { label: 'Explain This Count', disabled: off, run: () => explainRow(element) },
+      ],
+      { label: `${r.name}, ${showDate(iso)}`, back: scroller },
+    );
+  });
+
+  function explainRow(element) {
+    if (!vertical) select(element);
+    explain(element);
+  }
+
+  /** The panel for `element` with `iso` marked and its line in view. */
+  async function explainDay(element, iso) {
+    if (!vertical) select(element);
+    await explain(element);
+    if (explained !== element || panel.hidden) return;
+    goToDate(iso);
+    const li = panel.querySelector('li.x-day.x-marked');
+    if (li) li.scrollIntoView({ block: 'nearest' });
+  }
+
   // ---- The explain panel
 
   /** Scrolls the grid to a date's column and marks it. */
@@ -503,6 +589,10 @@ export function createDood(host, actions) {
       return;
     }
     marked = iso;
+    markInPanel(iso);
+    // On its side the dates are rows and the heading is the elements': only the panel
+    // marks the date.
+    if (vertical) return;
     const cells = thead.rows[0] ? thead.rows[0].cells : null;
     if (cells && cells[2 + i]) {
       const th = cells[2 + i];
@@ -510,12 +600,15 @@ export function createDood(host, actions) {
       scroller.scrollLeft = Math.max(0, th.offsetLeft - sticky - 3 * th.offsetWidth);
     }
     thead.replaceChildren(headerRow());
+    if (explained !== null && rowIndex(explained) >= 0) select(explained);
+    else drawRows(true);
+  }
+
+  function markInPanel(iso) {
     for (const li of panel.querySelectorAll('li.x-day')) {
       const b = li.querySelector('button.x-date');
       li.classList.toggle('x-marked', Boolean(b) && b.dataset.date === iso);
     }
-    if (explained !== null && rowIndex(explained) >= 0) select(explained);
-    else drawRows(true);
   }
 
   const dateButton = (iso) => el('button', { class: 'x-date', text: iso, title: `Show ${iso} in the grid`, attrs: { type: 'button' }, data: { date: iso } });
