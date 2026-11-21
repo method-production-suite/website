@@ -1,8 +1,11 @@
 <!-- title: Method Launcher -->
 <!-- description: The front door to the Method Production Suite: see every app, install the ones you want, keep them up to date and open them, from one small window. -->
+<!-- og:image: img/apps-light.png -->
+<!-- og:image:alt: Method Launcher's window: Storyteller, Reader and Schedule installed and up to date, each with Open, and Budget ready to install, with the recent files below. -->
 <!-- The launcher's page on the suite's site, served at /launcher/. MOrg syncs this file and
      site/img into the website at each release tag. Pictures: crates/app/src/screens.rs
-     draws them. -->
+     draws them. The og:image lines name the share picture (site/img) and its alt text, the
+     README's. -->
 <article class="prose">
   <p class="kicker">Method Launcher</p>
   <h1 class="pitch">Every app, one download.</h1>
@@ -59,9 +62,9 @@
     keeps itself up to date. On Windows and Linux it tells you when a new launcher is out,
     and you download it. On Linux it installs each app's AppImage, or its system package
     where you have apt. Installing on Windows and Linux is built and tested automatically,
-    not yet tested by a person on those systems. The Windows installer is not signed,
-    so Windows warns that the publisher is unknown before it opens. The suite's apps have no Linux ARM builds yet;
-    there the launcher shows them and links how to build them.</p>
+    not yet tested by a person on those systems. The Windows installer is not signed, and no
+    certificate is planned: Windows warns that the publisher is unknown before it opens. The
+    suite's apps have no Linux ARM builds yet; there the launcher shows them and links how to build them.</p>
 
   <picture>
     <source srcset="img/recent-dark.png" media="(prefers-color-scheme: dark)">
